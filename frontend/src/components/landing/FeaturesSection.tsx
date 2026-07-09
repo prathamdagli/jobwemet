@@ -58,13 +58,34 @@ function FeatureCard({
   description,
   detail,
   icon: Icon,
-}: (typeof FEATURES)[number]) {
+  featured = false,
+}: (typeof FEATURES)[number] & { featured?: boolean }) {
+  if (featured) {
+    return (
+      <div className="group relative flex flex-col gap-4 rounded-2xl border border-foreground bg-foreground p-7 text-background shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-lg sm:flex-row sm:items-start sm:gap-5">
+        <span className="inline-flex size-12 shrink-0 items-center justify-center rounded-xl bg-background/10 text-background">
+          <Icon className="size-6" aria-hidden="true" />
+        </span>
+        <div className="flex flex-col gap-2">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-background/50">
+            Core Feature
+          </span>
+          <h3 className="text-lg font-semibold text-background">{title}</h3>
+          <p className="text-sm text-background/70">{description}</p>
+          <p className="mt-1 text-xs font-medium text-background/50">
+            {detail}
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="group relative flex flex-col gap-3 rounded-2xl border border-border bg-card p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-foreground/20 hover:shadow-md">
-      <span className="inline-flex size-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
-        <Icon className="size-5" aria-hidden="true" />
+    <div className="group relative flex flex-col gap-4 rounded-2xl border border-border bg-card p-7 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-foreground/20 hover:shadow-md">
+      <span className="inline-flex size-12 items-center justify-center rounded-xl bg-primary/10 text-primary transition-transform duration-300 group-hover:scale-105">
+        <Icon className="size-6" aria-hidden="true" />
       </span>
-      <h3 className="text-base font-semibold text-foreground">{title}</h3>
+      <h3 className="text-lg font-semibold text-foreground">{title}</h3>
       <p className="text-sm text-muted-foreground">{description}</p>
       <p className="mt-1 text-xs font-medium text-muted-foreground/70">
         {detail}
@@ -92,8 +113,8 @@ export default function FeaturesSection() {
       </div>
 
       <div className="mt-14 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {FEATURES.map((feature) => (
-          <FeatureCard key={feature.title} {...feature} />
+        {FEATURES.map((feature, i) => (
+          <FeatureCard key={feature.title} {...feature} featured={i === 0} />
         ))}
       </div>
     </Section>

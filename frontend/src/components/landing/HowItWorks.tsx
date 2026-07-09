@@ -47,18 +47,20 @@ export default function HowItWorks() {
 
       <ol className="relative mx-auto mt-14 max-w-3xl">
         <div
-          className="absolute left-5 top-5 bottom-5 w-px bg-border"
+          className="absolute left-6 top-6 bottom-6 w-0.5 -translate-x-1/2 bg-border"
           aria-hidden="true"
         />
-        <div className="space-y-10">
+        <div className="space-y-8 sm:space-y-10">
           {STEPS.map((step, i) => (
-            <li key={step.title} className="relative flex gap-5">
-              <div className="relative z-10 flex size-10 shrink-0 items-center justify-center rounded-full border border-border bg-background text-primary">
+            <li key={step.title} className="relative flex gap-5 sm:gap-6">
+              <div className="relative z-10 flex size-12 shrink-0 items-center justify-center rounded-full border border-border bg-card text-primary shadow-sm">
                 <step.icon className="size-5" aria-hidden="true" />
               </div>
-              <div className="flex-1 pt-1.5">
-                <p className="text-xs font-medium text-primary">Step {i + 1}</p>
-                <h3 className="mt-1 text-lg font-semibold text-foreground">
+              <div className="flex-1 rounded-2xl border border-border bg-card p-5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md sm:p-6">
+                <p className="text-xs font-semibold uppercase tracking-wide text-primary">
+                  Step {i + 1}
+                </p>
+                <h3 className="mt-1.5 text-lg font-semibold text-foreground">
                   {step.title}
                 </h3>
                 <p className="mt-2 text-sm text-muted-foreground">

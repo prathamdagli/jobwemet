@@ -1,4 +1,4 @@
-import { CheckCircle2 } from 'lucide-react'
+import { CheckCircle2, Code } from 'lucide-react'
 import Section from './Section'
 
 const PRINCIPLES = [
@@ -17,6 +17,14 @@ const PRINCIPLES = [
     description:
       'You get a sequenced roadmap, not a random list of courses to scroll past.',
   },
+] as const
+
+const TECH = [
+  'React',
+  'TypeScript',
+  'Firebase',
+  'Tailwind CSS',
+  'AI / ML',
 ] as const
 
 export default function AboutSection() {
@@ -48,10 +56,17 @@ export default function AboutSection() {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-7">
-          <p className="text-sm font-semibold text-foreground">
-            What We Believe
+        <div className="rounded-2xl border border-border bg-card p-7 shadow-sm sm:p-8">
+          <p className="text-sm font-medium text-foreground">Our Mission</p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            To turn the noise of job descriptions and vague requirements into a
+            clear, evidence-based path from the skills you have to the career
+            you&rsquo;re meant for.
           </p>
+
+          <div className="my-6 h-px w-full bg-border" />
+
+          <p className="text-sm font-medium text-foreground">What We Believe</p>
           <ul className="mt-4 space-y-4">
             {PRINCIPLES.map((principle) => (
               <li key={principle.title} className="flex gap-3">
@@ -70,6 +85,30 @@ export default function AboutSection() {
               </li>
             ))}
           </ul>
+
+          <div className="my-6 h-px w-full bg-border" />
+
+          <p className="text-sm font-medium text-foreground">Built With</p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {TECH.map((tech) => (
+              <span
+                key={tech}
+                className="rounded-full border border-border bg-muted/40 px-3 py-1 text-xs font-medium text-foreground"
+              >
+                {tech}
+              </span>
+            ))}
+          </div>
+
+          <div className="mt-6 flex items-start gap-3 rounded-xl bg-muted/40 p-4">
+            <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <Code className="size-4" aria-hidden="true" />
+            </span>
+            <p className="text-sm text-muted-foreground">
+              Designed and built by a working engineer who lived this problem
+              first-hand.
+            </p>
+          </div>
         </div>
       </div>
     </Section>
