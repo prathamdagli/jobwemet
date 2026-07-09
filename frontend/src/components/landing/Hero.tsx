@@ -1,6 +1,7 @@
 import HeroBadge from './HeroBadge'
 import HeroButtons from './HeroButtons'
 import HeroVisual from './HeroVisual'
+import HeroSecondaryPreview from './HeroSecondaryPreview'
 
 export default function Hero() {
   return (
@@ -26,6 +27,17 @@ export default function Hero() {
             fully job-ready.
           </p>
           <HeroButtons />
+          <div className="w-full">
+            <p className="text-sm font-medium text-primary">
+              Inside The Platform
+            </p>
+            <p className="mt-1.5 max-w-md text-sm text-muted-foreground">
+              Watch a resume become a personalized career roadmap in real time.
+            </p>
+            <div className="mt-4">
+              <HeroSecondaryPreview />
+            </div>
+          </div>
         </div>
         <div className="relative">
           <HeroVisual />

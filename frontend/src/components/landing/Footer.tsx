@@ -4,7 +4,7 @@ const PRODUCT_LINKS = [
   { label: 'Features', href: '#features' },
   { label: 'How It Works', href: '#how-it-works' },
   { label: 'Statistics', href: '#stats' },
-  { label: 'Testimonials', href: '#testimonials' },
+  { label: 'About', href: '#about' },
 ]
 
 const RESOURCE_LINKS = [
