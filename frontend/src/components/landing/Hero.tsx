@@ -9,7 +9,7 @@ export default function Hero() {
       id="home"
       className="relative overflow-hidden bg-[#FCFCFC] px-6 pb-28 pt-20 lg:pt-24"
     >
-      <div className="mx-auto grid max-w-[1280px] items-start gap-16 lg:gap-20 lg:grid-cols-2">
+      <div className="mx-auto grid max-w-[1280px] items-center gap-16 lg:gap-20 lg:grid-cols-2">
         <div className="flex flex-col items-start gap-7">
           <HeroBadge />
           <h1 className="text-4xl font-semibold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
@@ -27,7 +27,7 @@ export default function Hero() {
             fully job-ready.
           </p>
           <HeroButtons />
-          <div className="w-full pt-5">
+          <div className="w-full pt-2">
             <p className="text-sm font-medium text-primary">
               JobWeMet Intelligence
             </p>
