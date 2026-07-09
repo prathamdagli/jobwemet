@@ -2,10 +2,10 @@ import Navbar from '@/components/landing/Navbar'
 import Hero from '@/components/landing/Hero'
 import StatsSection from '@/components/landing/StatsSection'
 import FeaturesSection from '@/components/landing/FeaturesSection'
-import HowItWorksPlaceholder from '@/components/landing/HowItWorksPlaceholder'
-import TestimonialsPlaceholder from '@/components/landing/TestimonialsPlaceholder'
-import CTAPlaceholder from '@/components/landing/CTAPlaceholder'
-import FooterPlaceholder from '@/components/landing/FooterPlaceholder'
+import HowItWorks from '@/components/landing/HowItWorks'
+import Testimonials from '@/components/landing/Testimonials'
+import CTASection from '@/components/landing/CTASection'
+import Footer from '@/components/landing/Footer'
 
 export default function LandingPage() {
   return (
@@ -15,11 +15,11 @@ export default function LandingPage() {
         <Hero />
         <StatsSection />
         <FeaturesSection />
-        <HowItWorksPlaceholder />
-        <TestimonialsPlaceholder />
-        <CTAPlaceholder />
+        <HowItWorks />
+        <Testimonials />
+        <CTASection />
       </main>
-      <FooterPlaceholder />
+      <Footer />
     </>
   )
 }
