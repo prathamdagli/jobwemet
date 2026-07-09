@@ -1,7 +1,7 @@
 import Navbar from '@/components/landing/Navbar'
 import Hero from '@/components/landing/Hero'
 import StatsSection from '@/components/landing/StatsSection'
-import FeaturesPlaceholder from '@/components/landing/FeaturesPlaceholder'
+import FeaturesSection from '@/components/landing/FeaturesSection'
 import HowItWorksPlaceholder from '@/components/landing/HowItWorksPlaceholder'
 import TestimonialsPlaceholder from '@/components/landing/TestimonialsPlaceholder'
 import CTAPlaceholder from '@/components/landing/CTAPlaceholder'
@@ -14,7 +14,7 @@ export default function LandingPage() {
       <main>
         <Hero />
         <StatsSection />
-        <FeaturesPlaceholder />
+        <FeaturesSection />
         <HowItWorksPlaceholder />
         <TestimonialsPlaceholder />
         <CTAPlaceholder />

@@ -1,0 +1,101 @@
+import {
+  BookOpen,
+  FileText,
+  LineChart,
+  Route,
+  ScanSearch,
+  Sparkles,
+} from 'lucide-react'
+import Section from './Section'
+
+const FEATURES = [
+  {
+    title: 'Resume & Skill Analysis',
+    description:
+      'Upload your resume and instantly extract technical and professional skills using AI-powered analysis.',
+    detail: 'PDF, DOCX & LinkedIn',
+    icon: FileText,
+  },
+  {
+    title: 'AI Career Prediction',
+    description:
+      'Discover the careers that best match your skills with confidence-based recommendations.',
+    detail: 'Confidence-scored matches',
+    icon: Sparkles,
+  },
+  {
+    title: 'Skill Gap Detection',
+    description:
+      'Identify missing technologies, tools and concepts required for your dream role.',
+    detail: 'Role-specific gaps',
+    icon: ScanSearch,
+  },
+  {
+    title: 'Personalized Learning Roadmap',
+    description:
+      'Receive a structured learning roadmap designed specifically for your career goal.',
+    detail: 'Step-by-step path',
+    icon: Route,
+  },
+  {
+    title: 'Course Recommendations',
+    description:
+      'Explore curated courses, certifications and learning resources that close your skill gaps.',
+    detail: 'Curated by relevance',
+    icon: BookOpen,
+  },
+  {
+    title: 'Progress Tracking',
+    description:
+      'Track your learning journey and measure your readiness for your target career.',
+    detail: 'Live readiness score',
+    icon: LineChart,
+  },
+] as const
+
+function FeatureCard({
+  title,
+  description,
+  detail,
+  icon: Icon,
+}: (typeof FEATURES)[number]) {
+  return (
+    <div className="group relative flex flex-col gap-3 rounded-2xl border border-border bg-card p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-foreground/20 hover:shadow-md">
+      <span className="inline-flex size-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
+        <Icon className="size-5" aria-hidden="true" />
+      </span>
+      <h3 className="text-base font-semibold text-foreground">{title}</h3>
+      <p className="text-sm text-muted-foreground">{description}</p>
+      <p className="mt-1 text-xs font-medium text-muted-foreground/70">
+        {detail}
+      </p>
+    </div>
+  )
+}
+
+export default function FeaturesSection() {
+  return (
+    <Section id="features" className="bg-[#FCFCFC]">
+      <div className="mx-auto max-w-2xl text-center">
+        <p className="text-sm font-medium text-primary">What You Get</p>
+        <h2
+          id="features-heading"
+          className="mt-3 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl"
+        >
+          From Resume To Ready &mdash; All In One Place
+        </h2>
+        <p className="mx-auto mt-4 max-w-xl text-base text-muted-foreground">
+          JobWeMet analyzes your skills, predicts your best-fit careers, maps
+          the gaps, and guides you through every step of learning until
+          you&rsquo;re job-ready.
+        </p>
+      </div>
+
+      <div className="mt-14 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {FEATURES.map((feature) => (
+          <FeatureCard key={feature.title} {...feature} />
+        ))}
+      </div>
+    </Section>
+  )
+}
