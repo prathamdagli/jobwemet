@@ -13,25 +13,19 @@ function FullScreenSpinner() {
   )
 }
 
-interface ProtectedRouteProps {
-  redirectTo?: string
-}
-
 /**
- * Blocks unauthenticated users from protected routes, redirecting them to the
- * auth flow. Renders the nested route for signed-in users.
+ * Redirects authenticated users away from auth pages (e.g. /login) to the
+ * protected app. Renders the nested route for guests.
  */
-export default function ProtectedRoute({
-  redirectTo = '/login',
-}: ProtectedRouteProps) {
+export default function GuestRoute() {
   const { user, loading } = useAuth()
 
   if (loading) {
     return <FullScreenSpinner />
   }
 
-  if (!user) {
-    return <Navigate to={redirectTo} replace />
+  if (user) {
+    return <Navigate to="/dashboard" replace />
   }
 
   return <Outlet />
