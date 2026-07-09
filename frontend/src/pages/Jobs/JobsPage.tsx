@@ -5,13 +5,10 @@ import {
   Gauge,
   Loader2,
   RefreshCw,
-  Rocket,
   SlidersHorizontal,
   Sparkles,
   TrendingUp,
   Trophy,
-  Wallet,
-  XCircle,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { WidgetCard } from '@/components/dashboard/WidgetCard'
@@ -21,96 +18,11 @@ import {
   FilterSelect,
   InsightRow,
   TopMatchBanner,
-  type Career,
 } from '@/components/careers/careers'
-
-const CAREERS: Career[] = [
-  {
-    id: 'ai-engineer',
-    title: 'AI Engineer',
-    match: 92,
-    description:
-      'Design, build and deploy intelligent systems and production ML models.',
-    experience: '3–5 years',
-    salary: '$120k – $180k',
-    category: 'Artificial Intelligence',
-    topSkills: ['Python', 'TensorFlow', 'Machine Learning'],
-    missingSkills: ['Kubernetes', 'MLOps'],
-    explanation: 'Excellent Python and Machine Learning foundation.',
-  },
-  {
-    id: 'ml-engineer',
-    title: 'Machine Learning Engineer',
-    match: 88,
-    description:
-      'Train, optimize and ship ML pipelines that scale across products.',
-    experience: '3–5 years',
-    salary: '$115k – $170k',
-    category: 'Artificial Intelligence',
-    topSkills: ['Python', 'TensorFlow', 'SQL'],
-    missingSkills: ['MLOps', 'Spark'],
-    explanation: 'Strong modeling skills align well with this role.',
-  },
-  {
-    id: 'data-scientist',
-    title: 'Data Scientist',
-    match: 84,
-    description:
-      'Turn raw data into insights and predictive models for the business.',
-    experience: '2–4 years',
-    salary: '$110k – $160k',
-    category: 'Data',
-    topSkills: ['Python', 'SQL', 'Statistics'],
-    missingSkills: ['Tableau', 'R'],
-    explanation: 'Great analytical and Python ecosystem knowledge.',
-  },
-  {
-    id: 'backend-developer',
-    title: 'Backend Developer',
-    match: 80,
-    description:
-      'Build reliable APIs, services and data layers that power applications.',
-    experience: '2–4 years',
-    salary: '$100k – $150k',
-    category: 'Engineering',
-    topSkills: ['Python', 'FastAPI', 'SQL'],
-    missingSkills: ['AWS', 'Docker'],
-    explanation: 'Strong backend skills align well with this role.',
-  },
-  {
-    id: 'software-engineer',
-    title: 'Software Engineer',
-    match: 78,
-    description: 'Develop and maintain robust software across the full stack.',
-    experience: '2–4 years',
-    salary: '$95k – $145k',
-    category: 'Engineering',
-    topSkills: ['Java', 'C++', 'Git'],
-    missingSkills: ['System Design', 'AWS'],
-    explanation: 'Solid programming fundamentals across languages.',
-  },
-  {
-    id: 'data-engineer',
-    title: 'Data Engineer',
-    match: 74,
-    description:
-      'Design pipelines and infrastructure that move and store data at scale.',
-    experience: '2–4 years',
-    salary: '$105k – $155k',
-    category: 'Data',
-    topSkills: ['SQL', 'Python', 'MySQL'],
-    missingSkills: ['Spark', 'Airflow'],
-    explanation: 'Cloud knowledge needs improvement.',
-  },
-]
-
-const TOP_MATCH = CAREERS[0]
-const HIGHEST = Math.max(...CAREERS.map((c) => c.match))
-const AVERAGE = Math.round(
-  CAREERS.reduce((sum, c) => sum + c.match, 0) / CAREERS.length,
-)
+import { useCareerMatches } from '@/hooks/useCareerMatches'
 
 export default function JobsPage() {
+  const { careers, insights, insightNote } = useCareerMatches()
   const [refreshing, setRefreshing] = useState(false)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -125,6 +37,12 @@ export default function JobsPage() {
     setRefreshing(true)
     timerRef.current = setTimeout(() => setRefreshing(false), 1600)
   }
+
+  const topMatch = careers[0]
+  const highest = Math.max(...careers.map((c) => c.match))
+  const average = Math.round(
+    careers.reduce((sum, c) => sum + c.match, 0) / careers.length,
+  )
 
   return (
     <div className="mx-auto max-w-7xl space-y-4 md:space-y-6">
@@ -159,24 +77,24 @@ export default function JobsPage() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <MetricTile
           label="Total Career Matches"
-          value={String(CAREERS.length)}
+          value={String(careers.length)}
           icon={Sparkles}
         />
         <MetricTile
           label="Highest Match"
-          value={`${HIGHEST}%`}
-          sub={TOP_MATCH.title}
+          value={`${highest}%`}
+          sub={topMatch.title}
           icon={Trophy}
         />
         <MetricTile
           label="Average Match"
-          value={`${AVERAGE}%`}
+          value={`${average}%`}
           icon={TrendingUp}
         />
         <MetricTile label="Career Readiness" value="84%" icon={Gauge} />
       </div>
 
-      <TopMatchBanner career={TOP_MATCH} />
+      <TopMatchBanner career={topMatch} />
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
@@ -207,7 +125,7 @@ export default function JobsPage() {
           </WidgetCard>
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            {CAREERS.map((career) => (
+            {careers.map((career) => (
               <CareerCard key={career.id} career={career} />
             ))}
           </div>
@@ -216,35 +134,21 @@ export default function JobsPage() {
         <aside className="lg:col-span-1" aria-label="Career insights">
           <WidgetCard title="Career Insights" icon={Sparkles}>
             <ul className="space-y-3">
-              <InsightRow
-                icon={Trophy}
-                label="Best Match"
-                value="AI Engineer"
-              />
-              <InsightRow
-                icon={Rocket}
-                label="Fastest Career Path"
-                value="Backend Developer"
-              />
-              <InsightRow
-                icon={Wallet}
-                label="Highest Salary"
-                value="AI Engineer"
-              />
-              <InsightRow
-                icon={XCircle}
-                label="Most Missing Skills"
-                value="Data Engineer"
-              />
+              {insights.map((item) => (
+                <InsightRow
+                  key={item.label}
+                  icon={item.icon}
+                  label={item.label}
+                  value={item.value}
+                />
+              ))}
             </ul>
             <div className="mt-4 flex items-start gap-2 rounded-lg border border-border bg-muted/40 px-3 py-2.5">
               <Award
                 className="mt-0.5 size-4 shrink-0 text-muted-foreground"
                 aria-hidden="true"
               />
-              <p className="text-xs text-foreground">
-                Closing 2 cloud skills could unlock 3 more strong matches.
-              </p>
+              <p className="text-xs text-foreground">{insightNote}</p>
             </div>
           </WidgetCard>
         </aside>

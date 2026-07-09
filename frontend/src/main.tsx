@@ -4,11 +4,14 @@ import './index.css'
 import './firebase/firebase'
 import App from './App.tsx'
 import { AuthProvider } from './contexts/AuthContext'
+import { AppStateProvider } from './contexts/AppStateContext'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <AuthProvider>
-      <App />
+      <AppStateProvider>
+        <App />
+      </AppStateProvider>
     </AuthProvider>
   </StrictMode>,
 )

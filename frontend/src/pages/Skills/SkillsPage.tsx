@@ -27,59 +27,9 @@ import {
   MetricTile,
   SkillRow,
   SoftSkillChip,
-  type DistributionItem,
   type TechnicalSkill,
 } from '@/components/skills/skills'
-
-const TECHNICAL_SKILLS: TechnicalSkill[] = [
-  { name: 'Python', category: 'Programming', confidence: 95 },
-  { name: 'Java', category: 'Programming', confidence: 82 },
-  { name: 'C++', category: 'Programming', confidence: 78 },
-  { name: 'SQL', category: 'Programming', confidence: 88 },
-  { name: 'React', category: 'Frameworks', confidence: 91 },
-  { name: 'TensorFlow', category: 'Frameworks', confidence: 84 },
-  { name: 'FastAPI', category: 'Frameworks', confidence: 79 },
-  { name: 'MySQL', category: 'Databases', confidence: 86 },
-  { name: 'Firebase', category: 'Databases', confidence: 80 },
-  { name: 'AWS', category: 'Cloud', confidence: 62 },
-  { name: 'Git', category: 'Tools', confidence: 90 },
-  { name: 'Docker', category: 'Tools', confidence: 62 },
-  { name: 'VS Code', category: 'Tools', confidence: 94 },
-]
-const CATEGORIES = ['Programming', 'Frameworks', 'Databases', 'Cloud', 'Tools']
-const SOFT_SKILLS = [
-  'Leadership',
-  'Communication',
-  'Problem Solving',
-  'Teamwork',
-  'Critical Thinking',
-]
-const SOFT_CONFIDENCE: Record<string, number> = {
-  Leadership: 92,
-  Communication: 88,
-  'Problem Solving': 95,
-  Teamwork: 90,
-  'Critical Thinking': 87,
-}
-const DISTRIBUTION: DistributionItem[] = [
-  { label: 'Programming', value: 40 },
-  { label: 'Frameworks', value: 25 },
-  { label: 'Databases', value: 15 },
-  { label: 'Cloud', value: 10 },
-  { label: 'Tools', value: 10 },
-]
-const INSIGHTS = [
-  'Strong backend development foundation.',
-  'Needs more cloud experience.',
-  'Excellent Python ecosystem knowledge.',
-  'Docker proficiency can be improved.',
-]
-const ACTION = {
-  strength: 'Python',
-  weakness: 'Docker',
-  nextSkill: 'Kubernetes',
-  improvement: '+12%',
-}
+import { useSkills } from '@/hooks/useSkills'
 
 function averageOf(skills: TechnicalSkill[]): number {
   if (skills.length === 0) return 0
@@ -90,6 +40,14 @@ function averageOf(skills: TechnicalSkill[]): number {
 export default function SkillsPage() {
   const [analyzing, setAnalyzing] = useState(false)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const {
+    technicalSkills,
+    categories,
+    softSkills,
+    distribution,
+    insights,
+    action,
+  } = useSkills()
   useEffect(
     () => () => {
       if (timerRef.current) clearTimeout(timerRef.current)
@@ -166,8 +124,8 @@ export default function SkillsPage() {
           className="lg:col-span-2"
         >
           <div className="space-y-8">
-            {CATEGORIES.map((category) => {
-              const skills = TECHNICAL_SKILLS.filter(
+            {categories.map((category) => {
+              const skills = technicalSkills.filter(
                 (skill) => skill.category === category,
               )
               const average = averageOf(skills)
@@ -192,11 +150,11 @@ export default function SkillsPage() {
 
         <WidgetCard title="Soft Skills" icon={Users}>
           <div className="grid grid-cols-1 gap-2">
-            {SOFT_SKILLS.map((skill) => (
+            {softSkills.map((skill) => (
               <SoftSkillChip
-                key={skill}
-                name={skill}
-                confidence={SOFT_CONFIDENCE[skill] ?? 0}
+                key={skill.name}
+                name={skill.name}
+                confidence={skill.confidence}
               />
             ))}
           </div>
@@ -211,7 +169,7 @@ export default function SkillsPage() {
 
         <WidgetCard title="AI Insights" icon={Lightbulb}>
           <ul className="space-y-3">
-            {INSIGHTS.map((text, index) => (
+            {insights.map((text, index) => (
               <li key={index} className="flex gap-2.5">
                 <Lightbulb
                   className="mt-0.5 size-4 shrink-0 text-muted-foreground"
@@ -225,7 +183,7 @@ export default function SkillsPage() {
 
         <WidgetCard title="Skill Distribution" icon={BarChart3}>
           <div className="space-y-4">
-            {DISTRIBUTION.map((item) => (
+            {distribution.map((item) => (
               <DistributionBar
                 key={item.label}
                 label={item.label}
@@ -240,22 +198,22 @@ export default function SkillsPage() {
             <InsightRow
               icon={TrendingUp}
               label="Top Strength"
-              value={ACTION.strength}
+              value={action.strength}
             />
             <InsightRow
               icon={AlertTriangle}
               label="Top Weakness"
-              value={ACTION.weakness}
+              value={action.weakness}
             />
             <InsightRow
               icon={Target}
               label="Recommended Next Skill"
-              value={ACTION.nextSkill}
+              value={action.nextSkill}
             />
             <InsightRow
               icon={ArrowUp}
               label="Estimated Improvement"
-              value={ACTION.improvement}
+              value={action.improvement}
             />
           </ul>
         </WidgetCard>

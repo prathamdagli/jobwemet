@@ -18,64 +18,11 @@ import {
   RecommendationItem,
   SkillCategoryGroup,
 } from '@/components/skillgap/skillgap'
-
-const DETECTED = [
-  { category: 'Programming', skills: ['Python', 'Java', 'SQL', 'C++'] },
-  { category: 'Frameworks', skills: ['React', 'TensorFlow', 'FastAPI'] },
-  { category: 'Databases', skills: ['MySQL', 'Firebase'] },
-  { category: 'Tools', skills: ['Git', 'Docker'] },
-]
-
-const MISSING = [
-  { category: 'Cloud', skills: ['AWS', 'Azure'] },
-  { category: 'DevOps', skills: ['Kubernetes', 'CI/CD'] },
-  { category: 'AI', skills: ['LLMs', 'LangChain'] },
-]
-
-const COVERAGE = [
-  { label: 'Programming', value: 95 },
-  { label: 'Frameworks', value: 82 },
-  { label: 'Databases', value: 80 },
-  { label: 'Cloud', value: 30 },
-  { label: 'DevOps', value: 25 },
-  { label: 'AI', value: 55 },
-]
-
-const PRIORITY = [
-  {
-    skill: 'Docker',
-    priority: 'High' as const,
-    time: '6 hrs',
-    difficulty: 'Easy',
-  },
-  {
-    skill: 'Kubernetes',
-    priority: 'High' as const,
-    time: '12 hrs',
-    difficulty: 'Hard',
-  },
-  {
-    skill: 'AWS',
-    priority: 'Medium' as const,
-    time: '15 hrs',
-    difficulty: 'Medium',
-  },
-  {
-    skill: 'LangChain',
-    priority: 'Medium' as const,
-    time: '10 hrs',
-    difficulty: 'Medium',
-  },
-]
-
-const RECOMMENDATIONS = [
-  'Learn Docker before Kubernetes.',
-  'AWS knowledge will significantly improve your AI Engineer match.',
-  'TensorFlow is already strong.',
-  'Focus on Cloud technologies next.',
-]
+import { useSkillGap } from '@/hooks/useSkillGap'
 
 export default function SkillGapPage() {
+  const { detected, missing, coverage, priority, recommendations } =
+    useSkillGap()
   const [refreshing, setRefreshing] = useState(false)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -131,7 +78,7 @@ export default function SkillGapPage() {
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <WidgetCard title="Detected Skills" icon={CheckCircle2}>
           <div className="space-y-4">
-            {DETECTED.map((group) => (
+            {detected.map((group) => (
               <SkillCategoryGroup
                 key={group.category}
                 title={group.category}
@@ -144,7 +91,7 @@ export default function SkillGapPage() {
 
         <WidgetCard title="Missing Skills" icon={AlertTriangle}>
           <div className="space-y-4">
-            {MISSING.map((group) => (
+            {missing.map((group) => (
               <SkillCategoryGroup
                 key={group.category}
                 title={group.category}
@@ -163,7 +110,7 @@ export default function SkillGapPage() {
           className="lg:col-span-2"
         >
           <ol className="space-y-3">
-            {PRIORITY.map((item, index) => (
+            {priority.map((item, index) => (
               <PriorityItem
                 key={item.skill}
                 rank={index + 1}
@@ -178,7 +125,7 @@ export default function SkillGapPage() {
 
         <WidgetCard title="AI Recommendations" icon={Sparkles}>
           <ul className="space-y-3">
-            {RECOMMENDATIONS.map((text, index) => (
+            {recommendations.map((text, index) => (
               <RecommendationItem key={index} text={text} />
             ))}
           </ul>
@@ -190,7 +137,7 @@ export default function SkillGapPage() {
           className="lg:col-span-3"
         >
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {COVERAGE.map((item) => (
+            {coverage.map((item) => (
               <DistributionBar
                 key={item.label}
                 label={item.label}

@@ -1,9 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import {
   Award,
-  CalendarDays,
   Clock,
-  Flame,
   GraduationCap,
   Loader2,
   RefreshCw,
@@ -15,91 +13,11 @@ import { Button } from '@/components/ui/button'
 import { WidgetCard } from '@/components/dashboard/WidgetCard'
 import { MetricTile } from '@/components/skills/skills'
 import { FilterSelect } from '@/components/careers/careers'
-import {
-  CourseCard,
-  SidebarStat,
-  type Course,
-} from '@/components/courses/courses'
-
-const COURSES: Course[] = [
-  {
-    id: 'docker-fundamentals',
-    title: 'Docker Fundamentals',
-    platform: 'Coursera',
-    instructor: 'Cloud Academy',
-    difficulty: 'Beginner',
-    duration: '6 Hours',
-    rating: 4.7,
-    skills: ['Docker', 'Containers', 'DevOps'],
-    description:
-      'Containerize applications and master the core Docker workflow from image to run.',
-  },
-  {
-    id: 'aws-cloud-essentials',
-    title: 'AWS Cloud Essentials',
-    platform: 'Udemy',
-    instructor: 'AWS Training',
-    difficulty: 'Intermediate',
-    duration: '8 Hours',
-    rating: 4.6,
-    skills: ['AWS', 'Cloud', 'EC2'],
-    description:
-      'Core AWS services for building scalable, resilient cloud deployments.',
-  },
-  {
-    id: 'kubernetes-for-developers',
-    title: 'Kubernetes for Developers',
-    platform: 'KodeKloud',
-    instructor: 'Mumshad Mannambeth',
-    difficulty: 'Intermediate',
-    duration: '10 Hours',
-    rating: 4.8,
-    skills: ['Kubernetes', 'Orchestration', 'DevOps'],
-    description:
-      'Deploy, scale and manage containers with Kubernetes in practice.',
-  },
-  {
-    id: 'langchain-crash-course',
-    title: 'LangChain Crash Course',
-    platform: 'YouTube',
-    instructor: 'freeCodeCamp',
-    difficulty: 'Beginner',
-    duration: '4 Hours',
-    rating: 4.5,
-    skills: ['LangChain', 'LLMs', 'Python'],
-    description: 'Build LLM-powered applications quickly with LangChain.',
-  },
-  {
-    id: 'mlops-fundamentals',
-    title: 'MLOps Fundamentals',
-    platform: 'Coursera',
-    instructor: 'Andrew Ng',
-    difficulty: 'Advanced',
-    duration: '12 Hours',
-    rating: 4.7,
-    skills: ['MLOps', 'CI/CD', 'Monitoring'],
-    description: 'Productionize machine learning pipelines end to end.',
-  },
-  {
-    id: 'system-design-basics',
-    title: 'System Design Basics',
-    platform: 'Educative',
-    instructor: 'Educative',
-    difficulty: 'Intermediate',
-    duration: '9 Hours',
-    rating: 4.6,
-    skills: ['System Design', 'Scalability', 'Architecture'],
-    description: 'Design scalable, reliable systems with confidence.',
-  },
-]
-
-const AI_INSIGHTS = [
-  'Learning Docker first unlocks three future roadmap modules.',
-  'AWS improves AI Engineer compatibility by 8%.',
-  'LangChain is optional but recommended.',
-]
+import { CourseCard, SidebarStat } from '@/components/courses/courses'
+import { useCourses } from '@/hooks/useCourses'
 
 export default function CoursesPage() {
+  const { courses, aiInsights, sidebarStats } = useCourses()
   const [refreshing, setRefreshing] = useState(false)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -190,7 +108,7 @@ export default function CoursesPage() {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {COURSES.map((course) => (
+            {courses.map((course) => (
               <CourseCard key={course.id} course={course} />
             ))}
           </div>
@@ -199,34 +117,21 @@ export default function CoursesPage() {
         <aside className="lg:col-span-1 space-y-4" aria-label="Course insights">
           <WidgetCard title="Learning Overview" icon={Sparkles}>
             <ul className="space-y-3">
-              <SidebarStat
-                icon={Award}
-                label="Most Recommended Skill"
-                value="Docker"
-              />
-              <SidebarStat
-                icon={GraduationCap}
-                label="Learning Progress"
-                value="65%"
-                progress={65}
-              />
-              <SidebarStat icon={Clock} label="Weekly Goal" value="5 hrs" />
-              <SidebarStat
-                icon={CalendarDays}
-                label="Est. Completion"
-                value="4 Weeks"
-              />
-              <SidebarStat
-                icon={Flame}
-                label="Learning Streak"
-                value="12 Days"
-              />
+              {sidebarStats.map((item) => (
+                <SidebarStat
+                  key={item.label}
+                  icon={item.icon}
+                  label={item.label}
+                  value={item.value}
+                  progress={item.progress}
+                />
+              ))}
             </ul>
           </WidgetCard>
 
           <WidgetCard title="AI Insights" icon={Sparkles}>
             <ul className="space-y-3">
-              {AI_INSIGHTS.map((text, index) => (
+              {aiInsights.map((text, index) => (
                 <li key={index} className="flex gap-2.5">
                   <Sparkles
                     className="mt-0.5 size-4 shrink-0 text-muted-foreground"
