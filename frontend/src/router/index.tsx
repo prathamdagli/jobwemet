@@ -4,6 +4,7 @@ import DashboardPage from '../pages/Dashboard/DashboardPage'
 import ResumePage from '../pages/Resume/ResumePage'
 import JobsPage from '../pages/Jobs/JobsPage'
 import SkillsPage from '../pages/Skills/SkillsPage'
+import SkillGapPage from '../pages/SkillGap/SkillGapPage'
 import CoursesPage from '../pages/Courses/CoursesPage'
 import RoadmapPage from '../pages/Roadmap/RoadmapPage'
 import ProfilePage from '../pages/Profile/ProfilePage'
@@ -42,6 +43,7 @@ export const router = createBrowserRouter([
           { path: '/resume', element: <ResumePage /> },
           { path: '/jobs', element: <JobsPage /> },
           { path: '/skills', element: <SkillsPage /> },
+          { path: '/skill-gap', element: <SkillGapPage /> },
           { path: '/courses', element: <CoursesPage /> },
           { path: '/roadmap', element: <RoadmapPage /> },
           { path: '/profile', element: <ProfilePage /> },
