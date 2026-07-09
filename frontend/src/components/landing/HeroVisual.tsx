@@ -58,14 +58,14 @@ export default function HeroVisual() {
         preserveAspectRatio="none"
       >
         <path
-          d="M50% 16% C 30% 16%, 26% 60%, 12% 76%"
+          d="M30% 80% C 20% 84%, 12% 90%, 2% 96%"
           fill="none"
           stroke="currentColor"
           strokeWidth="1.5"
           strokeDasharray="3 5"
         />
         <path
-          d="M86% 22% C 92% 40%, 92% 60%, 88% 76%"
+          d="M82% 14% C 90% 10%, 96% 6%, 100% 2%"
           fill="none"
           stroke="currentColor"
           strokeWidth="1.5"
@@ -74,7 +74,7 @@ export default function HeroVisual() {
       </svg>
 
       {/* main dashboard card — live platform preview */}
-      <div className="relative rounded-2xl border border-border bg-card p-6 shadow-2xl shadow-primary/5 ring-1 ring-border/60">
+      <div className="relative rounded-2xl border border-border bg-card p-7 shadow-2xl shadow-primary/5 ring-1 ring-border/60 sm:p-8">
         {/* header */}
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
@@ -94,7 +94,7 @@ export default function HeroVisual() {
           </span>
         </div>
 
-        <div className="my-5 h-px w-full bg-border" />
+        <div className="my-6 h-px w-full bg-border" />
 
         {/* detected skills */}
         <div>
@@ -113,14 +113,14 @@ export default function HeroVisual() {
           </ul>
         </div>
 
-        <div className="my-5 h-px w-full bg-border" />
+        <div className="my-6 h-px w-full bg-border" />
 
         {/* career prediction */}
         <div>
           <p className="mb-3 text-xs font-medium text-muted-foreground">
             Career Prediction
           </p>
-          <div className="space-y-3">
+          <div className="space-y-4">
             {CAREER_MATCHES.map((match) => (
               <div key={match.role}>
                 <div className="mb-1.5 flex items-center justify-between text-sm">
@@ -149,7 +149,7 @@ export default function HeroVisual() {
           </div>
         </div>
 
-        <div className="my-5 h-px w-full bg-border" />
+        <div className="my-6 h-px w-full bg-border" />
 
         {/* skill gap */}
         <div>
@@ -169,7 +169,7 @@ export default function HeroVisual() {
           </ul>
         </div>
 
-        <div className="my-5 h-px w-full bg-border" />
+        <div className="my-6 h-px w-full bg-border" />
 
         {/* learning roadmap */}
         <div>
@@ -195,7 +195,7 @@ export default function HeroVisual() {
                     <span className="my-1 w-px flex-1 bg-border" />
                   )}
                 </div>
-                <div className="flex flex-1 items-center justify-between pb-4">
+                <div className="flex flex-1 items-center justify-between pb-6">
                   <span className="text-sm font-medium text-foreground">
                     {step.title}
                   </span>
@@ -214,7 +214,7 @@ export default function HeroVisual() {
           </ol>
         </div>
 
-        <div className="my-5 h-px w-full bg-border" />
+        <div className="my-6 h-px w-full bg-border" />
 
         {/* confidence */}
         <div
@@ -270,8 +270,8 @@ export default function HeroVisual() {
         </div>
       </div>
 
-      {/* floating highlight: skill gap */}
-      <div className="absolute -left-5 bottom-12 hidden w-44 rounded-xl border border-border bg-background p-3 shadow-lg transition-transform duration-300 hover:-translate-y-1 sm:block">
+      {/* floating highlight: skill gap — frames lower-left corner */}
+      <div className="absolute -left-6 -bottom-7 hidden w-44 rounded-xl border border-border bg-background p-3 shadow-lg transition-transform duration-300 hover:-translate-y-1 sm:block">
         <div className="flex items-center gap-2">
           <span className="inline-flex size-7 items-center justify-center rounded-md bg-primary/10">
             <Puzzle className="size-4 text-primary" />
@@ -285,8 +285,8 @@ export default function HeroVisual() {
         </div>
       </div>
 
-      {/* floating highlight: new job match */}
-      <div className="absolute -right-4 -top-6 hidden w-44 rounded-xl border border-border bg-background p-3 shadow-lg transition-transform duration-300 hover:-translate-y-1 sm:block">
+      {/* floating highlight: new job match — frames upper-right corner */}
+      <div className="absolute -right-6 -top-6 hidden w-44 rounded-xl border border-border bg-background p-3 shadow-lg transition-transform duration-300 hover:-translate-y-1 sm:block">
         <div className="flex items-center gap-2">
           <span className="inline-flex size-7 items-center justify-center rounded-md bg-primary/10">
             <Target className="size-4 text-primary" />
