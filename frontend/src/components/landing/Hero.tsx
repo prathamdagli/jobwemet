@@ -4,7 +4,10 @@ import HeroVisual from './HeroVisual'
 
 export default function Hero() {
   return (
-    <section className="relative overflow-hidden px-6 pb-28 pt-20 lg:pt-24">
+    <section
+      id="home"
+      className="relative overflow-hidden bg-[#FCFCFC] px-6 pb-28 pt-20 lg:pt-24"
+    >
       <div className="mx-auto grid max-w-[1280px] items-start gap-16 lg:gap-20 lg:grid-cols-2">
         <div className="flex flex-col items-start gap-7">
           <HeroBadge />
