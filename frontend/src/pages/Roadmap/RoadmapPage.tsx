@@ -1,7 +1,12 @@
+import { Route } from 'lucide-react'
+import { SectionPlaceholder } from '@/components/dashboard/SectionPlaceholder'
+
 export default function RoadmapPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center">
-      <h1 className="text-4xl font-bold">Roadmap</h1>
-    </div>
+    <SectionPlaceholder
+      icon={Route}
+      title="Learning Roadmap"
+      description="Your personalized step-by-step learning path will appear here."
+    />
   )
 }

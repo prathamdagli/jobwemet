@@ -1,7 +1,12 @@
+import { BarChart3 } from 'lucide-react'
+import { SectionPlaceholder } from '@/components/dashboard/SectionPlaceholder'
+
 export default function SkillsPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center">
-      <h1 className="text-4xl font-bold">Skills</h1>
-    </div>
+    <SectionPlaceholder
+      icon={BarChart3}
+      title="Skill Gap"
+      description="Your skill gap analysis and recommendations will appear here."
+    />
   )
 }

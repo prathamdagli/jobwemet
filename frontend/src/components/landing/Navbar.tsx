@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { Menu, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
@@ -102,11 +103,15 @@ export default function Navbar() {
         <div className="hidden items-center gap-3 md:flex">
           <Button
             variant="ghost"
+            render={<Link to="/login" />}
             className="px-5 transition-all duration-300 hover:bg-muted hover:shadow-sm"
           >
             Login
           </Button>
-          <Button className="px-5 shadow-sm transition-all duration-300 hover:-translate-y-px hover:shadow-md">
+          <Button
+            render={<Link to="/register" />}
+            className="px-5 shadow-sm transition-all duration-300 hover:-translate-y-px hover:shadow-md"
+          >
             Get Started
           </Button>
         </div>
@@ -169,12 +174,14 @@ export default function Navbar() {
           <div className="mt-4 flex flex-col gap-3">
             <Button
               variant="ghost"
+              render={<Link to="/login" />}
               className="transition-all duration-300 hover:bg-muted hover:shadow-sm"
               onClick={handleNavClick}
             >
               Login
             </Button>
             <Button
+              render={<Link to="/register" />}
               className="shadow-sm transition-all duration-300 hover:-translate-y-px hover:shadow-md"
               onClick={handleNavClick}
             >

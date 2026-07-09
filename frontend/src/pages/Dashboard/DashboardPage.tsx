@@ -1,7 +1,12 @@
+import { LayoutDashboard } from 'lucide-react'
+import { SectionPlaceholder } from '@/components/dashboard/SectionPlaceholder'
+
 export default function DashboardPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center">
-      <h1 className="text-4xl font-bold">Dashboard</h1>
-    </div>
+    <SectionPlaceholder
+      icon={LayoutDashboard}
+      title="Dashboard"
+      description="Your AI-powered career intelligence overview will appear here."
+    />
   )
 }

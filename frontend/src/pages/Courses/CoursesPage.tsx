@@ -1,7 +1,12 @@
+import { GraduationCap } from 'lucide-react'
+import { SectionPlaceholder } from '@/components/dashboard/SectionPlaceholder'
+
 export default function CoursesPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center">
-      <h1 className="text-4xl font-bold">Courses</h1>
-    </div>
+    <SectionPlaceholder
+      icon={GraduationCap}
+      title="Courses"
+      description="Curated courses to close your skill gaps will appear here."
+    />
   )
 }

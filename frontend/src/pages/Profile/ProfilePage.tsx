@@ -1,7 +1,12 @@
+import { UserRound } from 'lucide-react'
+import { SectionPlaceholder } from '@/components/dashboard/SectionPlaceholder'
+
 export default function ProfilePage() {
   return (
-    <div className="flex min-h-screen items-center justify-center">
-      <h1 className="text-4xl font-bold">Profile</h1>
-    </div>
+    <SectionPlaceholder
+      icon={UserRound}
+      title="Profile"
+      description="Your account details and preferences will appear here."
+    />
   )
 }

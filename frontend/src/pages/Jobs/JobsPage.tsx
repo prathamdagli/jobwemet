@@ -1,7 +1,12 @@
+import { Briefcase } from 'lucide-react'
+import { SectionPlaceholder } from '@/components/dashboard/SectionPlaceholder'
+
 export default function JobsPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center">
-      <h1 className="text-4xl font-bold">Jobs</h1>
-    </div>
+    <SectionPlaceholder
+      icon={Briefcase}
+      title="Career Matches"
+      description="Roles matched to your skills and goals will appear here."
+    />
   )
 }
