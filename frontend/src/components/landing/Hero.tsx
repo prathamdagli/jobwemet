@@ -27,7 +27,7 @@ export default function Hero() {
             fully job-ready.
           </p>
           <HeroButtons />
-          <div className="w-full pt-4">
+          <div className="w-full pt-5">
             <p className="text-sm font-medium text-primary">
               JobWeMet Intelligence
             </p>

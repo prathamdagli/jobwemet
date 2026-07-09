@@ -45,7 +45,7 @@ export default function HeroSecondaryPreview() {
   return (
     <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-lg shadow-primary/5 ring-1 ring-border/60">
       {/* window chrome */}
-      <div className="flex items-center gap-2 border-b border-border bg-muted/30 px-4 py-2.5">
+      <div className="flex items-center gap-2 border-b border-border bg-muted/30 px-5 py-3">
         <span className="flex gap-1.5" aria-hidden="true">
           <span className="size-2.5 rounded-full bg-border" />
           <span className="size-2.5 rounded-full bg-border" />
@@ -60,9 +60,9 @@ export default function HeroSecondaryPreview() {
         </span>
       </div>
 
-      <div className="p-5">
+      <div className="p-6">
         {/* completed workflow */}
-        <div className="flex items-center">
+        <div className="flex items-center py-0.5">
           {WORKFLOW.map((step, i) => (
             <Fragment key={step.label}>
               <div className="flex items-center gap-1.5">
@@ -87,15 +87,15 @@ export default function HeroSecondaryPreview() {
           ))}
         </div>
 
-        <div className="my-5 h-px w-full bg-border" />
+        <div className="my-6 h-px w-full bg-border" />
 
         {/* detected + missing skills, side by side */}
-        <div className="grid grid-cols-2 gap-5">
+        <div className="grid grid-cols-2 gap-6">
           <div>
-            <p className="mb-2.5 text-xs font-medium text-muted-foreground">
+            <p className="mb-3 text-xs font-medium text-muted-foreground">
               Detected Skills
             </p>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2.5">
               {DETECTED_SKILLS.map((skill) => (
                 <span
                   key={skill}
@@ -107,10 +107,10 @@ export default function HeroSecondaryPreview() {
             </div>
           </div>
           <div>
-            <p className="mb-2.5 text-xs font-medium text-muted-foreground">
+            <p className="mb-3 text-xs font-medium text-muted-foreground">
               Missing Skills
             </p>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2.5">
               {MISSING_SKILLS.map((skill) => (
                 <span
                   key={skill}
@@ -124,10 +124,10 @@ export default function HeroSecondaryPreview() {
           </div>
         </div>
 
-        <div className="my-5 h-px w-full bg-border" />
+        <div className="my-6 h-px w-full bg-border" />
 
         {/* match + progress */}
-        <div className="grid grid-cols-2 gap-5">
+        <div className="grid grid-cols-2 gap-6">
           <div>
             <p className="text-xs font-medium text-muted-foreground">
               Career Match
@@ -136,7 +136,7 @@ export default function HeroSecondaryPreview() {
               AI Engineer
             </p>
             <p className="text-xs text-muted-foreground">92% match</p>
-            <div className="mt-2">
+            <div className="mt-3">
               <MiniBar value={92} />
             </div>
           </div>
@@ -146,7 +146,7 @@ export default function HeroSecondaryPreview() {
             </p>
             <p className="mt-1 text-sm font-semibold text-foreground">68%</p>
             <p className="text-xs text-muted-foreground">to job-ready</p>
-            <div className="mt-2">
+            <div className="mt-3">
               <MiniBar value={68} />
             </div>
           </div>
