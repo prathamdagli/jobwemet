@@ -1,29 +1,32 @@
 import { useEffect, useRef, useState } from 'react'
-import type { LucideIcon } from 'lucide-react'
 import {
+  Activity,
   AlertTriangle,
   ArrowUp,
   BarChart3,
   Briefcase,
   Clock,
-  Code,
   Gauge,
   Layers,
   Lightbulb,
   Loader2,
   RefreshCw,
+  Rocket,
   Sparkles,
   Target,
   TrendingUp,
   Users,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { WidgetCard } from '@/components/dashboard/WidgetCard'
+import { ProgressBar } from '@/components/dashboard/ProgressBar'
+import { InsightRow } from '@/components/careers/careers'
 import {
+  CategoryHeader,
   DistributionBar,
   MetricTile,
-  SkillConfidenceRow,
+  SkillRow,
+  SoftSkillChip,
   type DistributionItem,
   type TechnicalSkill,
 } from '@/components/skills/skills'
@@ -43,9 +46,7 @@ const TECHNICAL_SKILLS: TechnicalSkill[] = [
   { name: 'Docker', category: 'Tools', confidence: 62 },
   { name: 'VS Code', category: 'Tools', confidence: 94 },
 ]
-
 const CATEGORIES = ['Programming', 'Frameworks', 'Databases', 'Cloud', 'Tools']
-
 const SOFT_SKILLS = [
   'Leadership',
   'Communication',
@@ -53,7 +54,13 @@ const SOFT_SKILLS = [
   'Teamwork',
   'Critical Thinking',
 ]
-
+const SOFT_CONFIDENCE: Record<string, number> = {
+  Leadership: 92,
+  Communication: 88,
+  'Problem Solving': 95,
+  Teamwork: 90,
+  'Critical Thinking': 87,
+}
 const DISTRIBUTION: DistributionItem[] = [
   { label: 'Programming', value: 40 },
   { label: 'Frameworks', value: 25 },
@@ -61,14 +68,12 @@ const DISTRIBUTION: DistributionItem[] = [
   { label: 'Cloud', value: 10 },
   { label: 'Tools', value: 10 },
 ]
-
 const INSIGHTS = [
   'Strong backend development foundation.',
   'Needs more cloud experience.',
   'Excellent Python ecosystem knowledge.',
   'Docker proficiency can be improved.',
 ]
-
 const ACTION = {
   strength: 'Python',
   weakness: 'Docker',
@@ -76,36 +81,21 @@ const ACTION = {
   improvement: '+12%',
 }
 
-function ActionRow({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: LucideIcon
-  label: string
-  value: string
-}) {
-  return (
-    <li className="flex items-center justify-between gap-3 rounded-lg border border-border bg-muted/40 px-3 py-2.5">
-      <span className="flex items-center gap-2 text-sm text-muted-foreground">
-        <Icon className="size-4 shrink-0" aria-hidden="true" />
-        {label}
-      </span>
-      <span className="text-sm font-semibold text-foreground">{value}</span>
-    </li>
-  )
+function averageOf(skills: TechnicalSkill[]): number {
+  if (skills.length === 0) return 0
+  const total = skills.reduce((sum, skill) => sum + skill.confidence, 0)
+  return Math.round(total / skills.length)
 }
 
 export default function SkillsPage() {
   const [analyzing, setAnalyzing] = useState(false)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  useEffect(() => {
-    return () => {
+  useEffect(
+    () => () => {
       if (timerRef.current) clearTimeout(timerRef.current)
-    }
-  }, [])
-
+    },
+    [],
+  )
   function handleReanalyze() {
     if (analyzing) return
     setAnalyzing(true)
@@ -113,7 +103,7 @@ export default function SkillsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl space-y-4 md:space-y-6">
+    <div className="mx-auto max-w-7xl space-y-6 md:space-y-8">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
@@ -143,64 +133,83 @@ export default function SkillsPage() {
       </header>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <MetricTile label="Overall Skills" value="84%" icon={Gauge} />
+        <MetricTile
+          label="Overall Skills"
+          value="84%"
+          sub="Strong Skill Alignment"
+          icon={Gauge}
+        />
         <MetricTile
           label="Technical Skills"
           value="13"
-          sub="across 5 categories"
+          sub="Across 5 Categories"
           icon={Layers}
         />
-        <MetricTile label="Soft Skills" value="5" icon={Users} />
+        <MetricTile
+          label="Soft Skills"
+          value="5"
+          sub="Key Skills Identified"
+          icon={Users}
+        />
         <MetricTile
           label="Experience Level"
           value="Intermediate"
+          sub="2–4 Years Experience"
           icon={Briefcase}
         />
       </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
         <WidgetCard
           title="Technical Skills"
-          icon={Code}
+          icon={Sparkles}
           className="lg:col-span-2"
         >
-          <div className="space-y-6">
-            {CATEGORIES.map((category) => (
-              <div key={category}>
-                <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  {category}
-                </h3>
-                <div className="space-y-3">
-                  {TECHNICAL_SKILLS.filter((s) => s.category === category).map(
-                    (skill) => (
-                      <SkillConfidenceRow
-                        key={skill.name}
-                        name={skill.name}
-                        confidence={skill.confidence}
-                      />
-                    ),
-                  )}
-                </div>
-              </div>
-            ))}
+          <div className="space-y-8">
+            {CATEGORIES.map((category) => {
+              const skills = TECHNICAL_SKILLS.filter(
+                (skill) => skill.category === category,
+              )
+              const average = averageOf(skills)
+              return (
+                <section key={category}>
+                  <CategoryHeader
+                    category={category}
+                    count={skills.length}
+                    average={average}
+                  />
+                  <ProgressBar value={average} className="mt-2" />
+                  <div className="mt-1 divide-y divide-border">
+                    {skills.map((skill) => (
+                      <SkillRow key={skill.name} skill={skill} />
+                    ))}
+                  </div>
+                </section>
+              )
+            })}
           </div>
         </WidgetCard>
 
         <WidgetCard title="Soft Skills" icon={Users}>
-          <div className="flex flex-wrap gap-2">
+          <div className="grid grid-cols-1 gap-2">
             {SOFT_SKILLS.map((skill) => (
-              <Badge
+              <SoftSkillChip
                 key={skill}
-                variant="outline"
-                className="px-2.5 py-1 text-sm"
-              >
-                {skill}
-              </Badge>
+                name={skill}
+                confidence={SOFT_CONFIDENCE[skill] ?? 0}
+              />
             ))}
           </div>
+          <div className="my-4 border-t border-border" />
+          <ul className="space-y-2.5">
+            <InsightRow icon={TrendingUp} label="Top Strength" value="Python" />
+            <InsightRow icon={Activity} label="Most Used Skill" value="SQL" />
+            <InsightRow icon={Rocket} label="Fastest Growing" value="Docker" />
+            <InsightRow icon={Sparkles} label="AI Confidence" value="84%" />
+          </ul>
         </WidgetCard>
 
-        <WidgetCard title="AI Insights" icon={Sparkles}>
+        <WidgetCard title="AI Insights" icon={Lightbulb}>
           <ul className="space-y-3">
             {INSIGHTS.map((text, index) => (
               <li key={index} className="flex gap-2.5">
@@ -228,22 +237,22 @@ export default function SkillsPage() {
 
         <WidgetCard title="Recommended Actions" icon={Target}>
           <ul className="space-y-3">
-            <ActionRow
+            <InsightRow
               icon={TrendingUp}
               label="Top Strength"
               value={ACTION.strength}
             />
-            <ActionRow
+            <InsightRow
               icon={AlertTriangle}
               label="Top Weakness"
               value={ACTION.weakness}
             />
-            <ActionRow
+            <InsightRow
               icon={Target}
               label="Recommended Next Skill"
               value={ACTION.nextSkill}
             />
-            <ActionRow
+            <InsightRow
               icon={ArrowUp}
               label="Estimated Improvement"
               value={ACTION.improvement}

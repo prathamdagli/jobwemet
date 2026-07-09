@@ -1,5 +1,20 @@
 import type { LucideIcon } from 'lucide-react'
+import {
+  Blocks,
+  Brain,
+  Cloud,
+  Code,
+  Crown,
+  Database,
+  Lightbulb,
+  MessageCircle,
+  Sparkles,
+  Users,
+  Wrench,
+} from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
 import { ProgressBar } from '@/components/dashboard/ProgressBar'
+import { cn } from '@/lib/utils'
 
 export interface TechnicalSkill {
   name: string
@@ -37,22 +52,132 @@ export function MetricTile({
   )
 }
 
-export function SkillConfidenceRow({
+function levelFor(value: number) {
+  if (value >= 90) return { label: 'Expert', variant: 'secondary' as const }
+  if (value >= 80) return { label: 'Advanced', variant: 'outline' as const }
+  if (value >= 65) return { label: 'Intermediate', variant: 'muted' as const }
+  return { label: 'Beginner', variant: 'muted' as const }
+}
+
+function microDetail(value: number): string {
+  if (value >= 88) return 'Last used recently'
+  if (value >= 75) return 'Frequently detected'
+  return 'Needs improvement'
+}
+
+function ProficiencyDots({ value }: { value: number }) {
+  const filled = Math.max(0, Math.min(5, Math.round((value / 100) * 5)))
+  return (
+    <span
+      className="flex items-center gap-1"
+      role="img"
+      aria-label={`Proficiency ${value} out of 100`}
+    >
+      {Array.from({ length: 5 }).map((_, i) => (
+        <span
+          key={i}
+          className={cn(
+            'size-1.5 rounded-full',
+            i < filled ? 'bg-foreground' : 'bg-border',
+          )}
+        />
+      ))}
+    </span>
+  )
+}
+
+export function SkillRow({ skill }: { skill: TechnicalSkill }) {
+  const level = levelFor(skill.confidence)
+  return (
+    <div className="flex items-center justify-between gap-4 py-2.5">
+      <div className="min-w-0">
+        <div className="flex items-center gap-2">
+          <span className="truncate text-sm font-medium text-foreground">
+            {skill.name}
+          </span>
+          <Badge
+            variant={level.variant}
+            className="shrink-0 px-1.5 py-0 text-[0.65rem] font-medium"
+          >
+            {level.label}
+          </Badge>
+        </div>
+        <p className="mt-0.5 text-xs text-muted-foreground">
+          {microDetail(skill.confidence)}
+        </p>
+      </div>
+      <div className="flex shrink-0 items-center gap-3">
+        <ProficiencyDots value={skill.confidence} />
+        <span className="w-10 text-right text-sm font-medium tabular-nums text-foreground">
+          {skill.confidence}%
+        </span>
+      </div>
+    </div>
+  )
+}
+
+const CATEGORY_ICONS: Record<string, LucideIcon> = {
+  Programming: Code,
+  Frameworks: Blocks,
+  Databases: Database,
+  Cloud: Cloud,
+  Tools: Wrench,
+}
+
+export function CategoryHeader({
+  category,
+  count,
+  average,
+}: {
+  category: string
+  count: number
+  average: number
+}) {
+  const Icon = CATEGORY_ICONS[category] ?? Code
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <div className="flex items-center gap-2">
+        <Icon className="size-4 text-muted-foreground" aria-hidden="true" />
+        <h3 className="text-sm font-semibold tracking-tight text-foreground">
+          {category}
+        </h3>
+        <span className="text-xs text-muted-foreground">{count} skills</span>
+      </div>
+      <span className="text-xs font-medium text-muted-foreground">
+        {average}%
+      </span>
+    </div>
+  )
+}
+
+const SOFT_ICONS: Record<string, LucideIcon> = {
+  Leadership: Crown,
+  Communication: MessageCircle,
+  'Problem Solving': Lightbulb,
+  Teamwork: Users,
+  'Critical Thinking': Brain,
+}
+
+export function SoftSkillChip({
   name,
   confidence,
 }: {
   name: string
   confidence: number
 }) {
+  const Icon = SOFT_ICONS[name] ?? Sparkles
   return (
-    <div>
-      <div className="mb-1.5 flex items-center justify-between text-sm">
-        <span className="font-medium text-foreground">{name}</span>
-        <span className="text-xs font-medium text-muted-foreground">
-          {confidence}%
-        </span>
-      </div>
-      <ProgressBar value={confidence} />
+    <div className="flex items-center gap-2.5 rounded-lg border border-border bg-muted/40 px-3 py-2">
+      <Icon
+        className="size-4 shrink-0 text-muted-foreground"
+        aria-hidden="true"
+      />
+      <span className="truncate text-sm font-medium text-foreground">
+        {name}
+      </span>
+      <span className="ml-auto text-xs font-medium tabular-nums text-muted-foreground">
+        {confidence}%
+      </span>
     </div>
   )
 }
