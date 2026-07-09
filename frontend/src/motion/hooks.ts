@@ -88,7 +88,7 @@ export function useStagger(options?: {
  * @param options.amount  Visible fraction required to trigger. Defaults to VIEWPORT.amount.
  */
 export function useInViewReveal<
-  T extends HTMLElement = HTMLDivElement,
+  T extends HTMLElement | SVGElement = HTMLDivElement,
 >(options?: {
   once?: boolean
   amount?: number

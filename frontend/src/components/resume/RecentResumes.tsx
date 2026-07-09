@@ -1,5 +1,7 @@
+import { motion } from 'motion/react'
 import { FileText, History } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { listReveal } from '@/motion'
 
 export interface ResumeEntry {
   id: string
@@ -19,8 +21,9 @@ export function RecentResumes({ items }: { items: ResumeEntry[] }) {
   return (
     <ul className="divide-y divide-border">
       {items.map((item) => (
-        <li
+        <motion.li
           key={item.id}
+          variants={listReveal}
           className="flex items-center gap-3 py-3 first:pt-0 last:pb-0"
         >
           <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
@@ -38,7 +41,7 @@ export function RecentResumes({ items }: { items: ResumeEntry[] }) {
             <History className="size-3.5" aria-hidden="true" />
             Uploaded
           </Badge>
-        </li>
+        </motion.li>
       ))}
     </ul>
   )

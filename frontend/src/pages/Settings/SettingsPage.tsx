@@ -19,6 +19,7 @@ import { Select } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { WidgetCard } from '@/components/dashboard/WidgetCard'
 import { SettingRow } from '@/components/settings/settings'
+import { Reveal } from '@/motion'
 
 const FULL_NAME = 'Alex Morgan'
 const INITIALS = FULL_NAME.split(' ')
@@ -32,24 +33,26 @@ const LAST_UPDATED = 'Jul 9, 2026'
 export default function SettingsPage() {
   return (
     <div className="mx-auto max-w-7xl space-y-6 md:space-y-8">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
-            Settings
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Manage your account, security, and notification preferences.
-          </p>
-          <p className="mt-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Clock className="size-3.5" aria-hidden="true" />
-            Last updated {LAST_UPDATED}
-          </p>
-        </div>
-        <Button size="lg" className="gap-1.5">
-          <Pencil className="size-4" aria-hidden="true" />
-          Save Changes
-        </Button>
-      </header>
+      <Reveal>
+        <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+              Settings
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Manage your account, security, and notification preferences.
+            </p>
+            <p className="mt-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Clock className="size-3.5" aria-hidden="true" />
+              Last updated {LAST_UPDATED}
+            </p>
+          </div>
+          <Button size="lg" className="gap-1.5">
+            <Pencil className="size-4" aria-hidden="true" />
+            Save Changes
+          </Button>
+        </header>
+      </Reveal>
 
       <WidgetCard title="Account" icon={UserRound}>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">

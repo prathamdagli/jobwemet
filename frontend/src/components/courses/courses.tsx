@@ -1,9 +1,11 @@
 import type { LucideIcon } from 'lucide-react'
 import { BookOpen, Clock, Star } from 'lucide-react'
+import { motion } from 'motion/react'
 import { Link } from 'react-router-dom'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ProgressBar } from '@/components/dashboard/ProgressBar'
+import { GESTURE_LIMITS, cardReveal, listReveal, springSnappy } from '@/motion'
 
 export interface Course {
   id: string
@@ -28,7 +30,12 @@ const DIFFICULTY_BADGE: Record<
 
 export function CourseCard({ course }: { course: Course }) {
   return (
-    <article className="flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-shadow duration-300 hover:shadow-md">
+    <motion.article
+      variants={cardReveal}
+      whileHover={{ y: GESTURE_LIMITS.maxTranslateY }}
+      transition={springSnappy}
+      className="flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-[box-shadow,border-color] duration-300 hover:border-foreground/15 hover:shadow-md"
+    >
       <div className="relative flex h-32 items-center justify-center bg-muted">
         <BookOpen className="size-8 text-muted-foreground" aria-hidden="true" />
         <span className="absolute right-3 top-3">
@@ -81,7 +88,7 @@ export function CourseCard({ course }: { course: Course }) {
           </Button>
         </div>
       </div>
-    </article>
+    </motion.article>
   )
 }
 
@@ -97,13 +104,16 @@ export function SidebarStat({
   progress?: number
 }) {
   return (
-    <li className="flex flex-col gap-1.5 rounded-lg border border-border bg-muted/40 px-3 py-2.5">
+    <motion.li
+      variants={listReveal}
+      className="flex flex-col gap-1.5 rounded-lg border border-border bg-muted/40 px-3 py-2.5"
+    >
       <span className="flex items-center gap-2 text-sm text-muted-foreground">
         <Icon className="size-4 shrink-0" aria-hidden="true" />
         {label}
       </span>
       <span className="text-sm font-semibold text-foreground">{value}</span>
       {typeof progress === 'number' && <ProgressBar value={progress} />}
-    </li>
+    </motion.li>
   )
 }

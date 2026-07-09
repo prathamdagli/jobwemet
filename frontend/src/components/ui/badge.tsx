@@ -1,5 +1,7 @@
 import type { ComponentProps } from 'react'
 import { cva, type VariantProps } from 'class-variance-authority'
+import { motion } from 'motion/react'
+import { fast } from '@/motion'
 import { cn } from '@/lib/utils'
 
 const badgeVariants = cva(
@@ -23,7 +25,12 @@ function Badge({
   ...props
 }: ComponentProps<'span'> & VariantProps<typeof badgeVariants>) {
   return (
-    <span className={cn(badgeVariants({ variant }), className)} {...props} />
+    <motion.span
+      whileHover={{ y: -1 }}
+      transition={fast}
+      className={cn(badgeVariants({ variant }), className)}
+      {...(props as ComponentProps<typeof motion.span>)}
+    />
   )
 }
 

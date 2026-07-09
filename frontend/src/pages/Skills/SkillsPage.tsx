@@ -30,6 +30,7 @@ import {
   type TechnicalSkill,
 } from '@/components/skills/skills'
 import { useSkills } from '@/hooks/useSkills'
+import { Reveal, Stagger } from '@/motion'
 
 function averageOf(skills: TechnicalSkill[]): number {
   if (skills.length === 0) return 0
@@ -62,35 +63,37 @@ export default function SkillsPage() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-6 md:space-y-8">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
-            AI Skill Analysis
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            A breakdown of the skills extracted from your resume.
-          </p>
-          <p className="mt-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Clock className="size-3.5" aria-hidden="true" />
-            Last analyzed Jul 8, 2026
-          </p>
-        </div>
-        <Button
-          onClick={handleReanalyze}
-          disabled={analyzing}
-          size="lg"
-          className="gap-1.5"
-        >
-          {analyzing ? (
-            <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-          ) : (
-            <RefreshCw className="size-4" aria-hidden="true" />
-          )}
-          {analyzing ? 'Analyzing…' : 'Re-analyze Resume'}
-        </Button>
-      </header>
+      <Reveal>
+        <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+              AI Skill Analysis
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              A breakdown of the skills extracted from your resume.
+            </p>
+            <p className="mt-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Clock className="size-3.5" aria-hidden="true" />
+              Last analyzed Jul 8, 2026
+            </p>
+          </div>
+          <Button
+            onClick={handleReanalyze}
+            disabled={analyzing}
+            size="lg"
+            className="gap-1.5"
+          >
+            {analyzing ? (
+              <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+            ) : (
+              <RefreshCw className="size-4" aria-hidden="true" />
+            )}
+            {analyzing ? 'Analyzing…' : 'Re-analyze Resume'}
+          </Button>
+        </header>
+      </Reveal>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <Stagger className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <MetricTile
           label="Overall Skills"
           value="84%"
@@ -115,7 +118,7 @@ export default function SkillsPage() {
           sub="2–4 Years Experience"
           icon={Briefcase}
         />
-      </div>
+      </Stagger>
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
         <WidgetCard

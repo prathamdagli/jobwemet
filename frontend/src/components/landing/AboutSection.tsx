@@ -1,5 +1,7 @@
+import { motion } from 'motion/react'
 import { CheckCircle2, Code } from 'lucide-react'
 import Section from './Section'
+import { fadeUp, useInViewReveal } from '@/motion'
 
 const PRINCIPLES = [
   {
@@ -28,9 +30,16 @@ const TECH = [
 ] as const
 
 export default function AboutSection() {
+  const { ref, inView } = useInViewReveal<HTMLDivElement>()
   return (
     <Section id="about" className="bg-[#FCFCFC]">
-      <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
+      <motion.div
+        ref={ref}
+        variants={fadeUp}
+        initial="hidden"
+        animate={inView ? 'visible' : 'hidden'}
+        className="grid gap-12 lg:grid-cols-2 lg:items-center"
+      >
         <div>
           <p className="text-sm font-medium text-primary">Our Story</p>
           <h2
@@ -110,7 +119,7 @@ export default function AboutSection() {
             </p>
           </div>
         </div>
-      </div>
+      </motion.div>
     </Section>
   )
 }

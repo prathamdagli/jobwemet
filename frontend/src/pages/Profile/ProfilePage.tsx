@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { motion } from 'motion/react'
 import {
   Award,
   CalendarDays,
@@ -18,6 +19,7 @@ import { WidgetCard } from '@/components/dashboard/WidgetCard'
 import { ProgressBar } from '@/components/dashboard/ProgressBar'
 import { InsightRow } from '@/components/careers/careers'
 import { MetricTile } from '@/components/skills/skills'
+import { Reveal, listReveal, staggerContainer, timelineReveal } from '@/motion'
 import { useProfile } from '@/hooks/useProfile'
 
 export default function ProfilePage() {
@@ -34,24 +36,26 @@ export default function ProfilePage() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-6 md:space-y-8">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
-            Profile
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Your personal career dashboard and account overview.
-          </p>
-          <p className="mt-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Clock className="size-3.5" aria-hidden="true" />
-            Last updated {profile.lastUpdated}
-          </p>
-        </div>
-        <Button size="lg" className="gap-1.5">
-          <Pencil className="size-4" aria-hidden="true" />
-          Edit Profile
-        </Button>
-      </header>
+      <Reveal>
+        <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+              Profile
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Your personal career dashboard and account overview.
+            </p>
+            <p className="mt-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Clock className="size-3.5" aria-hidden="true" />
+              Last updated {profile.lastUpdated}
+            </p>
+          </div>
+          <Button size="lg" className="gap-1.5">
+            <Pencil className="size-4" aria-hidden="true" />
+            Edit Profile
+          </Button>
+        </header>
+      </Reveal>
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
         <WidgetCard title="Profile" icon={UserRound} className="lg:col-span-1">
@@ -178,10 +182,17 @@ export default function ProfilePage() {
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
         <WidgetCard title="Achievements" icon={Award}>
-          <ul className="space-y-3">
+          <motion.ul
+            variants={staggerContainer}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.2 }}
+            className="space-y-3"
+          >
             {achievements.map((item) => (
-              <li
+              <motion.li
                 key={item.title}
+                variants={listReveal}
                 className="flex items-start gap-3 rounded-lg border border-border bg-muted/40 p-3"
               >
                 <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-background">
@@ -203,15 +214,25 @@ export default function ProfilePage() {
                     {item.description}
                   </p>
                 </div>
-              </li>
+              </motion.li>
             ))}
-          </ul>
+          </motion.ul>
         </WidgetCard>
 
         <WidgetCard title="Recent Activity" icon={Clock}>
-          <ol className="relative space-y-5">
+          <motion.ol
+            variants={staggerContainer}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.2 }}
+            className="relative space-y-5"
+          >
             {activity.map((item, index) => (
-              <li key={item.title} className="flex items-start gap-3">
+              <motion.li
+                key={item.title}
+                variants={timelineReveal}
+                className="flex items-start gap-3"
+              >
                 <div className="flex flex-col items-center">
                   <span className="flex size-8 shrink-0 items-center justify-center rounded-full border border-border bg-background">
                     <item.icon
@@ -232,9 +253,9 @@ export default function ProfilePage() {
                   </p>
                   <p className="text-xs text-muted-foreground">{item.time}</p>
                 </div>
-              </li>
+              </motion.li>
             ))}
-          </ol>
+          </motion.ol>
         </WidgetCard>
       </div>
 

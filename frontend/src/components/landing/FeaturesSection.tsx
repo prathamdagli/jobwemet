@@ -1,3 +1,4 @@
+import { motion } from 'motion/react'
 import {
   BookOpen,
   FileText,
@@ -7,6 +8,7 @@ import {
   Sparkles,
 } from 'lucide-react'
 import Section from './Section'
+import { staggerChildren, staggerContainer } from '@/motion'
 
 const FEATURES = [
   {
@@ -62,19 +64,25 @@ function FeatureCard({
 }: (typeof FEATURES)[number] & { featured?: boolean }) {
   if (featured) {
     return (
-      <div className="group relative flex flex-col gap-4 rounded-2xl border border-foreground bg-foreground p-7 text-background shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
+      <motion.div
+        variants={staggerChildren}
+        className="group relative flex flex-col gap-4 rounded-2xl border border-foreground bg-foreground p-7 text-background shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+      >
         <span className="inline-flex size-12 shrink-0 items-center justify-center rounded-xl bg-background/10 text-background">
           <Icon className="size-6" aria-hidden="true" />
         </span>
         <h3 className="text-lg font-semibold text-background">{title}</h3>
         <p className="mt-1 text-sm text-background/70">{description}</p>
         <p className="mt-1 text-xs font-medium text-background/50">{detail}</p>
-      </div>
+      </motion.div>
     )
   }
 
   return (
-    <div className="group relative flex flex-col gap-4 rounded-2xl border border-border bg-card p-7 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-foreground/20 hover:shadow-md">
+    <motion.div
+      variants={staggerChildren}
+      className="group relative flex flex-col gap-4 rounded-2xl border border-border bg-card p-7 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-foreground/20 hover:shadow-md"
+    >
       <span className="inline-flex size-12 items-center justify-center rounded-xl bg-primary/10 text-primary transition-transform duration-300 group-hover:scale-105">
         <Icon className="size-6" aria-hidden="true" />
       </span>
@@ -83,7 +91,7 @@ function FeatureCard({
       <p className="mt-1 text-xs font-medium text-muted-foreground/70">
         {detail}
       </p>
-    </div>
+    </motion.div>
   )
 }
 
@@ -105,7 +113,13 @@ export default function FeaturesSection() {
         </p>
       </div>
 
-      <div className="mt-14 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <motion.div
+        variants={staggerContainer}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.2 }}
+        className="mt-14 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"
+      >
         {FEATURES.map((feature, i) => (
           <FeatureCard
             key={feature.title}
@@ -113,7 +127,7 @@ export default function FeaturesSection() {
             featured={i % 2 === 0}
           />
         ))}
-      </div>
+      </motion.div>
     </Section>
   )
 }

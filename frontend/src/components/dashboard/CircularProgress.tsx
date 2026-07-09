@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react'
+import { motion } from 'motion/react'
 import { cn } from '@/lib/utils'
+import { slow, useInViewReveal, usePrefersReducedMotion } from '@/motion'
 
 interface CircularProgressProps {
   value: number
@@ -28,6 +30,9 @@ export function CircularProgress({
   const circumference = 2 * Math.PI * radius
   const offset = circumference * (1 - clamped / 100)
 
+  const { ref, inView } = useInViewReveal<SVGSVGElement>()
+  const prefersReduced = usePrefersReducedMotion()
+
   return (
     <div
       className={cn(
@@ -37,6 +42,7 @@ export function CircularProgress({
       style={{ width: size, height: size }}
     >
       <svg
+        ref={ref}
         width={size}
         height={size}
         viewBox={`0 0 ${size} ${size}`}
@@ -55,15 +61,21 @@ export function CircularProgress({
           strokeWidth={strokeWidth}
           className="stroke-muted"
         />
-        <circle
+        {/* Arc "draws" once on first reveal by animating strokeDashoffset from
+            empty (circumference) to the target offset. */}
+        <motion.circle
           cx={size / 2}
           cy={size / 2}
           r={radius}
           strokeWidth={strokeWidth}
           strokeLinecap="round"
           strokeDasharray={circumference}
-          strokeDashoffset={offset}
-          className="stroke-foreground transition-[stroke-dashoffset] duration-700 ease-out"
+          initial={{
+            strokeDashoffset: prefersReduced ? offset : circumference,
+          }}
+          animate={{ strokeDashoffset: inView ? offset : circumference }}
+          transition={slow}
+          className="stroke-foreground"
         />
       </svg>
       {children && (

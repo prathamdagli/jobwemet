@@ -1,4 +1,6 @@
+import { motion } from 'motion/react'
 import { Code, Send, Sparkles, Users } from 'lucide-react'
+import { fadeUp, useInViewReveal } from '@/motion'
 
 const PRODUCT_LINKS = [
   { label: 'Features', href: '#features' },
@@ -27,12 +29,19 @@ const SOCIALS = [
 ] as const
 
 export default function Footer() {
+  const { ref, inView } = useInViewReveal<HTMLDivElement>()
   return (
     <footer
       id="footer"
       className="scroll-mt-20 border-t border-border bg-[#FCFCFC] px-6 py-20 md:py-24"
     >
-      <div className="mx-auto max-w-[1280px]">
+      <motion.div
+        ref={ref}
+        variants={fadeUp}
+        initial="hidden"
+        animate={inView ? 'visible' : 'hidden'}
+        className="mx-auto max-w-[1280px]"
+      >
         <div className="grid grid-cols-2 gap-10 md:grid-cols-4">
           <div className="col-span-2 md:col-span-1">
             <div className="flex items-center gap-2.5">
@@ -118,7 +127,7 @@ export default function Footer() {
             Built for career intelligence.
           </p>
         </div>
-      </div>
+      </motion.div>
     </footer>
   )
 }

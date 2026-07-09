@@ -1,5 +1,7 @@
+import { motion } from 'motion/react'
 import { Map, Sparkles, Trophy, Upload } from 'lucide-react'
 import Section from './Section'
+import { timelineReveal, useInViewReveal } from '@/motion'
 
 const STEPS = [
   {
@@ -28,6 +30,38 @@ const STEPS = [
   },
 ] as const
 
+function TimelineStep({
+  step,
+  index,
+}: {
+  step: (typeof STEPS)[number]
+  index: number
+}) {
+  const { ref, inView } = useInViewReveal<HTMLLIElement>()
+  return (
+    <motion.li
+      ref={ref}
+      variants={timelineReveal}
+      initial="hidden"
+      animate={inView ? 'visible' : 'hidden'}
+      className="relative flex gap-5 sm:gap-6"
+    >
+      <div className="relative z-10 flex size-12 shrink-0 items-center justify-center rounded-full border border-border bg-card text-primary shadow-sm">
+        <step.icon className="size-5" aria-hidden="true" />
+      </div>
+      <div className="flex-1 rounded-2xl border border-border bg-card p-5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md sm:p-6">
+        <p className="text-xs font-semibold uppercase tracking-wide text-primary">
+          Step {index + 1}
+        </p>
+        <h3 className="mt-1.5 text-lg font-semibold text-foreground">
+          {step.title}
+        </h3>
+        <p className="mt-2 text-sm text-muted-foreground">{step.description}</p>
+      </div>
+    </motion.li>
+  )
+}
+
 export default function HowItWorks() {
   return (
     <Section id="how-it-works" className="bg-white">
@@ -52,22 +86,7 @@ export default function HowItWorks() {
         />
         <div className="space-y-8 sm:space-y-10">
           {STEPS.map((step, i) => (
-            <li key={step.title} className="relative flex gap-5 sm:gap-6">
-              <div className="relative z-10 flex size-12 shrink-0 items-center justify-center rounded-full border border-border bg-card text-primary shadow-sm">
-                <step.icon className="size-5" aria-hidden="true" />
-              </div>
-              <div className="flex-1 rounded-2xl border border-border bg-card p-5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md sm:p-6">
-                <p className="text-xs font-semibold uppercase tracking-wide text-primary">
-                  Step {i + 1}
-                </p>
-                <h3 className="mt-1.5 text-lg font-semibold text-foreground">
-                  {step.title}
-                </h3>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  {step.description}
-                </p>
-              </div>
-            </li>
+            <TimelineStep key={step.title} step={step} index={i} />
           ))}
         </div>
       </ol>

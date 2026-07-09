@@ -1,6 +1,13 @@
 import type { ReactNode } from 'react'
 import type { LucideIcon } from 'lucide-react'
+import { motion } from 'motion/react'
 import { cn } from '@/lib/utils'
+import {
+  cardReveal,
+  GESTURE_LIMITS,
+  springSnappy,
+  useInViewReveal,
+} from '@/motion'
 
 interface WidgetCardProps {
   title?: string
@@ -18,10 +25,18 @@ export function WidgetCard({
   className,
   children,
 }: WidgetCardProps) {
+  const { ref, inView } = useInViewReveal<HTMLElement>()
+
   return (
-    <section
+    <motion.section
+      ref={ref}
+      variants={cardReveal}
+      initial="hidden"
+      animate={inView ? 'visible' : 'hidden'}
+      whileHover={{ y: GESTURE_LIMITS.maxTranslateY }}
+      transition={springSnappy}
       className={cn(
-        'flex flex-col rounded-2xl border border-border bg-card p-5 shadow-sm transition-shadow duration-300 hover:shadow-md',
+        'flex flex-col rounded-2xl border border-border bg-card p-5 shadow-sm transition-[box-shadow,border-color] duration-300 hover:border-foreground/15 hover:shadow-md',
         className,
       )}
     >
@@ -42,6 +57,6 @@ export function WidgetCard({
         </div>
       )}
       <div className="flex-1">{children}</div>
-    </section>
+    </motion.section>
   )
 }

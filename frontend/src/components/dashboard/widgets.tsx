@@ -18,6 +18,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { useAuth } from '@/hooks/useAuth'
+import { useCountUp } from '@/motion'
 import { cn } from '@/lib/utils'
 import { CircularProgress } from './CircularProgress'
 import { ProgressBar } from './ProgressBar'
@@ -86,7 +87,7 @@ export function CareerReadinessWidget() {
       <div className="flex flex-1 flex-col items-center justify-center py-1">
         <CircularProgress value={68} label="Career readiness">
           <span className="text-3xl font-semibold tracking-tight text-foreground">
-            68%
+            {Math.round(useCountUp(68))}%
           </span>
           <span className="mt-0.5 text-xs text-muted-foreground">Complete</span>
         </CircularProgress>
@@ -109,7 +110,7 @@ export function TopCareerMatchWidget() {
           label="Top career match"
         >
           <span className="text-2xl font-semibold tracking-tight text-foreground">
-            92%
+            {Math.round(useCountUp(92))}%
           </span>
           <span className="text-xs text-muted-foreground">Match</span>
         </CircularProgress>
@@ -147,7 +148,7 @@ export function LearningProgressWidget() {
     <WidgetCard title="Learning Progress" icon={GraduationCap}>
       <div className="flex flex-1 flex-col justify-center">
         <p className="text-3xl font-semibold tracking-tight text-foreground">
-          68%
+          {Math.round(useCountUp(68))}%
         </p>
         <p className="mb-3 text-sm text-muted-foreground">
           of your roadmap complete

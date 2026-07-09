@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import type { LucideIcon } from 'lucide-react'
+import { motion } from 'motion/react'
 import {
   ArrowUpRight,
   Banknote,
@@ -11,6 +12,14 @@ import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ProgressBar } from '@/components/dashboard/ProgressBar'
+import {
+  GESTURE_LIMITS,
+  cardReveal,
+  fadeUp,
+  listReveal,
+  springSnappy,
+  useInViewReveal,
+} from '@/motion'
 
 export interface Career {
   id: string
@@ -28,9 +37,12 @@ export interface Career {
 export function CareerCard({ career }: { career: Career }) {
   const headingId = `career-${career.id}-title`
   return (
-    <article
+    <motion.article
+      variants={cardReveal}
+      whileHover={{ y: GESTURE_LIMITS.maxTranslateY }}
+      transition={springSnappy}
       aria-labelledby={headingId}
-      className="flex flex-col rounded-2xl border border-border bg-card p-5 shadow-sm transition-shadow duration-300 hover:shadow-md"
+      className="flex flex-col rounded-2xl border border-border bg-card p-5 shadow-sm transition-[box-shadow,border-color] duration-300 hover:border-foreground/15 hover:shadow-md"
     >
       <div className="flex items-start justify-between gap-3">
         <div>
@@ -126,13 +138,18 @@ export function CareerCard({ career }: { career: Career }) {
           View Details
         </Button>
       </div>
-    </article>
+    </motion.article>
   )
 }
 
 export function TopMatchBanner({ career }: { career: Career }) {
+  const { ref, inView } = useInViewReveal<HTMLElement>()
   return (
-    <section
+    <motion.section
+      ref={ref}
+      variants={fadeUp}
+      initial="hidden"
+      animate={inView ? 'visible' : 'hidden'}
       aria-label="Top career match"
       className="flex flex-col gap-4 rounded-2xl border border-border bg-primary p-6 text-primary-foreground shadow-sm sm:flex-row sm:items-center sm:justify-between"
     >
@@ -162,7 +179,7 @@ export function TopMatchBanner({ career }: { career: Career }) {
           Excellent Fit
         </Badge>
       </div>
-    </section>
+    </motion.section>
   )
 }
 
@@ -210,7 +227,10 @@ export function InsightRow({
   value: string
 }) {
   return (
-    <li className="flex items-center justify-between gap-3 rounded-lg border border-border bg-muted/40 px-3 py-2.5">
+    <motion.li
+      variants={listReveal}
+      className="flex items-center justify-between gap-3 rounded-lg border border-border bg-muted/40 px-3 py-2.5"
+    >
       <span className="flex items-center gap-2 text-sm text-muted-foreground">
         <Icon className="size-4 shrink-0" aria-hidden="true" />
         {label}
@@ -220,6 +240,6 @@ export function InsightRow({
       >
         {value}
       </span>
-    </li>
+    </motion.li>
   )
 }

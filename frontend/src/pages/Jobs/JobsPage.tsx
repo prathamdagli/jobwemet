@@ -20,6 +20,7 @@ import {
   TopMatchBanner,
 } from '@/components/careers/careers'
 import { useCareerMatches } from '@/hooks/useCareerMatches'
+import { Reveal, Stagger } from '@/motion'
 
 export default function JobsPage() {
   const { careers, insights, insightNote } = useCareerMatches()
@@ -46,35 +47,37 @@ export default function JobsPage() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-4 md:space-y-6">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
-            Career Matches
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            AI-recommended careers based on your analyzed skills.
-          </p>
-          <p className="mt-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Clock className="size-3.5" aria-hidden="true" />
-            Last updated Jul 9, 2026
-          </p>
-        </div>
-        <Button
-          onClick={handleRefresh}
-          disabled={refreshing}
-          size="lg"
-          className="gap-1.5"
-        >
-          {refreshing ? (
-            <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-          ) : (
-            <RefreshCw className="size-4" aria-hidden="true" />
-          )}
-          {refreshing ? 'Refreshing…' : 'Refresh Recommendations'}
-        </Button>
-      </header>
+      <Reveal>
+        <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+              Career Matches
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              AI-recommended careers based on your analyzed skills.
+            </p>
+            <p className="mt-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Clock className="size-3.5" aria-hidden="true" />
+              Last updated Jul 9, 2026
+            </p>
+          </div>
+          <Button
+            onClick={handleRefresh}
+            disabled={refreshing}
+            size="lg"
+            className="gap-1.5"
+          >
+            {refreshing ? (
+              <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+            ) : (
+              <RefreshCw className="size-4" aria-hidden="true" />
+            )}
+            {refreshing ? 'Refreshing…' : 'Refresh Recommendations'}
+          </Button>
+        </header>
+      </Reveal>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <Stagger className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <MetricTile
           label="Total Career Matches"
           value={String(careers.length)}
@@ -92,7 +95,7 @@ export default function JobsPage() {
           icon={TrendingUp}
         />
         <MetricTile label="Career Readiness" value="84%" icon={Gauge} />
-      </div>
+      </Stagger>
 
       <TopMatchBanner career={topMatch} />
 
@@ -124,11 +127,11 @@ export default function JobsPage() {
             </div>
           </WidgetCard>
 
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <Stagger className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {careers.map((career) => (
               <CareerCard key={career.id} career={career} />
             ))}
-          </div>
+          </Stagger>
         </div>
 
         <aside className="lg:col-span-1" aria-label="Career insights">

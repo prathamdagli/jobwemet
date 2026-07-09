@@ -1,6 +1,8 @@
+import { motion } from 'motion/react'
 import { Button } from '@/components/ui/button'
 import { Check } from 'lucide-react'
 import Section from './Section'
+import { scaleIn, useInViewReveal } from '@/motion'
 
 const TRUST = [
   'Free to start',
@@ -10,9 +12,16 @@ const TRUST = [
 ] as const
 
 export default function CTASection() {
+  const { ref, inView } = useInViewReveal<HTMLDivElement>()
   return (
     <Section id="cta" className="bg-white">
-      <div className="mx-auto max-w-4xl rounded-3xl bg-foreground px-6 py-16 text-center text-background sm:px-12 sm:py-20">
+      <motion.div
+        ref={ref}
+        variants={scaleIn}
+        initial="hidden"
+        animate={inView ? 'visible' : 'hidden'}
+        className="mx-auto max-w-4xl rounded-3xl bg-foreground px-6 py-16 text-center text-background sm:px-12 sm:py-20"
+      >
         <h2 className="text-3xl font-semibold tracking-tight text-background sm:text-4xl lg:text-5xl">
           Ready To Map Your Career With AI?
         </h2>
@@ -43,7 +52,7 @@ export default function CTASection() {
             </span>
           ))}
         </div>
-      </div>
+      </motion.div>
     </Section>
   )
 }

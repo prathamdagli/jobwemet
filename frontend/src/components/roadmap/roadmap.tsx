@@ -1,7 +1,9 @@
+import { motion } from 'motion/react'
 import { Check, Clock, Lock, Signal } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { ProgressBar } from '@/components/dashboard/ProgressBar'
 import { cn } from '@/lib/utils'
+import { GESTURE_LIMITS, springSnappy, timelineReveal } from '@/motion'
 
 export type ModuleStatus = 'completed' | 'current' | 'upcoming' | 'locked'
 
@@ -61,7 +63,7 @@ export function RoadmapModule({
   isLast?: boolean
 }) {
   return (
-    <li className="flex gap-4">
+    <motion.li variants={timelineReveal} className="flex gap-4">
       <div className="flex flex-col items-center">
         <span
           className={cn(
@@ -87,9 +89,11 @@ export function RoadmapModule({
         )}
       </div>
 
-      <div
+      <motion.div
+        whileHover={{ y: GESTURE_LIMITS.maxTranslateY }}
+        transition={springSnappy}
         className={cn(
-          'mb-6 flex-1 rounded-2xl border bg-card p-5 shadow-sm',
+          'mb-6 flex-1 rounded-2xl border bg-card p-5 shadow-sm transition-[box-shadow,border-color] duration-300 hover:border-foreground/15 hover:shadow-md',
           cardClass(status),
         )}
       >
@@ -126,7 +130,7 @@ export function RoadmapModule({
             <ProgressBar value={progress} label="Progress" showValue />
           </div>
         )}
-      </div>
-    </li>
+      </motion.div>
+    </motion.li>
   )
 }

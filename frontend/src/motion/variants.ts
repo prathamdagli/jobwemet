@@ -115,14 +115,16 @@ export const scaleOut: Variants = {
  * so they reveal in a cascade. Controls timing only.
  */
 export const staggerContainer: Variants = {
-  hidden: {},
+  hidden: { opacity: 1 },
   visible: {
+    opacity: 1,
     transition: {
       delayChildren: STAGGER.childDelay,
       staggerChildren: STAGGER.stagger,
     },
   },
   exit: {
+    opacity: 1,
     transition: {
       staggerChildren: STAGGER.staggerFast,
       staggerDirection: -1,

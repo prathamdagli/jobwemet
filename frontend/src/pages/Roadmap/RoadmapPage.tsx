@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { motion } from 'motion/react'
 import { Link } from 'react-router-dom'
 import {
   BookOpen,
@@ -17,6 +18,7 @@ import { WidgetCard } from '@/components/dashboard/WidgetCard'
 import { MetricTile } from '@/components/skills/skills'
 import { InsightRow } from '@/components/careers/careers'
 import { RoadmapModule } from '@/components/roadmap/roadmap'
+import { Reveal, Stagger, staggerContainer } from '@/motion'
 import { useRoadmap } from '@/hooks/useRoadmap'
 
 export default function RoadmapPage() {
@@ -38,39 +40,41 @@ export default function RoadmapPage() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-4 md:space-y-6">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
-            Learning Roadmap
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Your personalized path from current skills to your target career.
-          </p>
-          <p className="mt-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Target className="size-3.5" aria-hidden="true" />
-            Target Career: AI Engineer
-          </p>
-          <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <RefreshCw className="size-3.5" aria-hidden="true" />
-            Last generated Jul 9, 2026
-          </p>
-        </div>
-        <Button
-          onClick={handleRegenerate}
-          disabled={regenerating}
-          size="lg"
-          className="gap-1.5"
-        >
-          {regenerating ? (
-            <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-          ) : (
-            <RefreshCw className="size-4" aria-hidden="true" />
-          )}
-          {regenerating ? 'Generating…' : 'Regenerate Roadmap'}
-        </Button>
-      </header>
+      <Reveal>
+        <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+              Learning Roadmap
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Your personalized path from current skills to your target career.
+            </p>
+            <p className="mt-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Target className="size-3.5" aria-hidden="true" />
+              Target Career: AI Engineer
+            </p>
+            <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <RefreshCw className="size-3.5" aria-hidden="true" />
+              Last generated Jul 9, 2026
+            </p>
+          </div>
+          <Button
+            onClick={handleRegenerate}
+            disabled={regenerating}
+            size="lg"
+            className="gap-1.5"
+          >
+            {regenerating ? (
+              <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+            ) : (
+              <RefreshCw className="size-4" aria-hidden="true" />
+            )}
+            {regenerating ? 'Generating…' : 'Regenerate Roadmap'}
+          </Button>
+        </header>
+      </Reveal>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <Stagger className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <MetricTile label="Overall Progress" value="68%" icon={Gauge} />
         <MetricTile
           label="Modules Completed"
@@ -79,12 +83,18 @@ export default function RoadmapPage() {
         />
         <MetricTile label="Current Module" value="Docker" icon={Route} />
         <MetricTile label="Est. Completion" value="4 Weeks" icon={Clock} />
-      </div>
+      </Stagger>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <WidgetCard title="Your Roadmap" icon={Route}>
-            <ol className="relative">
+            <motion.ol
+              variants={staggerContainer}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.2 }}
+              className="relative"
+            >
               {modules.map((module, index) => (
                 <RoadmapModule
                   key={module.title}
@@ -92,7 +102,7 @@ export default function RoadmapPage() {
                   isLast={index === modules.length - 1}
                 />
               ))}
-            </ol>
+            </motion.ol>
           </WidgetCard>
         </div>
 

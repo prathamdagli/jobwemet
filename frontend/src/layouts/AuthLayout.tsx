@@ -1,4 +1,6 @@
-import { Outlet } from 'react-router-dom'
+import { Outlet, useLocation } from 'react-router-dom'
+import { AnimatePresence, motion } from 'motion/react'
+import { pageTransition } from '@/motion'
 import { Brain, Check } from 'lucide-react'
 
 const HIGHLIGHTS = [
@@ -23,6 +25,7 @@ function BrandLogo({ className }: { className?: string }) {
 }
 
 export default function AuthLayout() {
+  const location = useLocation()
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
       {/* Branded panel */}
@@ -71,7 +74,17 @@ export default function AuthLayout() {
       <main className="flex min-h-screen items-center justify-center px-6 py-12">
         <div className="w-full max-w-sm">
           <BrandLogo className="mb-8 lg:hidden" />
-          <Outlet />
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={location.pathname}
+              variants={pageTransition}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+            >
+              <Outlet />
+            </motion.div>
+          </AnimatePresence>
         </div>
       </main>
     </div>

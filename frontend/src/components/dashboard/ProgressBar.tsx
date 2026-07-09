@@ -1,4 +1,6 @@
+import { motion } from 'motion/react'
 import { cn } from '@/lib/utils'
+import { progressReveal, useInViewReveal } from '@/motion'
 
 interface ProgressBarProps {
   value: number
@@ -14,6 +16,7 @@ export function ProgressBar({
   className,
 }: ProgressBarProps) {
   const clamped = Math.min(100, Math.max(0, value))
+  const { ref, inView } = useInViewReveal<HTMLDivElement>()
 
   return (
     <div className={cn('w-full', className)}>
@@ -26,6 +29,7 @@ export function ProgressBar({
         </div>
       )}
       <div
+        ref={ref}
         role="progressbar"
         aria-valuenow={clamped}
         aria-valuemin={0}
@@ -33,9 +37,14 @@ export function ProgressBar({
         aria-label={label ?? 'Progress'}
         className="h-2 w-full overflow-hidden rounded-full bg-muted"
       >
-        <div
-          className="h-full rounded-full bg-foreground transition-[width] duration-700 ease-out"
-          style={{ width: `${clamped}%` }}
+        {/* Fill is sized to the value; progressReveal grows it once via scaleX
+            (GPU-friendly) from the left edge — no width animation. */}
+        <motion.div
+          variants={progressReveal}
+          initial="hidden"
+          animate={inView ? 'visible' : 'hidden'}
+          style={{ width: `${clamped}%`, transformOrigin: 'left' }}
+          className="h-full rounded-full bg-foreground"
         />
       </div>
     </div>

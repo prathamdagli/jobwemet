@@ -1,4 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
+import { motion } from 'motion/react'
 import {
   Blocks,
   Brain,
@@ -15,6 +16,13 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { ProgressBar } from '@/components/dashboard/ProgressBar'
 import { cn } from '@/lib/utils'
+import {
+  GESTURE_LIMITS,
+  springSnappy,
+  statReveal,
+  listReveal,
+  useCountUp,
+} from '@/motion'
 
 export interface TechnicalSkill {
   name: string
@@ -25,6 +33,22 @@ export interface TechnicalSkill {
 export interface DistributionItem {
   label: string
   value: number
+}
+
+/** Count a numeric metric up once on mount; non-numeric values render as-is. */
+function CountValue({ value }: { value: string }) {
+  const match = value.match(/^(\D*?)(\d+)(.*)$/)
+  const target = match ? Number(match[2]) : 0
+  const counted = useCountUp(target)
+  if (!match) return <>{value}</>
+  const [, prefix, , suffix] = match
+  return (
+    <>
+      {prefix}
+      {Math.round(counted)}
+      {suffix}
+    </>
+  )
 }
 
 export function MetricTile({
@@ -39,16 +63,21 @@ export function MetricTile({
   icon?: LucideIcon
 }) {
   return (
-    <div className="flex flex-col rounded-2xl border border-border bg-card p-5 shadow-sm transition-shadow duration-300 hover:shadow-md">
+    <motion.div
+      variants={statReveal}
+      whileHover={{ y: GESTURE_LIMITS.maxTranslateY }}
+      transition={springSnappy}
+      className="flex flex-col rounded-2xl border border-border bg-card p-5 shadow-sm transition-[box-shadow,border-color] duration-300 hover:border-foreground/15 hover:shadow-md"
+    >
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
         {Icon && <Icon className="size-4" aria-hidden="true" />}
         <span>{label}</span>
       </div>
       <p className="mt-2 text-3xl font-semibold tracking-tight text-foreground">
-        {value}
+        <CountValue value={value} />
       </p>
       {sub && <p className="mt-1 text-xs text-muted-foreground">{sub}</p>}
-    </div>
+    </motion.div>
   )
 }
 
@@ -89,7 +118,10 @@ function ProficiencyDots({ value }: { value: number }) {
 export function SkillRow({ skill }: { skill: TechnicalSkill }) {
   const level = levelFor(skill.confidence)
   return (
-    <div className="flex items-center justify-between gap-4 py-2.5">
+    <motion.div
+      variants={listReveal}
+      className="flex items-center justify-between gap-4 py-2.5"
+    >
       <div className="min-w-0">
         <div className="flex items-center gap-2">
           <span className="truncate text-sm font-medium text-foreground">
@@ -112,7 +144,7 @@ export function SkillRow({ skill }: { skill: TechnicalSkill }) {
           {skill.confidence}%
         </span>
       </div>
-    </div>
+    </motion.div>
   )
 }
 
@@ -167,7 +199,10 @@ export function SoftSkillChip({
 }) {
   const Icon = SOFT_ICONS[name] ?? Sparkles
   return (
-    <div className="flex items-center gap-2.5 rounded-lg border border-border bg-muted/40 px-3 py-2">
+    <motion.div
+      variants={listReveal}
+      className="flex items-center gap-2.5 rounded-lg border border-border bg-muted/40 px-3 py-2"
+    >
       <Icon
         className="size-4 shrink-0 text-muted-foreground"
         aria-hidden="true"
@@ -178,7 +213,7 @@ export function SoftSkillChip({
       <span className="ml-auto text-xs font-medium tabular-nums text-muted-foreground">
         {confidence}%
       </span>
-    </div>
+    </motion.div>
   )
 }
 

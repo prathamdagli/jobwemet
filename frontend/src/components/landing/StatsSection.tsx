@@ -1,5 +1,7 @@
+import { motion } from 'motion/react'
 import { Brain, Compass, GraduationCap, Target } from 'lucide-react'
 import Section from './Section'
+import { staggerChildren, staggerContainer, useCountUp } from '@/motion'
 
 const STATS = [
   {
@@ -28,6 +30,22 @@ const STATS = [
   },
 ] as const
 
+/** Animated stat value: counts the leading number up, keeps any prefix/suffix. */
+function StatNumber({ value }: { value: string }) {
+  const match = value.match(/^(\D*)(\d+)(.*)$/)
+  const target = match ? Number(match[2]) : 0
+  const counted = useCountUp(target)
+  if (!match) return <>{value}</>
+  const [, prefix, , suffix] = match
+  return (
+    <>
+      {prefix}
+      {Math.round(counted)}
+      {suffix}
+    </>
+  )
+}
+
 function StatCard({
   value,
   label,
@@ -35,18 +53,21 @@ function StatCard({
   icon: Icon,
 }: (typeof STATS)[number]) {
   return (
-    <div className="group relative flex flex-col gap-4 rounded-2xl border border-border bg-card p-7 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
+    <motion.div
+      variants={staggerChildren}
+      className="group relative flex flex-col gap-4 rounded-2xl border border-border bg-card p-7 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
+    >
       <span className="inline-flex size-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
         <Icon className="size-5" aria-hidden="true" />
       </span>
       <div>
         <p className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-          {value}
+          <StatNumber value={value} />
         </p>
         <h3 className="mt-1 text-sm font-medium text-foreground">{label}</h3>
       </div>
       <p className="text-sm text-muted-foreground">{description}</p>
-    </div>
+    </motion.div>
   )
 }
 
@@ -69,11 +90,17 @@ export default function StatsSection() {
         </p>
       </div>
 
-      <div className="mt-14 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      <motion.div
+        variants={staggerContainer}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.2 }}
+        className="mt-14 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4"
+      >
         {STATS.map((stat) => (
           <StatCard key={stat.label} {...stat} />
         ))}
-      </div>
+      </motion.div>
     </Section>
   )
 }

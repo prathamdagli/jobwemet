@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
+import { motion } from 'motion/react'
 import { cn } from '@/lib/utils'
 import {
   dashboardNav,
   logoutNavItem,
   type NavItem,
 } from '@/config/dashboardNav'
+import { drawerTransition, iconHover } from '@/motion'
 import { useAuth } from '@/hooks/useAuth'
 
 function BrandMark({ collapsed }: { collapsed: boolean }) {
@@ -49,16 +51,32 @@ function NavItemLink({
       title={collapsed ? item.label : undefined}
       className={({ isActive }) =>
         cn(
-          'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
+          'relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
           collapsed && 'justify-center px-0',
           isActive
-            ? 'bg-accent text-accent-foreground'
+            ? 'text-accent-foreground'
             : 'text-muted-foreground hover:bg-muted hover:text-foreground',
         )
       }
     >
-      <item.icon className="size-5 shrink-0" aria-hidden="true" />
-      {!collapsed && <span className="truncate">{item.label}</span>}
+      {({ isActive }) => (
+        <>
+          {isActive && (
+            <motion.span
+              layoutId="sidebar-active"
+              className="absolute inset-0 -z-10 rounded-lg bg-accent"
+              transition={{ type: 'spring', stiffness: 380, damping: 32 }}
+            />
+          )}
+          <motion.span
+            {...iconHover}
+            className="flex size-5 shrink-0 items-center justify-center"
+          >
+            <item.icon className="size-5" aria-hidden="true" />
+          </motion.span>
+          {!collapsed && <span className="truncate">{item.label}</span>}
+        </>
+      )}
     </NavLink>
   )
 }
@@ -90,7 +108,12 @@ function LogoutButton({ collapsed }: { collapsed: boolean }) {
         collapsed && 'justify-center px-0',
       )}
     >
-      <logoutNavItem.icon className="size-5 shrink-0" aria-hidden="true" />
+      <motion.span
+        {...iconHover}
+        className="flex size-5 shrink-0 items-center justify-center"
+      >
+        <logoutNavItem.icon className="size-5" aria-hidden="true" />
+      </motion.span>
       {!collapsed && <span>{logoutNavItem.label}</span>}
     </button>
   )
@@ -149,7 +172,7 @@ export default function Sidebar({
         <SidebarContent collapsed={collapsed} />
       </aside>
 
-      {/* Mobile slide-over drawer */}
+      {/* Mobile slide-over drawer — left-anchored */}
       <div
         className={cn('md:hidden', mobileOpen ? '' : 'pointer-events-none')}
         aria-hidden={!mobileOpen}
@@ -161,16 +184,18 @@ export default function Sidebar({
             mobileOpen ? 'opacity-100' : 'opacity-0',
           )}
         />
-        <aside
+        <motion.aside
           aria-label="Sidebar"
           inert={!mobileOpen}
+          variants={drawerTransition}
+          initial="hidden"
+          animate={mobileOpen ? 'visible' : 'exit'}
           className={cn(
-            'fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-border bg-card shadow-xl transition-transform duration-300',
-            mobileOpen ? 'translate-x-0' : '-translate-x-full',
+            'fixed inset-y-0 left-0 z-50 flex w-64 -translate-x-full flex-col border-r border-border bg-card shadow-xl',
           )}
         >
           <SidebarContent collapsed={false} onNavigate={onCloseMobile} />
-        </aside>
+        </motion.aside>
       </div>
     </>
   )

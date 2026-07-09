@@ -1,5 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import { MotionConfig } from 'motion/react'
 import './index.css'
 import './firebase/firebase'
 import App from './App.tsx'
@@ -10,7 +11,9 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <AuthProvider>
       <AppStateProvider>
-        <App />
+        <MotionConfig reducedMotion="user">
+          <App />
+        </MotionConfig>
       </AppStateProvider>
     </AuthProvider>
   </StrictMode>,

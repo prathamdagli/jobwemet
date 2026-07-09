@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import { History, UploadCloud } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { WidgetCard } from '@/components/dashboard/WidgetCard'
+import { Reveal } from '@/motion'
 import {
   RecentResumes,
   type ResumeEntry,
@@ -30,27 +31,31 @@ export default function ResumePage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
-            Resume
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Upload your resume to unlock AI-powered skill extraction and career
-            matching.
-          </p>
-        </div>
-        <Button
-          onClick={() => dropRef.current?.open()}
-          size="lg"
-          className="gap-1.5"
-        >
-          <UploadCloud className="size-4" aria-hidden="true" />
-          Upload Resume
-        </Button>
-      </header>
+      <Reveal>
+        <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+              Resume
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Upload your resume to unlock AI-powered skill extraction and
+              career matching.
+            </p>
+          </div>
+          <Button
+            onClick={() => dropRef.current?.open()}
+            size="lg"
+            className="gap-1.5"
+          >
+            <UploadCloud className="size-4" aria-hidden="true" />
+            Upload Resume
+          </Button>
+        </header>
+      </Reveal>
 
-      <ResumeDropzone ref={dropRef} onUploaded={handleUploaded} />
+      <Reveal>
+        <ResumeDropzone ref={dropRef} onUploaded={handleUploaded} />
+      </Reveal>
 
       <WidgetCard title="Recently Uploaded Resumes" icon={History}>
         <RecentResumes items={recent} />

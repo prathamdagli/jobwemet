@@ -12,11 +12,14 @@
  *   variants    — the reusable `Variants` catalog (fadeUp, cardReveal, …)
  *   gestures    — hover/tap interaction presets (cardHover, buttonHover, …)
  *   hooks       — reduced-motion-aware React hooks
+ *   useCountUp  — one-shot number counter (KPIs, percentages)
  *
- * Nothing here is wired into any page yet — this is infrastructure only.
+ * Everything is wired in for global use; import from here only.
  */
 export * from './constants'
 export * from './transitions'
 export * from './variants'
 export * from './gestures'
 export * from './hooks'
+export * from './useCountUp'
+export * from './Reveal'

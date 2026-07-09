@@ -19,6 +19,7 @@ import {
   SkillCategoryGroup,
 } from '@/components/skillgap/skillgap'
 import { useSkillGap } from '@/hooks/useSkillGap'
+import { Reveal, Stagger } from '@/motion'
 
 export default function SkillGapPage() {
   const { detected, missing, coverage, priority, recommendations } =
@@ -40,40 +41,42 @@ export default function SkillGapPage() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-4 md:space-y-6">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
-            Skill Gap Analysis
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            See what you have, what's missing, and what to learn next.
-          </p>
-          <p className="mt-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
-            <RefreshCw className="size-3.5" aria-hidden="true" />
-            Last updated Jul 9, 2026
-          </p>
-        </div>
-        <Button
-          onClick={handleRefresh}
-          disabled={refreshing}
-          size="lg"
-          className="gap-1.5"
-        >
-          {refreshing ? (
-            <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-          ) : (
-            <RefreshCw className="size-4" aria-hidden="true" />
-          )}
-          {refreshing ? 'Refreshing…' : 'Refresh Analysis'}
-        </Button>
-      </header>
+      <Reveal>
+        <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+              Skill Gap Analysis
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              See what you have, what's missing, and what to learn next.
+            </p>
+            <p className="mt-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+              <RefreshCw className="size-3.5" aria-hidden="true" />
+              Last updated Jul 9, 2026
+            </p>
+          </div>
+          <Button
+            onClick={handleRefresh}
+            disabled={refreshing}
+            size="lg"
+            className="gap-1.5"
+          >
+            {refreshing ? (
+              <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+            ) : (
+              <RefreshCw className="size-4" aria-hidden="true" />
+            )}
+            {refreshing ? 'Refreshing…' : 'Refresh Analysis'}
+          </Button>
+        </header>
+      </Reveal>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <Stagger className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <MetricTile label="Detected Skills" value="18" icon={CheckCircle2} />
         <MetricTile label="Missing Skills" value="7" icon={AlertTriangle} />
         <MetricTile label="Coverage" value="72%" icon={PieChart} />
         <MetricTile label="Career Readiness" value="84%" icon={Gauge} />
-      </div>
+      </Stagger>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <WidgetCard title="Detected Skills" icon={CheckCircle2}>

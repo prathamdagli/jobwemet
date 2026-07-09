@@ -1,10 +1,13 @@
 import { Button as ButtonPrimitive } from '@base-ui/react/button'
 import { cva, type VariantProps } from 'class-variance-authority'
+import type { ReactElement } from 'react'
+import { motion } from 'motion/react'
+import { buttonHover } from '@/motion'
 
 import { cn } from '@/lib/utils'
 
 const buttonVariants = cva(
-  "group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 [&_svg]:transition-transform group-hover/button:[&_svg]:translate-x-0.5",
   {
     variants: {
       variant: {
@@ -44,12 +47,35 @@ function Button({
   className,
   variant = 'default',
   size = 'default',
+  render,
   ...props
 }: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) {
+  const classes = cn(buttonVariants({ variant, size, className }))
+
+  // When a caller supplies `render` (e.g. <Link/>), keep their element as-is.
+  // Otherwise render a motion.button so hover/tap gestures apply.
+  if (render) {
+    return (
+      <ButtonPrimitive
+        data-slot="button"
+        className={classes}
+        render={render as ReactElement}
+        {...props}
+      />
+    )
+  }
+
   return (
     <ButtonPrimitive
       data-slot="button"
-      className={cn(buttonVariants({ variant, size, className }))}
+      className={classes}
+      render={(buttonProps) => (
+        // Base UI's merged props use React's DOM event types; motion's button
+        // expects its own (drag/pan) handler signatures. The runtime shape is
+        // compatible, so cast to satisfy the two type systems.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        <motion.button {...(buttonProps as any)} {...buttonHover} />
+      )}
       {...props}
     />
   )
