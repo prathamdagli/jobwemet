@@ -27,14 +27,15 @@ export default function Hero() {
             fully job-ready.
           </p>
           <HeroButtons />
-          <div className="w-full">
+          <div className="w-full pt-4">
             <p className="text-sm font-medium text-primary">
-              Inside The Platform
+              JobWeMet Intelligence
             </p>
             <p className="mt-1.5 max-w-md text-sm text-muted-foreground">
-              Watch a resume become a personalized career roadmap in real time.
+              A real look at the workspace &mdash; your skills, matches, and
+              roadmap in one view.
             </p>
-            <div className="mt-4">
+            <div className="mt-6">
               <HeroSecondaryPreview />
             </div>
           </div>
