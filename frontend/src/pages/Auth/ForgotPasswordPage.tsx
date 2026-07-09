@@ -1,6 +1,12 @@
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
-import { CheckCircle2, Loader2, Mail, ArrowLeft } from 'lucide-react'
+import {
+  AlertCircle,
+  ArrowLeft,
+  CheckCircle2,
+  Loader2,
+  Mail,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -61,7 +67,8 @@ export default function ForgotPasswordPage() {
           onClick={() => setSent(false)}
           disabled={loading}
         >
-          Resend email
+          {loading ? <Loader2 className="size-4 animate-spin" /> : null}
+          {loading ? 'Sending…' : 'Resend email'}
         </Button>
 
         <Link
@@ -77,25 +84,28 @@ export default function ForgotPasswordPage() {
 
   return (
     <div>
-      <div className="mb-8">
+      <header className="mb-8">
         <h1 className="text-2xl font-semibold tracking-tight text-foreground">
           Forgot password?
         </h1>
         <p className="mt-1.5 text-sm text-muted-foreground">
           Enter your email and we&apos;ll send you a reset link.
         </p>
-      </div>
+      </header>
 
       {error && (
         <div
+          id="forgot-error"
           role="alert"
-          className="mb-5 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2.5 text-sm text-destructive"
+          aria-live="polite"
+          className="mb-5 flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2.5 text-sm text-destructive"
         >
-          {error}
+          <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+          <span>{error}</span>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} noValidate className="space-y-4">
+      <form onSubmit={handleSubmit} noValidate className="space-y-5">
         <div className="space-y-1.5">
           <Label htmlFor="email">Email</Label>
           <div className="relative">
@@ -104,11 +114,13 @@ export default function ForgotPasswordPage() {
               id="email"
               type="email"
               autoComplete="email"
+              autoFocus
               placeholder="you@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="pl-9"
               aria-invalid={error ? true : undefined}
+              aria-describedby={error ? 'forgot-error' : undefined}
               disabled={loading}
             />
           </div>

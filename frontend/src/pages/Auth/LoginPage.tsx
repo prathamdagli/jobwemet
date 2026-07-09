@@ -1,6 +1,6 @@
-import { useState, type FormEvent } from 'react'
+import { useRef, useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Eye, EyeOff, Loader2, Lock, Mail } from 'lucide-react'
+import { AlertCircle, Eye, EyeOff, Loader2, Lock, Mail } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -21,6 +21,7 @@ const REMEMBER_EMAIL_KEY = 'jobwemet.rememberEmail'
 export default function LoginPage() {
   const { loginWithEmail, loginWithGoogle } = useAuth()
   const navigate = useNavigate()
+  const googleBusy = useRef(false)
 
   const [email, setEmail] = useState(
     () => localStorage.getItem(REMEMBER_EMAIL_KEY) ?? '',
@@ -67,6 +68,8 @@ export default function LoginPage() {
   }
 
   async function handleGoogle() {
+    if (googleBusy.current) return
+    googleBusy.current = true
     setError(null)
     setLoading(true)
     try {
@@ -76,30 +79,34 @@ export default function LoginPage() {
       setError(getAuthErrorMessage(err))
     } finally {
       setLoading(false)
+      googleBusy.current = false
     }
   }
 
   return (
     <div>
-      <div className="mb-8">
+      <header className="mb-8">
         <h1 className="text-2xl font-semibold tracking-tight text-foreground">
           Welcome back
         </h1>
         <p className="mt-1.5 text-sm text-muted-foreground">
           Sign in to continue to JobWeMet.
         </p>
-      </div>
+      </header>
 
       {error && (
         <div
+          id="login-error"
           role="alert"
-          className="mb-5 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2.5 text-sm text-destructive"
+          aria-live="polite"
+          className="mb-5 flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2.5 text-sm text-destructive"
         >
-          {error}
+          <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+          <span>{error}</span>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} noValidate className="space-y-4">
+      <form onSubmit={handleSubmit} noValidate className="space-y-5">
         <div className="space-y-1.5">
           <Label htmlFor="email">Email</Label>
           <div className="relative">
@@ -108,11 +115,13 @@ export default function LoginPage() {
               id="email"
               type="email"
               autoComplete="email"
+              autoFocus
               placeholder="you@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="pl-9"
               aria-invalid={error ? true : undefined}
+              aria-describedby={error ? 'login-error' : undefined}
               disabled={loading}
             />
           </div>
@@ -139,12 +148,14 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               className="px-9"
               aria-invalid={error ? true : undefined}
+              aria-describedby={error ? 'login-error' : undefined}
               disabled={loading}
             />
             <button
               type="button"
               onClick={() => setShowPassword((v) => !v)}
               aria-label={showPassword ? 'Hide password' : 'Show password'}
+              aria-pressed={showPassword}
               className="absolute right-2 top-1/2 flex size-7 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
               disabled={loading}
             >

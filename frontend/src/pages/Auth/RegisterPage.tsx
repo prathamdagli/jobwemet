@@ -1,6 +1,15 @@
-import { useState, type FormEvent } from 'react'
+import { useRef, useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Eye, EyeOff, Loader2, Lock, Mail, User } from 'lucide-react'
+import {
+  AlertCircle,
+  Eye,
+  EyeOff,
+  Loader2,
+  Lock,
+  Mail,
+  User,
+} from 'lucide-react'
+import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -10,10 +19,22 @@ import { getAuthErrorMessage } from '@/utils/firebaseErrors'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const MIN_PASSWORD = 8
+const STRENGTH_LABELS = ['Too weak', 'Too weak', 'Weak', 'Fair', 'Strong']
+
+function getPasswordStrength(password: string): number {
+  if (!password) return 0
+  let score = 0
+  if (password.length >= MIN_PASSWORD) score++
+  if (/[a-z]/.test(password) && /[A-Z]/.test(password)) score++
+  if (/\d/.test(password)) score++
+  if (/[^A-Za-z0-9]/.test(password)) score++
+  return score
+}
 
 export default function RegisterPage() {
   const { registerWithEmail, loginWithGoogle } = useAuth()
   const navigate = useNavigate()
+  const googleBusy = useRef(false)
 
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
@@ -22,6 +43,8 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+
+  const strength = getPasswordStrength(password)
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault()
@@ -56,6 +79,8 @@ export default function RegisterPage() {
   }
 
   async function handleGoogle() {
+    if (googleBusy.current) return
+    googleBusy.current = true
     setError(null)
     setLoading(true)
     try {
@@ -65,30 +90,34 @@ export default function RegisterPage() {
       setError(getAuthErrorMessage(err))
     } finally {
       setLoading(false)
+      googleBusy.current = false
     }
   }
 
   return (
     <div>
-      <div className="mb-8">
+      <header className="mb-8">
         <h1 className="text-2xl font-semibold tracking-tight text-foreground">
           Create your account
         </h1>
         <p className="mt-1.5 text-sm text-muted-foreground">
           Start your AI-powered career journey.
         </p>
-      </div>
+      </header>
 
       {error && (
         <div
+          id="register-error"
           role="alert"
-          className="mb-5 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2.5 text-sm text-destructive"
+          aria-live="polite"
+          className="mb-5 flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2.5 text-sm text-destructive"
         >
-          {error}
+          <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+          <span>{error}</span>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} noValidate className="space-y-4">
+      <form onSubmit={handleSubmit} noValidate className="space-y-5">
         <div className="space-y-1.5">
           <Label htmlFor="fullName">Full name</Label>
           <div className="relative">
@@ -97,11 +126,13 @@ export default function RegisterPage() {
               id="fullName"
               type="text"
               autoComplete="name"
+              autoFocus
               placeholder="Jane Doe"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               className="pl-9"
               aria-invalid={error ? true : undefined}
+              aria-describedby={error ? 'register-error' : undefined}
               disabled={loading}
             />
           </div>
@@ -120,6 +151,7 @@ export default function RegisterPage() {
               onChange={(e) => setEmail(e.target.value)}
               className="pl-9"
               aria-invalid={error ? true : undefined}
+              aria-describedby={error ? 'register-error' : undefined}
               disabled={loading}
             />
           </div>
@@ -138,12 +170,14 @@ export default function RegisterPage() {
               onChange={(e) => setPassword(e.target.value)}
               className="px-9"
               aria-invalid={error ? true : undefined}
+              aria-describedby={error ? 'register-error' : undefined}
               disabled={loading}
             />
             <button
               type="button"
               onClick={() => setShowPassword((v) => !v)}
               aria-label={showPassword ? 'Hide password' : 'Show password'}
+              aria-pressed={showPassword}
               className="absolute right-2 top-1/2 flex size-7 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
               disabled={loading}
             >
@@ -154,6 +188,35 @@ export default function RegisterPage() {
               )}
             </button>
           </div>
+
+          {password && (
+            <div
+              className="mt-2"
+              role="progressbar"
+              aria-label="Password strength"
+              aria-valuemin={0}
+              aria-valuemax={4}
+              aria-valuenow={strength}
+            >
+              <div className="flex gap-1.5">
+                {[0, 1, 2, 3].map((i) => (
+                  <span
+                    key={i}
+                    className={cn(
+                      'h-1 flex-1 rounded-full transition-colors',
+                      i < strength ? 'bg-foreground' : 'bg-muted',
+                    )}
+                  />
+                ))}
+              </div>
+              <p className="mt-1.5 text-xs text-muted-foreground">
+                Password strength:{' '}
+                <span className="font-medium text-foreground">
+                  {STRENGTH_LABELS[strength]}
+                </span>
+              </p>
+            </div>
+          )}
         </div>
 
         <div className="space-y-1.5">
@@ -169,6 +232,7 @@ export default function RegisterPage() {
               onChange={(e) => setConfirm(e.target.value)}
               className="pl-9"
               aria-invalid={error ? true : undefined}
+              aria-describedby={error ? 'register-error' : undefined}
               disabled={loading}
             />
           </div>
