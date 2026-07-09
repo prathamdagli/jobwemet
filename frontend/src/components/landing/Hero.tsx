@@ -9,18 +9,18 @@ export default function Hero() {
         <div className="flex flex-col items-start gap-6">
           <HeroBadge />
           <h1 className="text-4xl font-semibold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
-            Transform Your Skills Into{' '}
-            <span className="text-primary">Career Opportunities</span> With AI
+            AI Maps Your Skills To The{' '}
+            <span className="text-primary">Career You&rsquo;re Meant For</span>
           </h1>
           <p className="max-w-xl text-lg text-muted-foreground">
-            JobWeMet reads your resume to understand the skills you already
-            have, predicts the careers you are best suited for, and pinpoints
-            exactly what is missing to reach them.
+            JobWeMet&rsquo;s AI understands the skills you already have and
+            predicts the careers you&rsquo;re genuinely suited for &mdash; in
+            seconds, not guesswork.
           </p>
           <p className="max-w-xl text-lg text-muted-foreground">
-            From there it builds a personalized learning roadmap, recommends the
-            right courses, and tracks your progress until you are truly
-            job-ready.
+            It pinpoints the exact skills you&rsquo;re missing, then builds a
+            personalized learning path that takes you from where you are to
+            fully job-ready.
           </p>
           <HeroButtons />
         </div>

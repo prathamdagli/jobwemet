@@ -1,4 +1,10 @@
-import { BookOpen, CheckCircle2, Code2, TrendingUp } from 'lucide-react'
+import {
+  BookOpen,
+  CheckCircle2,
+  Code2,
+  Sparkles,
+  TrendingUp,
+} from 'lucide-react'
 
 function ProgressBar({ value }: { value: number }) {
   return (
@@ -10,7 +16,7 @@ function ProgressBar({ value }: { value: number }) {
       aria-valuemax={100}
     >
       <div
-        className="h-full rounded-full bg-primary transition-all duration-500"
+        className="h-full rounded-full bg-primary transition-all duration-700"
         style={{ width: `${value}%` }}
       />
     </div>
@@ -22,56 +28,125 @@ const MISSING_SKILLS = ['TensorFlow', 'Docker', 'Kubernetes'] as const
 export default function HeroVisual() {
   return (
     <div className="relative mx-auto w-full max-w-xl">
-      {/* subtle connection lines behind the dashboard */}
+      {/* subtle connection lines linking the card to its floating highlights */}
       <svg
-        className="pointer-events-none absolute inset-0 h-full w-full text-muted-foreground/25"
+        className="pointer-events-none absolute inset-0 h-full w-full text-muted-foreground/30"
         aria-hidden="true"
         preserveAspectRatio="none"
       >
         <path
-          d="M50% 14% C 30% 14%, 28% 60%, 12% 78%"
+          d="M52% 18% C 32% 18%, 28% 58%, 12% 74%"
           fill="none"
           stroke="currentColor"
           strokeWidth="1.5"
-          strokeDasharray="4 5"
+          strokeDasharray="3 5"
         />
         <path
-          d="M86% 22% C 92% 40%, 92% 60%, 88% 76%"
+          d="M84% 24% C 92% 42%, 92% 60%, 88% 74%"
           fill="none"
           stroke="currentColor"
           strokeWidth="1.5"
-          strokeDasharray="4 5"
+          strokeDasharray="3 5"
         />
       </svg>
 
       {/* main dashboard card */}
-      <div className="relative rounded-2xl border border-border bg-card p-6 shadow-xl">
+      <div className="relative rounded-2xl border border-border bg-card p-6 shadow-2xl shadow-primary/5 ring-1 ring-border/60">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="inline-flex size-9 items-center justify-center rounded-lg bg-muted">
+          <div className="flex items-center gap-3">
+            <span className="inline-flex size-10 items-center justify-center rounded-xl bg-primary/10">
               <Code2 className="size-5 text-primary" />
             </span>
             <div>
               <p className="text-sm font-semibold text-foreground">
                 Skill Analysis
               </p>
-              <p className="text-xs text-muted-foreground">
-                Live profile snapshot
+              <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <span className="size-1.5 animate-pulse rounded-full bg-primary" />
+                Live AI profile
               </p>
             </div>
           </div>
-          <span className="rounded-full border border-border bg-muted/50 px-2.5 py-1 text-xs font-medium text-muted-foreground">
+          <span className="inline-flex items-center gap-1 rounded-full border border-border bg-muted/50 px-2.5 py-1 text-xs font-medium text-muted-foreground">
+            <Sparkles className="size-3 text-primary" />
             AI
           </span>
         </div>
 
-        {/* top skill */}
+        {/* top skill + relationship graph */}
         <div className="mt-6">
           <div className="mb-2 flex items-center justify-between text-sm">
             <span className="font-medium text-foreground">Python</span>
             <span className="font-medium text-foreground">95%</span>
           </div>
           <ProgressBar value={95} />
+          <svg
+            className="mt-4 h-12 w-full text-muted-foreground/40"
+            viewBox="0 0 320 48"
+            fill="none"
+            aria-hidden="true"
+          >
+            <line
+              x1="40"
+              y1="24"
+              x2="120"
+              y2="12"
+              stroke="currentColor"
+              strokeWidth="1.5"
+            />
+            <line
+              x1="40"
+              y1="24"
+              x2="120"
+              y2="36"
+              stroke="currentColor"
+              strokeWidth="1.5"
+            />
+            <line
+              x1="120"
+              y1="12"
+              x2="200"
+              y2="24"
+              stroke="currentColor"
+              strokeWidth="1.5"
+            />
+            <line
+              x1="120"
+              y1="36"
+              x2="200"
+              y2="24"
+              stroke="currentColor"
+              strokeWidth="1.5"
+            />
+            <line
+              x1="200"
+              y1="24"
+              x2="280"
+              y2="24"
+              stroke="currentColor"
+              strokeWidth="1.5"
+            />
+            <circle cx="40" cy="24" r="5" className="fill-primary" />
+            <circle
+              cx="120"
+              cy="12"
+              r="4"
+              className="fill-muted-foreground/40"
+            />
+            <circle
+              cx="120"
+              cy="36"
+              r="4"
+              className="fill-muted-foreground/40"
+            />
+            <circle
+              cx="200"
+              cy="24"
+              r="4"
+              className="fill-muted-foreground/40"
+            />
+            <circle cx="280" cy="24" r="5" className="fill-primary" />
+          </svg>
         </div>
 
         <div className="my-5 h-px w-full bg-border" />
@@ -125,14 +200,14 @@ export default function HeroVisual() {
       </div>
 
       {/* floating highlight: skill gap */}
-      <div className="absolute -left-5 bottom-10 hidden w-44 rounded-xl border border-border bg-background p-3 shadow-lg sm:block">
+      <div className="absolute -left-5 bottom-10 hidden w-44 rounded-xl border border-border bg-background p-3 shadow-lg transition-transform duration-300 hover:-translate-y-1 sm:block">
         <div className="flex items-center gap-2">
-          <span className="inline-flex size-7 items-center justify-center rounded-md bg-muted">
+          <span className="inline-flex size-7 items-center justify-center rounded-md bg-primary/10">
             <CheckCircle2 className="size-4 text-primary" />
           </span>
           <div>
             <p className="text-xs font-semibold text-foreground">
-              Skill Gap Detected
+              Skill Gap Found
             </p>
             <p className="text-xs text-muted-foreground">3 skills to learn</p>
           </div>
@@ -140,7 +215,7 @@ export default function HeroVisual() {
       </div>
 
       {/* floating highlight: roadmap progress */}
-      <div className="absolute -right-4 -top-6 hidden w-40 rounded-xl border border-border bg-background p-3 text-right shadow-lg sm:block">
+      <div className="absolute -right-4 -top-6 hidden w-40 rounded-xl border border-border bg-background p-3 text-right shadow-lg transition-transform duration-300 hover:-translate-y-1 sm:block">
         <p className="text-2xl font-semibold tracking-tight text-foreground">
           68%
         </p>
