@@ -227,49 +227,69 @@ function FeatureCard({
     <motion.div
       variants={staggerChildren}
       className={cn(
-        'group relative flex flex-col gap-4 rounded-2xl border p-7 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md',
+        // Shared surface: every card is identical in bg, radius, padding and
+        // shadow family + hover behaviour. Only emphasis differs.
+        'group relative flex flex-col gap-4 overflow-hidden rounded-2xl bg-card p-7 transition-all duration-300 hover:-translate-y-1',
         featured
-          ? 'border-foreground bg-foreground text-background'
-          : 'border-border bg-card',
+          ? 'border-2 border-foreground/20 shadow-md hover:border-foreground/35 hover:shadow-lg'
+          : 'border border-border shadow-sm hover:border-foreground/25 hover:shadow-md',
       )}
     >
+      {/* animated top accent line — always on for the core feature, reveals on
+          hover for the rest. Monochrome, GPU transform only. */}
+      <span
+        aria-hidden="true"
+        className={cn(
+          'pointer-events-none absolute inset-x-0 top-0 h-0.5 origin-left bg-gradient-to-r from-foreground/60 to-foreground/10 transition-transform duration-500 ease-out',
+          featured ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100',
+        )}
+      />
+
+      {/* soft spotlight — only on the core feature, very subtle */}
+      {featured && (
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background:
+              'radial-gradient(60% 45% at 50% 0%, color-mix(in oklch, var(--foreground) 5%, transparent), transparent 70%)',
+          }}
+        />
+      )}
+
+      {/* Core Feature badge */}
+      {featured && (
+        <span className="absolute right-5 top-5 inline-flex items-center rounded-full border border-foreground/20 bg-muted/60 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-foreground">
+          Core Feature
+        </span>
+      )}
+
       <span
         className={cn(
-          'inline-flex size-12 shrink-0 items-center justify-center rounded-xl',
-          featured
-            ? 'bg-background/10 text-background'
-            : 'bg-primary/10 text-primary transition-transform duration-300 group-hover:scale-105',
+          'relative inline-flex shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary transition-transform duration-300 group-hover:rotate-3',
+          featured ? 'size-14' : 'size-12',
         )}
       >
-        <Icon className="size-6" aria-hidden="true" />
+        <Icon className={featured ? 'size-7' : 'size-6'} aria-hidden="true" />
       </span>
-      <div>
+
+      <div className="relative">
         <h3
           className={cn(
-            'text-lg font-semibold',
-            featured ? 'text-background' : 'text-foreground',
+            'font-semibold text-foreground',
+            featured ? 'text-xl' : 'text-lg',
           )}
         >
           {title}
         </h3>
-        <p
-          className={cn(
-            'mt-1 text-sm',
-            featured ? 'text-background/70' : 'text-muted-foreground',
-          )}
-        >
-          {description}
-        </p>
+        <p className="mt-1 text-sm text-muted-foreground">{description}</p>
       </div>
 
-      <Preview kind={preview} />
+      <div className="relative">
+        <Preview kind={preview} />
+      </div>
 
-      <p
-        className={cn(
-          'mt-1 text-xs font-medium',
-          featured ? 'text-background/50' : 'text-muted-foreground/70',
-        )}
-      >
+      <p className="relative mt-1 text-xs font-medium text-muted-foreground/70">
         {detail}
       </p>
     </motion.div>
