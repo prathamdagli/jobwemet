@@ -1,378 +1,284 @@
 import { motion } from 'motion/react'
+import { Brain, Route, Target, type LucideIcon } from 'lucide-react'
 import {
-  Brain,
-  Check,
-  FileText,
-  GraduationCap,
-  Lock,
-  Network,
-  Route,
-  Sparkles,
-  Target,
-  TrendingUp,
-  type LucideIcon,
-} from 'lucide-react'
-import { fadeIn, fadeUp, staggerContainer, useMouseTilt } from '@/motion'
+  fadeUp,
+  staggerContainer,
+  useCountUp,
+  usePrefersReducedMotion,
+} from '@/motion'
 
 /**
- * AuthShowcase — the left panel of the auth layout.
+ * AuthShowcase — the left panel of the auth layout, reimagined as an onboarding
+ * experience rather than another marketing hero.
  *
- * The brief: this is NOT another hero, and not a copy of the landing dashboard.
- * It sells the *promise* of the product — "this is what you unlock after you
- * sign in" — as a dark, monochrome "enter the workspace" scene in the spirit of
- * Cursor / Linear / Notion AI. A floating, light application window shows the
- * real pipeline (resume -> skills -> career -> roadmap) surrounded by small
- * floating modules, with feature highlights and trust stats below.
- *
- * Motion is assembled entirely from `src/motion`: `useMouseTilt` for the cursor
- * reactive 3D depth on the window and modules, `staggerContainer` + `fadeIn`/
- * `fadeUp` for staggered reveals. Everything degrades gracefully under
- * prefers-reduced-motion (the hook no-ops, CSS animates are disabled).
+ * The brief: the user is *entering* the AI workspace, so the centrepiece is a
+ * living network of connected skills (Python / React / SQL -> AI -> AI Engineer
+ * + Roadmap) with animated connection lines and a pulsing AI core — not a
+ * dashboard window and not floating card copies of the landing page. A large
+ * logo and short welcome message set the tone; three feature highlights and
+ * three count-up metrics sit below. Dark, monochrome, and fully reduced-motion
+ * aware.
  */
 
 /* ------------------------------------------------------------------ */
-/*  The product window — the centre-piece illustration                 */
+/*  Very subtle drifting particles                                    */
 /* ------------------------------------------------------------------ */
-function WorkspaceWindow() {
-  const { ref, style, onMouseMove, onMouseLeave } = useMouseTilt({ maxTilt: 4 })
-
+function Particles() {
+  const prefersReduced = usePrefersReducedMotion()
+  if (prefersReduced) return null
+  const dots = [
+    { top: '18%', left: '14%', d: 6, delay: 0 },
+    { top: '68%', left: '82%', d: 4, delay: 1.2 },
+    { top: '38%', left: '86%', d: 5, delay: 0.6 },
+    { top: '80%', left: '18%', d: 3, delay: 1.8 },
+  ]
   return (
-    <motion.div
-      ref={ref}
-      style={style}
-      onMouseMove={onMouseMove}
-      onMouseLeave={onMouseLeave}
-      className="relative [transform-style:preserve-3d]"
-    >
-      <motion.div
-        variants={fadeUp}
-        initial="hidden"
-        animate="visible"
-        className="relative overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-2xl shadow-black/40 ring-1 ring-black/5"
-      >
-        {/* top reflection sheen */}
-        <div
-          className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/[0.03] to-transparent"
-          aria-hidden="true"
-        />
-
-        {/* window chrome */}
-        <div className="flex items-center gap-2 border-b border-zinc-200 bg-zinc-50 px-4 py-2.5">
-          <span className="flex gap-1.5" aria-hidden="true">
-            <span className="size-2.5 rounded-full bg-zinc-300" />
-            <span className="size-2.5 rounded-full bg-zinc-300" />
-            <span className="size-2.5 rounded-full bg-zinc-300" />
-          </span>
-          <span className="ml-1.5 text-xs font-medium text-zinc-500">
-            JobWeMet Workspace
-          </span>
-          <span className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-zinc-200 bg-white px-2 py-0.5 text-[11px] font-medium text-zinc-600">
-            <span className="relative flex size-1.5">
-              <span className="absolute inline-flex size-1.5 animate-ping rounded-full bg-zinc-900 opacity-60" />
-              <span className="relative inline-flex size-1.5 rounded-full bg-zinc-900" />
-            </span>
-            AI live
-          </span>
-        </div>
-
-        <div className="space-y-3 p-4">
-          {/* Resume uploaded */}
-          <div className="flex items-center justify-between rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2.5">
-            <div className="flex items-center gap-2.5">
-              <span className="inline-flex size-8 items-center justify-center rounded-lg bg-zinc-900">
-                <FileText className="size-4 text-white" />
-              </span>
-              <div>
-                <p className="text-xs font-semibold text-zinc-900">
-                  resume.pdf
-                </p>
-                <p className="text-[11px] text-zinc-500">Uploaded</p>
-              </div>
-            </div>
-            <span className="inline-flex items-center gap-1 rounded-full bg-zinc-900 px-2 py-0.5 text-[10px] font-semibold text-white">
-              <Check className="size-3" />
-              Parsed
-            </span>
-          </div>
-
-          {/* AI analyzing */}
-          <div className="rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2.5">
-            <div className="flex items-center gap-2 text-xs font-medium text-zinc-700">
-              <Sparkles className="size-3.5 text-zinc-900" />
-              AI is analyzing your resume
-              <span
-                className="ml-auto flex items-center gap-0.5"
-                aria-hidden="true"
-              >
-                <span className="size-1 animate-bounce rounded-full bg-zinc-900 [animation-delay:-0.2s]" />
-                <span className="size-1 animate-bounce rounded-full bg-zinc-900 [animation-delay:-0.1s]" />
-                <span className="size-1 animate-bounce rounded-full bg-zinc-900" />
-              </span>
-            </div>
-            <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-zinc-200">
-              <div className="hero-shimmer h-full w-full rounded-full" />
-            </div>
-          </div>
-
-          {/* Skills extracted */}
-          <div>
-            <div className="mb-2 flex items-center justify-between">
-              <p className="text-[11px] font-medium uppercase tracking-wide text-zinc-500">
-                Skills extracted
-              </p>
-              <span className="text-[11px] font-semibold text-zinc-900">5</span>
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              {['Python', 'React', 'SQL', 'ML', 'Git'].map((s) => (
-                <span
-                  key={s}
-                  className="rounded-full border border-zinc-200 bg-zinc-100 px-2.5 py-1 text-[11px] font-medium text-zinc-700"
-                >
-                  {s}
-                </span>
-              ))}
-            </div>
-          </div>
-
-          {/* Career predicted */}
-          <div className="rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2.5">
-            <div className="flex items-center justify-between text-xs">
-              <span className="font-semibold text-zinc-900">AI Engineer</span>
-              <span className="font-semibold text-zinc-900">92%</span>
-            </div>
-            <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-zinc-200">
-              <div
-                className="h-full rounded-full bg-zinc-900"
-                style={{ width: '92%' }}
-              />
-            </div>
-            <p className="mt-1.5 text-[11px] text-zinc-500">
-              Best career match
-            </p>
-          </div>
-
-          {/* Roadmap generated (progress timeline) */}
-          <div>
-            <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-zinc-500">
-              Roadmap generated
-            </p>
-            <ol className="space-y-0">
-              {[
-                { t: 'Machine Learning', s: 'completed' },
-                { t: 'Deep Learning', s: 'current' },
-                { t: 'MLOps', s: 'locked' },
-              ].map((n, i, a) => (
-                <li key={n.t} className="flex gap-2.5">
-                  <div className="flex flex-col items-center">
-                    {n.s === 'completed' ? (
-                      <Check className="size-4 text-zinc-900" />
-                    ) : n.s === 'current' ? (
-                      <span className="inline-flex size-4 items-center justify-center rounded-full border border-zinc-900/30 bg-zinc-900/10">
-                        <span className="size-1.5 animate-pulse rounded-full bg-zinc-900" />
-                      </span>
-                    ) : (
-                      <span className="inline-flex size-4 items-center justify-center rounded-full border border-zinc-200 bg-zinc-100">
-                        <Lock className="size-2.5 text-zinc-400" />
-                      </span>
-                    )}
-                    {i < a.length - 1 && (
-                      <span className="my-1 w-px flex-1 bg-zinc-200" />
-                    )}
-                  </div>
-                  <div className="flex flex-1 items-center justify-between pb-3">
-                    <span className="text-xs font-medium text-zinc-800">
-                      {n.t}
-                    </span>
-                    <span
-                      className={
-                        n.s === 'locked'
-                          ? 'rounded-full bg-zinc-100 px-2 py-0.5 text-[10px] font-medium text-zinc-500'
-                          : 'rounded-full bg-zinc-900/10 px-2 py-0.5 text-[10px] font-medium text-zinc-900'
-                      }
-                    >
-                      {n.s}
-                    </span>
-                  </div>
-                </li>
-              ))}
-            </ol>
-          </div>
-        </div>
-      </motion.div>
-    </motion.div>
+    <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+      {dots.map((p, i) => (
+        <motion.span
+          key={i}
+          className="absolute"
+          style={{ top: p.top, left: p.left }}
+          animate={{ opacity: [0, 0.6, 0], y: [0, -14, 0] }}
+          transition={{
+            duration: 6,
+            delay: p.delay,
+            repeat: Infinity,
+            ease: 'easeInOut',
+          }}
+        >
+          <span
+            className="block rounded-full bg-white/50"
+            style={{ width: p.d, height: p.d }}
+          />
+        </motion.span>
+      ))}
+    </div>
   )
 }
 
 /* ------------------------------------------------------------------ */
-/*  Floating micro-modules around the window                          */
+/*  The skill network — the centrepiece illustration                  */
 /* ------------------------------------------------------------------ */
-interface ModuleConfig {
-  title: string
-  sub: string
-  icon: LucideIcon
-  pos: string
-  size: string
-  progress?: number
-  badge?: string
-  live?: boolean
-  lgOnly?: boolean
+type NodeKind = 'skill' | 'core' | 'career' | 'roadmap'
+
+interface NetNode {
+  id: string
+  x: number
+  y: number
+  label: string
+  kind: NodeKind
 }
 
-const MODULES: ModuleConfig[] = [
-  {
-    title: 'Career Match',
-    sub: 'AI Engineer · 92%',
-    icon: Target,
-    pos: '-right-6 -top-5',
-    size: 'w-44',
-    progress: 92,
-    badge: 'New',
-  },
-  {
-    title: 'Resume Parsed',
-    sub: '5 skills extracted',
-    icon: FileText,
-    pos: '-left-8 top-1/4',
-    size: 'w-40',
-  },
-  {
-    title: 'Learning Progress',
-    sub: '68% to job-ready',
-    icon: TrendingUp,
-    pos: '-right-6 -bottom-6',
-    size: 'w-44',
-    progress: 68,
-  },
-  {
-    title: 'Skills Found',
-    sub: '18 in your resume',
-    icon: Network,
-    pos: '-left-6 -top-12',
-    size: 'w-36',
-  },
-  {
-    title: 'AI Thinking',
-    sub: 'Mapping skills…',
-    icon: Sparkles,
-    pos: '-left-6 -bottom-10',
-    size: 'w-40',
-    live: true,
-    lgOnly: true,
-  },
-  {
-    title: 'Roadmap Ready',
-    sub: '3 steps generated',
-    icon: GraduationCap,
-    pos: '-right-10 top-1/2',
-    size: 'w-36',
-    lgOnly: true,
-  },
+const NODES: NetNode[] = [
+  { id: 'python', x: 88, y: 255, label: 'Python', kind: 'skill' },
+  { id: 'react', x: 186, y: 292, label: 'React', kind: 'skill' },
+  { id: 'sql', x: 64, y: 150, label: 'SQL', kind: 'skill' },
+  { id: 'ai', x: 205, y: 165, label: 'AI', kind: 'core' },
+  { id: 'career', x: 322, y: 108, label: 'AI Engineer', kind: 'career' },
+  { id: 'roadmap', x: 315, y: 248, label: 'Roadmap', kind: 'roadmap' },
 ]
 
-function FloatingModule({ cfg, index }: { cfg: ModuleConfig; index: number }) {
-  const { ref, style, onMouseMove, onMouseLeave } = useMouseTilt({ maxTilt: 3 })
-  const Icon: LucideIcon = cfg.icon
+const EDGES: [string, string][] = [
+  ['python', 'ai'],
+  ['react', 'ai'],
+  ['sql', 'ai'],
+  ['ai', 'career'],
+  ['ai', 'roadmap'],
+]
+
+function SkillNode({
+  node,
+  index,
+  prefersReduced,
+}: {
+  node: NetNode
+  index: number
+  prefersReduced: boolean
+}) {
+  const w =
+    node.kind === 'skill'
+      ? 78
+      : node.kind === 'core'
+        ? 70
+        : node.kind === 'career'
+          ? 108
+          : 96
+  const h = 34
+  const { x, y } = node
+  const emphasized = node.kind === 'career' || node.kind === 'core'
 
   return (
-    <motion.div
-      ref={ref}
-      style={style}
-      onMouseMove={onMouseMove}
-      onMouseLeave={onMouseLeave}
-      variants={fadeIn}
-      initial="hidden"
-      animate="visible"
-      transition={{ delay: 0.35 + index * 0.08, duration: 0.5 }}
-      className={`absolute ${cfg.pos} ${cfg.size} ${
-        cfg.lgOnly ? 'hidden lg:block' : 'block'
-      }`}
+    <motion.g
+      initial={{ opacity: 0, scale: 0.85 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{
+        duration: 0.5,
+        delay: 0.3 + index * 0.12,
+        ease: [0.22, 1, 0.36, 1],
+      }}
+      style={{ transformOrigin: `${x}px ${y}px` }}
     >
-      <div className="pointer-events-auto relative rounded-xl border border-zinc-200 bg-white p-2.5 shadow-xl shadow-black/20 ring-1 ring-black/5">
-        {cfg.badge && (
-          <span className="absolute -right-2 -top-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-zinc-900 px-1.5 text-[10px] font-semibold text-white shadow-sm">
-            {cfg.badge}
-          </span>
-        )}
-        <div className="flex items-center gap-2">
-          <span className="inline-flex size-7 shrink-0 items-center justify-center rounded-lg bg-zinc-900">
-            <Icon className="size-3.5 text-white" />
-          </span>
-          <div className="min-w-0">
-            <p className="truncate text-[11px] font-semibold text-zinc-900">
-              {cfg.title}
-            </p>
-            <p className="truncate text-[10px] text-zinc-500">{cfg.sub}</p>
-          </div>
-          {cfg.live && (
-            <span className="ml-auto flex size-1.5 shrink-0">
-              <span className="absolute inline-flex size-1.5 animate-ping rounded-full bg-zinc-900 opacity-60" />
-              <span className="relative inline-flex size-1.5 rounded-full bg-zinc-900" />
-            </span>
-          )}
-        </div>
-        {cfg.progress !== undefined && (
-          <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-zinc-200">
-            <div
-              className="h-full rounded-full bg-zinc-900"
-              style={{ width: `${cfg.progress}%` }}
+      {/* AI core: rotating processing ring + pulsing halo */}
+      {node.kind === 'core' && (
+        <>
+          {!prefersReduced && (
+            <motion.circle
+              cx={x}
+              cy={y}
+              r="30"
+              fill="none"
+              stroke="currentColor"
+              strokeOpacity="0.22"
+              strokeWidth="1"
+              strokeDasharray="4 6"
+              animate={{ rotate: 360 }}
+              transition={{ duration: 16, repeat: Infinity, ease: 'linear' }}
+              style={{ transformOrigin: `${x}px ${y}px` }}
             />
-          </div>
-        )}
-      </div>
-    </motion.div>
+          )}
+          {!prefersReduced && (
+            <motion.circle
+              cx={x}
+              cy={y}
+              r="22"
+              fill="none"
+              stroke="currentColor"
+              strokeOpacity="0.6"
+              strokeWidth="1.5"
+              animate={{ scale: [1, 1.5], opacity: [0.6, 0] }}
+              transition={{ duration: 2.4, repeat: Infinity, ease: 'easeOut' }}
+              style={{ transformOrigin: `${x}px ${y}px` }}
+            />
+          )}
+        </>
+      )}
+
+      <rect
+        x={x - w / 2}
+        y={y - h / 2}
+        width={w}
+        height={h}
+        rx="17"
+        fill={emphasized ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.06)'}
+        stroke={emphasized ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.4)'}
+        strokeWidth="1.25"
+      />
+      <text
+        x={x}
+        y={y}
+        dominantBaseline="central"
+        textAnchor="middle"
+        fill="rgba(255,255,255,0.92)"
+        fontSize={node.kind === 'core' ? 13 : 11}
+        fontWeight={node.kind === 'core' ? 700 : 500}
+      >
+        {node.label}
+      </text>
+    </motion.g>
   )
 }
 
-function FloatingModules() {
+function SkillNetwork() {
+  const prefersReduced = usePrefersReducedMotion()
+  const pos = Object.fromEntries(NODES.map((n) => [n.id, n]))
   return (
-    <motion.div
-      variants={staggerContainer}
-      initial="hidden"
-      animate="visible"
-      className="pointer-events-none absolute inset-0"
+    <svg
+      viewBox="0 0 400 340"
+      className="w-full max-w-[16rem] text-white/70 sm:max-w-[20rem] lg:max-w-md"
+      fill="none"
       aria-hidden="true"
     >
-      {MODULES.map((cfg, i) => (
-        <FloatingModule key={cfg.title} cfg={cfg} index={i} />
+      {EDGES.map(([f, t], i) => {
+        const a = pos[f]
+        const b = pos[t]
+        return (
+          <motion.line
+            key={`${f}-${t}`}
+            x1={a.x}
+            y1={a.y}
+            x2={b.x}
+            y2={b.y}
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeOpacity="0.45"
+            strokeLinecap="round"
+            initial={{ pathLength: 0, opacity: 0 }}
+            animate={{ pathLength: 1, opacity: 1 }}
+            transition={{
+              duration: 0.9,
+              delay: 0.4 + i * 0.18,
+              ease: [0.22, 1, 0.36, 1],
+            }}
+          />
+        )
+      })}
+      {NODES.map((n, i) => (
+        <SkillNode
+          key={n.id}
+          node={n}
+          index={i}
+          prefersReduced={prefersReduced}
+        />
       ))}
-    </motion.div>
+    </svg>
   )
 }
 
 /* ------------------------------------------------------------------ */
-/*  Feature highlights + trust strip                                  */
+/*  Feature highlights + count-up metrics                             */
 /* ------------------------------------------------------------------ */
 const FEATURES: { icon: LucideIcon; title: string; desc: string }[] = [
   {
     icon: Brain,
     title: 'AI Career Intelligence',
-    desc: "Predicts the roles you're genuinely suited for.",
+    desc: 'Predicts your strongest career matches.',
   },
   {
     icon: Route,
     title: 'Personalized Roadmaps',
-    desc: 'A step-by-step path from where you are to job-ready.',
+    desc: 'Creates learning paths unique to you.',
   },
   {
     icon: Target,
     title: 'Skill Gap Analysis',
-    desc: 'Pinpoints exactly what to learn next.',
+    desc: 'Finds exactly what to learn next.',
   },
 ]
 
-const TRUST: { value: string; label: string }[] = [
-  { value: '18', label: 'Skills Analysed' },
-  { value: '92%', label: 'Match Accuracy' },
+const METRICS = [
+  { value: '18+', label: 'Skills Analysed' },
+  { value: '92%', label: 'Prediction Accuracy' },
   { value: '1000+', label: 'Learning Resources' },
-]
+] as const
+
+function Metric({ value, label }: { value: string; label: string }) {
+  const match = value.match(/^(\D*)(\d+)(.*)$/)
+  const target = match ? Number(match[2]) : 0
+  const counted = useCountUp(target, { duration: 1.3, delay: 0.2 })
+  const [, prefix, , suffix] = match ?? []
+  return (
+    <div className="px-4 text-center first:pl-0 last:pr-0">
+      <p className="text-xl font-semibold tracking-tight text-white">
+        {prefix}
+        {Math.round(counted)}
+        {suffix}
+      </p>
+      <p className="mt-1 text-[10px] uppercase tracking-wide text-neutral-500">
+        {label}
+      </p>
+    </div>
+  )
+}
 
 export default function AuthShowcase() {
   return (
     <aside className="relative hidden min-h-screen overflow-hidden bg-neutral-950 md:flex md:flex-col">
-      {/* layered monochrome background */}
+      {/* layered dark monochrome background */}
       <div className="auth-layer auth-spotlight" aria-hidden="true" />
-      <div className="auth-layer auth-mesh" aria-hidden="true" />
       <div className="auth-layer auth-grid" aria-hidden="true" />
+      <div className="auth-layer auth-mesh" aria-hidden="true" />
+      <Particles />
       <svg className="auth-layer auth-noise" aria-hidden="true">
         <filter id="auth-noise-filter">
           <feTurbulence
@@ -389,31 +295,31 @@ export default function AuthShowcase() {
 
       {/* content */}
       <div className="relative z-10 flex h-full flex-col justify-between gap-8 px-8 py-10 md:px-10 lg:px-14">
-        {/* top: logo + tagline */}
+        {/* top: large logo + welcome message */}
         <header>
-          <div className="flex items-center gap-2.5">
-            <span className="flex size-9 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/20">
-              <Brain className="size-5 text-white" />
+          <div className="flex items-center gap-3">
+            <span className="flex size-11 items-center justify-center rounded-2xl bg-white/10 ring-1 ring-white/20">
+              <Brain className="size-6 text-white" />
             </span>
-            <span className="text-lg font-semibold tracking-tight text-white">
+            <span className="text-xl font-semibold tracking-tight text-white">
               JobWeMet
             </span>
           </div>
-          <p className="mt-4 max-w-xs text-sm leading-relaxed text-neutral-400">
-            Your AI career copilot. Sign in to unlock a workspace that maps your
-            skills to the career you&rsquo;re meant for.
+          <h1 className="mt-5 text-2xl font-semibold tracking-tight text-white">
+            Welcome to JobWeMet
+          </h1>
+          <p className="mt-3 max-w-sm text-sm leading-relaxed text-neutral-400">
+            One intelligent workspace that analyzes your resume, maps your
+            skills, predicts careers, and builds your learning roadmap.
           </p>
         </header>
 
-        {/* middle: the workspace + floating modules */}
+        {/* middle: the living skill network */}
         <div className="relative flex flex-1 items-center justify-center">
-          <div className="relative w-full max-w-md">
-            <WorkspaceWindow />
-            <FloatingModules />
-          </div>
+          <SkillNetwork />
         </div>
 
-        {/* bottom: feature highlights + trust */}
+        {/* bottom: feature highlights + metrics */}
         <footer className="space-y-7">
           <motion.ul
             variants={staggerContainer}
@@ -446,18 +352,8 @@ export default function AuthShowcase() {
           </motion.ul>
 
           <div className="flex items-center justify-center divide-x divide-white/10">
-            {TRUST.map((t) => (
-              <div
-                key={t.label}
-                className="px-4 text-center first:pl-0 last:pr-0"
-              >
-                <p className="text-base font-semibold tracking-tight text-neutral-100">
-                  {t.value}
-                </p>
-                <p className="mt-0.5 text-[10px] uppercase tracking-wide text-neutral-500">
-                  {t.label}
-                </p>
-              </div>
+            {METRICS.map((m) => (
+              <Metric key={m.label} value={m.value} label={m.label} />
             ))}
           </div>
         </footer>

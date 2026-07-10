@@ -29,7 +29,13 @@ export default function AuthLayout() {
       {/* Right: the auth form — unchanged */}
       <main className="flex min-h-screen items-center justify-center bg-background px-6 py-12">
         <div className="w-full max-w-sm">
-          <BrandLogo className="mb-8 md:hidden" />
+          <div className="mb-8 text-center md:hidden">
+            <BrandLogo />
+            <p className="mt-3 text-sm text-muted-foreground">
+              One intelligent workspace that maps your skills to the career
+              you&rsquo;re meant for.
+            </p>
+          </div>
           <AnimatePresence mode="wait">
             <motion.div
               key={location.pathname}
