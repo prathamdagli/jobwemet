@@ -110,7 +110,7 @@ function ReadinessRing({
 function ProductWindow({ prefersReduced }: { prefersReduced: boolean }) {
   return (
     <motion.div
-      className="group relative w-full max-w-[48rem] overflow-hidden rounded-3xl border border-white/10 bg-white/[0.04] shadow-[0_30px_60px_-28px_rgba(0,0,0,0.55)] ring-1 ring-inset ring-white/10 backdrop-blur-2xl"
+      className="group relative w-full max-w-[52rem] overflow-hidden rounded-3xl border border-white/10 bg-white/[0.04] shadow-[0_30px_60px_-28px_rgba(0,0,0,0.55)] ring-1 ring-inset ring-white/10 backdrop-blur-2xl"
       initial={prefersReduced ? false : { opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: 'easeOut' }}
@@ -336,7 +336,7 @@ export default function AuthShowcase() {
         </header>
 
         {/* middle: product mockup, fills the panel width */}
-        <div className="relative flex flex-1 items-center justify-center px-6">
+        <div className="relative flex flex-1 items-center justify-center px-2">
           <ProductWindow prefersReduced={prefersReduced} />
         </div>
 
