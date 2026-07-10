@@ -11,26 +11,26 @@ import {
 const STATS = [
   {
     value: '100+',
-    label: 'Career Paths',
-    description: 'Different career recommendations available.',
+    title: 'Career Paths',
+    label: 'Available',
     icon: Compass,
   },
   {
     value: '250+',
-    label: 'Skills Recognized',
-    description: 'Technical and professional skills analyzed.',
+    title: 'Skills',
+    label: 'Recognized',
     icon: Brain,
   },
   {
     value: '1000+',
-    label: 'Learning Resources',
-    description: 'Courses, certifications and learning paths.',
+    title: 'Courses',
+    label: 'Recommended',
     icon: GraduationCap,
   },
   {
-    value: 'Up to 92%',
-    label: 'Prediction Confidence',
-    description: 'Career prediction confidence using our AI models.',
+    value: '92%',
+    title: 'AI Accuracy',
+    label: 'Confidence',
     icon: Target,
   },
 ] as const
@@ -53,36 +53,36 @@ function CountingNumber({ value }: { value: string }) {
 
 function StatCard({
   value,
+  title,
   label,
-  description,
   icon: Icon,
   active,
 }: (typeof STATS)[number] & { active: boolean }) {
   return (
     <motion.div
       variants={staggerChildren}
-      className="group relative flex flex-col gap-4 rounded-2xl border border-border bg-card p-7 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
+      className="group relative flex flex-col gap-3 rounded-2xl border border-border bg-card p-7 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
     >
       <span className="inline-flex size-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
         <Icon className="size-5" aria-hidden="true" />
       </span>
       <div>
-        <p className="text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
+        <p className="text-5xl font-semibold tracking-tight text-foreground sm:text-6xl">
           {active ? <CountingNumber value={value} /> : value}
         </p>
-        <div className="mt-1.5">
-          <h3 className="inline-block text-sm font-medium text-foreground">
+        <div className="mt-3">
+          <h3 className="text-sm font-medium text-foreground">{title}</h3>
+          <p className="mt-0.5 text-[11px] uppercase tracking-wide text-muted-foreground">
             {label}
-          </h3>
+          </p>
           <motion.span
-            className="mt-1.5 block h-px w-8 origin-left rounded-full bg-foreground/30"
+            className="mt-3 block h-px w-8 origin-left rounded-full bg-foreground/30"
             initial={{ scaleX: 0 }}
             animate={active ? { scaleX: 1 } : { scaleX: 0 }}
             transition={{ duration: 0.6, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
           />
         </div>
       </div>
-      <p className="text-sm text-muted-foreground">{description}</p>
     </motion.div>
   )
 }
@@ -123,11 +123,11 @@ export default function StatsSection() {
           id="stats-heading"
           className="mt-3 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl"
         >
-          Intelligence That Maps You To The Right Career
+          Built For Career Intelligence
         </h2>
         <p className="mx-auto mt-4 max-w-xl text-base text-muted-foreground">
-          Every recommendation is grounded in measurable capability &mdash; not
-          vanity metrics. Here is what powers your career map.
+          Everything needed to analyze your skills and build your career
+          roadmap.
         </p>
       </div>
 
