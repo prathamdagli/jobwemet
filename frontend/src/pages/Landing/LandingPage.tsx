@@ -6,6 +6,7 @@ import HowItWorks from '@/components/landing/HowItWorks'
 import AboutSection from '@/components/landing/AboutSection'
 import CTASection from '@/components/landing/CTASection'
 import Footer from '@/components/landing/Footer'
+import StoryBackground from '@/components/landing/StoryBackground'
 
 export default function LandingPage() {
   return (
@@ -13,13 +14,17 @@ export default function LandingPage() {
       <Navbar />
       <main>
         <Hero />
-        <StatsSection />
-        <FeaturesSection />
-        <HowItWorks />
-        <AboutSection />
-        <CTASection />
+        {/* One continuous background shared by every section below the Hero. */}
+        <div className="relative">
+          <StoryBackground />
+          <StatsSection />
+          <FeaturesSection />
+          <HowItWorks />
+          <AboutSection />
+          <CTASection />
+          <Footer />
+        </div>
       </main>
-      <Footer />
     </>
   )
 }

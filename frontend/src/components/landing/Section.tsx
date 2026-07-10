@@ -16,7 +16,10 @@ export default function Section({ id, className, children }: SectionProps) {
   return (
     <section
       id={id}
-      className={cn('scroll-mt-20 px-6 py-16 md:py-24 lg:py-32', className)}
+      className={cn(
+        'scroll-mt-20 px-6 py-16 md:py-24 lg:py-32 relative z-10',
+        className,
+      )}
     >
       <div className="mx-auto max-w-[1280px]">{children}</div>
     </section>

@@ -29,16 +29,52 @@ const TECH = [
   'AI / ML',
 ] as const
 
+/** Faint connected-node illustration — pure decoration, monochrome. */
+function AboutIllustration() {
+  return (
+    <svg
+      className="pointer-events-none absolute -right-10 top-10 -z-0 h-72 w-72 text-foreground/[0.05]"
+      viewBox="0 0 200 200"
+      fill="none"
+      aria-hidden="true"
+    >
+      <path
+        d="M40 60 L100 40 L160 70 L140 130 L80 150 L30 120 Z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+      />
+      <path
+        d="M100 40 L100 110 L140 130 M100 110 L60 120 M100 110 L80 150"
+        stroke="currentColor"
+        strokeWidth="1.5"
+      />
+      {[
+        [40, 60],
+        [100, 40],
+        [160, 70],
+        [140, 130],
+        [80, 150],
+        [30, 120],
+        [100, 110],
+        [60, 120],
+      ].map(([cx, cy], i) => (
+        <circle key={i} cx={cx} cy={cy} r="4" fill="currentColor" />
+      ))}
+    </svg>
+  )
+}
+
 export default function AboutSection() {
   const { ref, inView } = useInViewReveal<HTMLDivElement>()
   return (
-    <Section id="about" className="bg-[#FCFCFC]">
+    <Section id="about">
+      <AboutIllustration />
       <motion.div
         ref={ref}
         variants={fadeUp}
         initial="hidden"
         animate={inView ? 'visible' : 'hidden'}
-        className="grid gap-12 lg:grid-cols-2 lg:items-center"
+        className="relative grid gap-12 lg:grid-cols-2 lg:items-center"
       >
         <div>
           <p className="text-sm font-medium text-primary">Our Story</p>
@@ -65,58 +101,74 @@ export default function AboutSection() {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-border bg-card p-7 shadow-sm sm:p-8">
-          <p className="text-sm font-medium text-foreground">Our Mission</p>
-          <p className="mt-2 text-sm text-muted-foreground">
-            To turn the noise of job descriptions and vague requirements into a
-            clear, evidence-based path from the skills you have to the career
-            you&rsquo;re meant for.
-          </p>
+        <div className="space-y-5">
+          {/* Mission card */}
+          <div className="rounded-2xl border border-border bg-card p-7 shadow-sm sm:p-8">
+            <p className="text-sm font-medium text-foreground">Our Mission</p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              To turn the noise of job descriptions and vague requirements into
+              a clear, evidence-based path from the skills you have to the
+              career you&rsquo;re meant for.
+            </p>
+          </div>
 
-          <div className="my-6 h-px w-full bg-border" />
-
-          <p className="text-sm font-medium text-foreground">What We Believe</p>
-          <ul className="mt-4 space-y-4">
+          {/* Principles as cards */}
+          <div className="grid gap-4 sm:grid-cols-3">
             {PRINCIPLES.map((principle) => (
-              <li key={principle.title} className="flex gap-3">
+              <div
+                key={principle.title}
+                className="rounded-xl border border-border bg-card p-4 shadow-sm"
+              >
                 <CheckCircle2
-                  className="size-5 shrink-0 text-primary"
+                  className="size-5 text-primary"
                   aria-hidden="true"
                 />
-                <div>
-                  <p className="text-sm font-medium text-foreground">
-                    {principle.title}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {principle.description}
-                  </p>
-                </div>
-              </li>
-            ))}
-          </ul>
-
-          <div className="my-6 h-px w-full bg-border" />
-
-          <p className="text-sm font-medium text-foreground">Built With</p>
-          <div className="mt-4 flex flex-wrap gap-2">
-            {TECH.map((tech) => (
-              <span
-                key={tech}
-                className="rounded-full border border-border bg-muted/40 px-3 py-1 text-xs font-medium text-foreground"
-              >
-                {tech}
-              </span>
+                <p className="mt-2 text-sm font-medium text-foreground">
+                  {principle.title}
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {principle.description}
+                </p>
+              </div>
             ))}
           </div>
 
-          <div className="mt-6 flex items-start gap-3 rounded-xl bg-muted/40 p-4">
-            <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-              <Code className="size-4" aria-hidden="true" />
-            </span>
-            <p className="text-sm text-muted-foreground">
-              Designed and built by a working engineer who lived this problem
-              first-hand.
-            </p>
+          {/* Built with */}
+          <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+            <p className="text-sm font-medium text-foreground">Built With</p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {TECH.map((tech) => (
+                <span
+                  key={tech}
+                  className="rounded-full border border-border bg-muted/40 px-3 py-1 text-xs font-medium text-foreground"
+                >
+                  {tech}
+                </span>
+              ))}
+            </div>
+
+            {/* Founder profile card */}
+            <div className="mt-6 flex items-start gap-3 rounded-xl bg-muted/40 p-4">
+              <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
+                PD
+              </span>
+              <div>
+                <p className="text-sm font-medium text-foreground">
+                  Pratham Dagli
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Founder &amp; Engineer
+                </p>
+                <p className="mt-2 flex items-start gap-2 text-sm text-muted-foreground">
+                  <Code
+                    className="mt-0.5 size-4 shrink-0 text-primary"
+                    aria-hidden="true"
+                  />
+                  Designed and built by a working engineer who lived this
+                  problem first-hand.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </motion.div>
