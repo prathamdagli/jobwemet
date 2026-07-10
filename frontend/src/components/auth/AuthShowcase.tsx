@@ -1,6 +1,16 @@
 import { useMemo, useState } from 'react'
 import { motion, useMotionValue, useSpring, useTransform } from 'motion/react'
-import { Brain } from 'lucide-react'
+import {
+  Brain,
+  Box,
+  Code,
+  Cpu,
+  FileText,
+  Route,
+  Sparkles,
+  Target,
+  type LucideIcon,
+} from 'lucide-react'
 import { useMouseTilt, usePrefersReducedMotion } from '@/motion'
 import { cn } from '@/lib/utils'
 
@@ -8,17 +18,89 @@ import { cn } from '@/lib/utils'
  * AuthShowcase — the left panel of the auth layout, reimagined as the entry
  * point to a futuristic operating system rather than a marketing graphic.
  *
- * The centrepiece is a single, large, floating "AI Command Core": a glass disk
- * carrying multiple rotating concentric rings, segmented arcs, a holographic
- * centre, a rotating scan sweep, orbiting micro-dots, a soft reflection and
- * layered shadows — all monochrome. Around it float tiny glass HUD pills
- * connected to the core by energy lines, all reacting to the pointer.
+ * The centrepiece is a single, large, floating "AI Command Core": an engineered
+ * HUD of stacked glass rings around a glowing energy centre, with orbiting
+ * micro-dots, a rotating scan sweep and a soft shadow — all monochrome. Around
+ * it float tiny glass HUD pills connected to the core by energy lines, all
+ * reacting to the pointer.
  *
- * No dashboard, no node graph, no infographic — just an engineered interface.
+ * No dashboard, no node graph, no infographic — just a targeting interface.
  */
 
+const ANNULUS =
+  'radial-gradient(circle, transparent 47%, #000 48%, #000 52%, transparent 53%)'
+
 /* ------------------------------------------------------------------ */
-/*  Primitive: a concentric ring (solid or dashed) on the Z-axis       */
+/*  Outer ring — thick glass, segmented, rotating slowly              */
+/* ------------------------------------------------------------------ */
+function GlassRing({
+  size,
+  duration,
+  direction,
+  depth = 0,
+  prefersReduced,
+}: {
+  size: string
+  duration: number
+  direction: 1 | -1
+  depth?: number
+  prefersReduced: boolean
+}) {
+  return (
+    <div
+      className="absolute left-1/2 top-1/2"
+      style={{
+        transform: 'translate(-50%, -50%)',
+        transformStyle: 'preserve-3d',
+      }}
+    >
+      <div
+        style={{
+          transform: `translateZ(${depth}px)`,
+          transformStyle: 'preserve-3d',
+        }}
+      >
+        <motion.div
+          className="rounded-full border border-white/[0.12]"
+          style={{
+            width: size,
+            height: size,
+            borderWidth: 7,
+            boxShadow:
+              'inset 0 1px 0 rgba(255,255,255,0.22), inset 0 -1px 0 rgba(255,255,255,0.04), 0 10px 30px -12px rgba(0,0,0,0.65)',
+            backdropFilter: 'blur(2px)',
+          }}
+          animate={{ rotate: prefersReduced ? 0 : 360 * direction }}
+          transition={{ duration, repeat: Infinity, ease: 'linear' }}
+        >
+          {/* segmented tick overlay */}
+          <div
+            className="absolute inset-0 rounded-full"
+            style={{
+              background:
+                'conic-gradient(from 0deg, rgba(255,255,255,0.6) 0deg 1.4deg, transparent 1.4deg 12deg)',
+              WebkitMaskImage: ANNULUS,
+              maskImage: ANNULUS,
+            }}
+          />
+          {/* reflection on the glass */}
+          <div
+            className="absolute inset-0 rounded-full"
+            style={{
+              background:
+                'conic-gradient(from 200deg, rgba(255,255,255,0.12), transparent 60deg)',
+              WebkitMaskImage: ANNULUS,
+              maskImage: ANNULUS,
+            }}
+          />
+        </motion.div>
+      </div>
+    </div>
+  )
+}
+
+/* ------------------------------------------------------------------ */
+/*  Thin dashed ring (counter-rotating)                               */
 /* ------------------------------------------------------------------ */
 function Ring({
   size,
@@ -69,22 +151,18 @@ function Ring({
 }
 
 /* ------------------------------------------------------------------ */
-/*  Primitive: a rotating segmented arc (one or two border sides)      */
+/*  Third ring — many tiny technical tick marks                       */
 /* ------------------------------------------------------------------ */
-function Arc({
+function TickRing({
   size,
-  borderClass,
   duration,
   direction,
-  rotation = 0,
   depth = 0,
   prefersReduced,
 }: {
   size: string
-  borderClass: string
   duration: number
   direction: 1 | -1
-  rotation?: number
   depth?: number
   prefersReduced: boolean
 }) {
@@ -92,7 +170,7 @@ function Arc({
     <div
       className="absolute left-1/2 top-1/2"
       style={{
-        transform: `translate(-50%, -50%) rotate(${rotation}deg)`,
+        transform: 'translate(-50%, -50%)',
         transformStyle: 'preserve-3d',
       }}
     >
@@ -103,18 +181,101 @@ function Arc({
         }}
       >
         <motion.div
-          className={cn('rounded-full border-transparent', borderClass)}
+          className="absolute inset-0"
           style={{ width: size, height: size }}
           animate={{ rotate: prefersReduced ? 0 : 360 * direction }}
           transition={{ duration, repeat: Infinity, ease: 'linear' }}
-        />
+        >
+          {/* fine ticks */}
+          <div
+            className="absolute inset-0 rounded-full"
+            style={{
+              background:
+                'repeating-conic-gradient(from 0deg, rgba(255,255,255,0.45) 0deg 0.5deg, transparent 0.5deg 6deg)',
+              WebkitMaskImage: ANNULUS,
+              maskImage: ANNULUS,
+            }}
+          />
+          {/* 12 major ticks */}
+          <div
+            className="absolute inset-0 rounded-full"
+            style={{
+              background:
+                'repeating-conic-gradient(from 0deg, rgba(255,255,255,0.75) 0deg 1deg, transparent 1deg 30deg)',
+              WebkitMaskImage: ANNULUS,
+              maskImage: ANNULUS,
+            }}
+          />
+        </motion.div>
       </div>
     </div>
   )
 }
 
 /* ------------------------------------------------------------------ */
-/*  Orbiting micro-dots (small / medium / bright indicators)           */
+/*  Fourth ring — glowing energy ring (pulsing brightness)            */
+/* ------------------------------------------------------------------ */
+function EnergyRing({
+  size,
+  duration,
+  direction,
+  depth = 0,
+  prefersReduced,
+}: {
+  size: string
+  duration: number
+  direction: 1 | -1
+  depth?: number
+  prefersReduced: boolean
+}) {
+  return (
+    <div
+      className="absolute left-1/2 top-1/2"
+      style={{
+        transform: 'translate(-50%, -50%)',
+        transformStyle: 'preserve-3d',
+      }}
+    >
+      <div
+        style={{
+          transform: `translateZ(${depth}px)`,
+          transformStyle: 'preserve-3d',
+        }}
+      >
+        {/* solid hairline */}
+        <motion.div
+          className="absolute inset-0 rounded-full border border-white/25"
+          style={{ width: size, height: size }}
+          animate={{ rotate: prefersReduced ? 0 : 360 * direction }}
+          transition={{ duration, repeat: Infinity, ease: 'linear' }}
+        />
+        {/* travelling glow */}
+        <motion.div
+          className="absolute inset-0 rounded-full"
+          style={{ width: size, height: size }}
+          animate={{ rotate: prefersReduced ? 0 : 360 * direction }}
+          transition={{ duration, repeat: Infinity, ease: 'linear' }}
+        >
+          <motion.div
+            className="absolute inset-0 rounded-full"
+            style={{
+              background:
+                'conic-gradient(from 0deg, transparent 0deg, rgba(255,255,255,0.75) 45deg, transparent 95deg, rgba(255,255,255,0.55) 200deg, transparent 255deg, rgba(255,255,255,0.7) 320deg, transparent 360deg)',
+              WebkitMaskImage: ANNULUS,
+              maskImage: ANNULUS,
+              filter: 'blur(3px)',
+            }}
+            animate={prefersReduced ? undefined : { opacity: [0.5, 1, 0.5] }}
+            transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+          />
+        </motion.div>
+      </div>
+    </div>
+  )
+}
+
+/* ------------------------------------------------------------------ */
+/*  Orbiting micro-dots (small / medium / bright indicators)          */
 /* ------------------------------------------------------------------ */
 function OrbitDots({
   radiusPct,
@@ -190,12 +351,12 @@ function OrbitDots({
 }
 
 /* ------------------------------------------------------------------ */
-/*  The AI Command Core — inner visuals (placed inside the tilt stage) */
+/*  The AI Command Core — inner visuals (placed inside the tilt stage)*/
 /* ------------------------------------------------------------------ */
 function CommandCoreInner({ prefersReduced }: { prefersReduced: boolean }) {
   return (
     <>
-      {/* breathing radial glow behind the disk */}
+      {/* soft radial lighting / outer bloom behind the core */}
       <div
         className="absolute left-1/2 top-1/2"
         style={{ transform: 'translate(-50%, -50%)' }}
@@ -203,103 +364,55 @@ function CommandCoreInner({ prefersReduced }: { prefersReduced: boolean }) {
         <motion.div
           className="rounded-full"
           style={{
-            width: '96%',
-            height: '96%',
+            width: '100%',
+            height: '100%',
             background:
-              'radial-gradient(circle, rgba(255,255,255,0.16), rgba(255,255,255,0.04) 46%, transparent 72%)',
-            filter: 'blur(10px)',
+              'radial-gradient(circle, rgba(255,255,255,0.14), rgba(255,255,255,0.04) 44%, transparent 70%)',
+            filter: 'blur(12px)',
           }}
           animate={
             prefersReduced
               ? undefined
-              : { scale: [1, 1.08, 1], opacity: [0.8, 1, 0.8] }
+              : { scale: [1, 1.07, 1], opacity: [0.8, 1, 0.8] }
           }
           transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
         />
       </div>
 
-      {/* the floating glass disk — base surface with layered shadows */}
-      <div
-        className="absolute left-1/2 top-1/2 rounded-[2rem] border border-white/10 bg-white/[0.03] backdrop-blur-xl"
-        style={{
-          width: '84%',
-          height: '84%',
-          transform: 'translate(-50%, -50%) translateZ(0px)',
-          boxShadow:
-            '0 40px 80px -28px rgba(0,0,0,0.75), 0 12px 32px -16px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.08)',
-        }}
-      />
-
-      {/* concentric rings — clearly visible, varied speeds & directions */}
-      <Ring
-        size="34%"
-        borderClass="border-white/[0.14]"
-        thickness={1}
-        duration={7}
+      {/* stacked glass rings — depth via translateZ, alternating direction */}
+      <GlassRing
+        size="90%"
+        duration={26}
         direction={1}
-        depth={10}
-        prefersReduced={prefersReduced}
-      />
-      <Ring
-        size="48%"
-        borderClass="border-white/[0.11]"
-        thickness={1}
-        dashed
-        duration={8}
-        direction={-1}
-        depth={18}
-        prefersReduced={prefersReduced}
-      />
-      <Ring
-        size="62%"
-        borderClass="border-white/[0.09]"
-        thickness={1}
-        duration={9}
-        direction={1}
-        depth={26}
+        depth={8}
         prefersReduced={prefersReduced}
       />
       <Ring
         size="76%"
-        borderClass="border-white/[0.08]"
+        borderClass="border-white/20"
         thickness={1.5}
         dashed
-        duration={14}
+        duration={16}
         direction={-1}
-        depth={34}
+        depth={16}
         prefersReduced={prefersReduced}
       />
-      <Ring
-        size="90%"
-        borderClass="border-white/[0.06]"
-        thickness={1}
-        duration={22}
+      <TickRing
+        size="62%"
+        duration={11}
         direction={1}
-        depth={42}
+        depth={26}
         prefersReduced={prefersReduced}
       />
-
-      {/* rotating segmented arcs */}
-      <Arc
-        size="58%"
-        borderClass="border-t border-white/35"
-        duration={6}
-        direction={1}
-        rotation={0}
-        depth={22}
-        prefersReduced={prefersReduced}
-      />
-      <Arc
-        size="70%"
-        borderClass="border-l border-b border-white/25"
+      <EnergyRing
+        size="48%"
         duration={8}
         direction={-1}
-        rotation={45}
-        depth={30}
+        depth={36}
         prefersReduced={prefersReduced}
       />
 
-      {/* orbiting micro-dots (more of them, varied sizes, different speeds) */}
+      {/* orbiting micro-dots (small / medium / bright, varied speeds) */}
       <OrbitDots
         radiusPct={42}
         count={16}
@@ -315,7 +428,7 @@ function CommandCoreInner({ prefersReduced }: { prefersReduced: boolean }) {
         count={22}
         duration={28}
         direction={-1}
-        depth={38}
+        depth={40}
         bright={[3, 11]}
         medium={[7, 15]}
         prefersReduced={prefersReduced}
@@ -333,14 +446,13 @@ function CommandCoreInner({ prefersReduced }: { prefersReduced: boolean }) {
             animate={{ rotate: 360 }}
             transition={{ duration: 3.5, repeat: Infinity, ease: 'linear' }}
           >
-            {/* bright radial scan line */}
             <div
               style={{
                 position: 'absolute',
                 left: '50%',
                 top: '50%',
                 width: 2,
-                height: '44%',
+                height: '46%',
                 transform: 'translate(-50%, -100%)',
                 background:
                   'linear-gradient(to top, rgba(255,255,255,0.95), rgba(255,255,255,0.1))',
@@ -348,14 +460,13 @@ function CommandCoreInner({ prefersReduced }: { prefersReduced: boolean }) {
                 borderRadius: 2,
               }}
             />
-            {/* fading trail behind the line */}
             <div
               style={{
                 position: 'absolute',
                 left: '50%',
                 top: '50%',
-                width: '88%',
-                height: '88%',
+                width: '92%',
+                height: '92%',
                 transform: 'translate(-50%, -50%)',
                 background:
                   'conic-gradient(from 0deg, rgba(255,255,255,0) 308deg, rgba(255,255,255,0.12) 352deg, rgba(255,255,255,0) 360deg)',
@@ -366,27 +477,28 @@ function CommandCoreInner({ prefersReduced }: { prefersReduced: boolean }) {
         </div>
       )}
 
-      {/* holographic centre — breathes continuously (2.5s) */}
+      {/* engineered energy centre — glass lens + concentric circles + bloom */}
       <div className="absolute inset-0">
-        {/* pulsing centre glow */}
+        {/* outer bloom */}
         <motion.div
           className="absolute left-1/2 top-1/2 rounded-full"
           style={{
-            width: '34%',
-            height: '34%',
+            width: '40%',
+            height: '40%',
             transform: 'translate(-50%, -50%)',
             background:
               'radial-gradient(circle, rgba(255,255,255,0.22), transparent 70%)',
-            filter: 'blur(6px)',
+            filter: 'blur(8px)',
           }}
           animate={
             prefersReduced
               ? undefined
-              : { opacity: [0.5, 1, 0.5], scale: [0.92, 1.05, 0.92] }
+              : { opacity: [0.45, 0.9, 0.45], scale: [0.92, 1.05, 0.92] }
           }
           transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
         />
-        {/* glass disc */}
+
+        {/* glass lens */}
         <div
           className="absolute left-1/2 top-1/2 rounded-full border border-white/10 bg-white/[0.04] backdrop-blur-md"
           style={{
@@ -394,34 +506,67 @@ function CommandCoreInner({ prefersReduced }: { prefersReduced: boolean }) {
             height: '30%',
             transform: 'translate(-50%, -50%)',
             boxShadow:
-              'inset 0 1px 0 rgba(255,255,255,0.12), 0 12px 30px -12px rgba(0,0,0,0.6)',
+              'inset 0 1px 0 rgba(255,255,255,0.14), inset 0 -10px 20px -12px rgba(0,0,0,0.6), 0 16px 40px -16px rgba(0,0,0,0.7)',
           }}
-        />
-        {/* rotating conic shimmer ring */}
-        <motion.div
+        >
+          {/* glass reflection */}
+          <div
+            className="absolute left-1/2 top-1/2 size-full rounded-full"
+            style={{
+              transform: 'translate(-50%, -50%)',
+              background:
+                'radial-gradient(60% 40% at 50% 14%, rgba(255,255,255,0.12), transparent 70%)',
+            }}
+          />
+          {/* concentric circles */}
+          <div
+            className="absolute left-1/2 top-1/2 rounded-full border border-white/15"
+            style={{
+              width: '74%',
+              height: '74%',
+              transform: 'translate(-50%, -50%)',
+            }}
+          />
+          <div
+            className="absolute left-1/2 top-1/2 rounded-full border border-white/20"
+            style={{
+              width: '50%',
+              height: '50%',
+              transform: 'translate(-50%, -50%)',
+            }}
+          />
+          <div
+            className="absolute left-1/2 top-1/2 rounded-full border border-white/25"
+            style={{
+              width: '28%',
+              height: '28%',
+              transform: 'translate(-50%, -50%)',
+            }}
+          />
+        </div>
+
+        {/* faint halo around the core */}
+        <div
           className="absolute left-1/2 top-1/2 rounded-full"
           style={{
-            width: '23%',
-            height: '23%',
+            width: '18%',
+            height: '18%',
             transform: 'translate(-50%, -50%)',
             background:
-              'conic-gradient(from 0deg, transparent, rgba(255,255,255,0.6), transparent 42%, rgba(255,255,255,0.25), transparent 80%)',
-            WebkitMaskImage:
-              'radial-gradient(circle, transparent 58%, #000 60%, #000 100%)',
-            maskImage:
-              'radial-gradient(circle, transparent 58%, #000 60%, #000 100%)',
+              'radial-gradient(circle, rgba(255,255,255,0.35), transparent 65%)',
+            filter: 'blur(3px)',
           }}
-          animate={{ rotate: prefersReduced ? 0 : 360 }}
-          transition={{ duration: 16, repeat: Infinity, ease: 'linear' }}
         />
-        {/* pulsing core */}
+
+        {/* bright energy core + layered bloom */}
         <motion.div
           className="absolute left-1/2 top-1/2 rounded-full bg-white"
           style={{
-            width: 14,
-            height: 14,
+            width: 11,
+            height: 11,
             transform: 'translate(-50%, -50%)',
-            boxShadow: '0 0 22px rgba(255,255,255,0.7)',
+            boxShadow:
+              '0 0 10px rgba(255,255,255,0.9), 0 0 22px rgba(255,255,255,0.6), 0 0 40px rgba(255,255,255,0.35)',
           }}
           animate={
             prefersReduced
@@ -432,16 +577,16 @@ function CommandCoreInner({ prefersReduced }: { prefersReduced: boolean }) {
         />
       </div>
 
-      {/* soft reflection beneath the disk */}
+      {/* soft shadow beneath the floating core */}
       <div
-        className="absolute left-1/2 top-[88%] rounded-full"
+        className="absolute left-1/2 top-[90%] rounded-full"
         style={{
-          width: '70%',
-          height: '22%',
+          width: '64%',
+          height: '16%',
           transform: 'translate(-50%, -50%)',
           background:
-            'radial-gradient(ellipse, rgba(255,255,255,0.12), transparent 70%)',
-          filter: 'blur(6px)',
+            'radial-gradient(ellipse, rgba(0,0,0,0.55), transparent 70%)',
+          filter: 'blur(8px)',
         }}
       />
     </>
@@ -449,7 +594,7 @@ function CommandCoreInner({ prefersReduced }: { prefersReduced: boolean }) {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Connector energy lines (a pulse travels core -> HUD)               */
+/*  Connector energy lines (pulse travels core -> HUD, brighter nodes) */
 /* ------------------------------------------------------------------ */
 function Connectors({
   items,
@@ -469,15 +614,17 @@ function Connectors({
     >
       {items.map((it, i) => (
         <g key={i}>
+          {/* thin technical base line */}
           <line
             x1={50}
             y1={50}
             x2={it.cx}
             y2={it.cy}
             stroke="white"
-            strokeOpacity={0.12}
-            strokeWidth={0.3}
+            strokeOpacity={0.1}
+            strokeWidth={0.25}
           />
+          {/* moving energy pulse */}
           <motion.line
             x1={50}
             y1={50}
@@ -486,13 +633,23 @@ function Connectors({
             stroke="white"
             strokeWidth={0.5}
             strokeLinecap="round"
-            strokeDasharray="2.5 38"
-            strokeOpacity={active === i ? 0.95 : 0.4}
+            strokeDasharray="1.5 39"
+            strokeOpacity={active === i ? 0.95 : 0.35}
             animate={
               prefersReduced ? undefined : { strokeDashoffset: [0, -40.5] }
             }
             transition={{ duration: 2.2, repeat: Infinity, ease: 'linear' }}
           />
+          {/* elegant anchor node at the HUD end */}
+          <circle
+            cx={it.cx}
+            cy={it.cy}
+            r={active === i ? 1.1 : 0.7}
+            fill="white"
+            fillOpacity={active === i ? 1 : 0.6}
+          />
+          {/* core node */}
+          <circle cx={50} cy={50} r={0.6} fill="white" fillOpacity={0.45} />
         </g>
       ))}
     </svg>
@@ -500,10 +657,12 @@ function Connectors({
 }
 
 /* ------------------------------------------------------------------ */
-/*  Tiny floating glass HUD pills                                      */
+/*  Tiny floating glass HUD pills (icon + title + secondary text)     */
 /* ------------------------------------------------------------------ */
 function HudPill({
+  icon: Icon,
   label,
+  sub,
   cx,
   cy,
   index,
@@ -511,7 +670,9 @@ function HudPill({
   onHover,
   prefersReduced,
 }: {
+  icon: LucideIcon
   label: string
+  sub: string
   cx: number
   cy: number
   index: number
@@ -533,8 +694,8 @@ function HudPill({
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ delay: index * 0.12, duration: 0.5, ease: 'easeOut' }}
       >
-        <motion.span
-          className="inline-flex cursor-default items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.05] px-2.5 py-1 text-[10px] font-medium tracking-tight text-white/80 shadow-[0_4px_14px_-6px_rgba(0,0,0,0.6)] backdrop-blur-md"
+        <motion.div
+          className="inline-flex cursor-default items-center gap-2 rounded-xl border border-white/10 bg-white/[0.05] px-2.5 py-1.5 shadow-[0_6px_18px_-8px_rgba(0,0,0,0.7)] backdrop-blur-md"
           animate={
             prefersReduced ? undefined : { y: [0, -6, 0], scale: [1, 1.03, 1] }
           }
@@ -545,28 +706,37 @@ function HudPill({
           }}
           whileHover={{
             y: -4,
-            scale: 1.06,
-            boxShadow: '0 8px 26px -6px rgba(255,255,255,0.28)',
+            scale: 1.05,
+            boxShadow: '0 10px 28px -6px rgba(255,255,255,0.25)',
             borderColor: 'rgba(255,255,255,0.3)',
           }}
           onMouseEnter={() => onHover(index)}
           onMouseLeave={() => onHover(null)}
         >
           <span
-            className="size-1 rounded-full bg-white/70"
+            className="flex size-5 items-center justify-center rounded-md bg-white/10 text-white/70"
             style={{
-              boxShadow: active ? '0 0 8px rgba(255,255,255,0.95)' : 'none',
+              boxShadow: active ? '0 0 10px rgba(255,255,255,0.5)' : 'none',
             }}
-          />
-          {label}
-        </motion.span>
+          >
+            <Icon className="size-3" aria-hidden="true" />
+          </span>
+          <span className="flex flex-col leading-tight">
+            <span className="text-[10px] font-medium tracking-tight text-white/85">
+              {label}
+            </span>
+            <span className="text-[8px] uppercase tracking-wide text-white/40">
+              {sub}
+            </span>
+          </span>
+        </motion.div>
       </motion.div>
     </div>
   )
 }
 
 /* ------------------------------------------------------------------ */
-/*  Background: thin technical corner brackets (futuristic frame)      */
+/*  Background: thin technical corner brackets (futuristic frame)     */
 /* ------------------------------------------------------------------ */
 function TechBrackets() {
   const base = 'pointer-events-none absolute size-7 border-white/10'
@@ -584,7 +754,7 @@ function TechBrackets() {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Background: large faint rotating circles                           */
+/*  Background: large faint rotating circles                          */
 /* ------------------------------------------------------------------ */
 function BgCircles({ prefersReduced }: { prefersReduced: boolean }) {
   return (
@@ -614,7 +784,7 @@ function BgCircles({ prefersReduced }: { prefersReduced: boolean }) {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Background: tiny twinkling stars                                   */
+/*  Background: tiny twinkling stars                                  */
 /* ------------------------------------------------------------------ */
 function Stars({ prefersReduced }: { prefersReduced: boolean }) {
   const stars = useMemo(
@@ -656,7 +826,7 @@ function Stars({ prefersReduced }: { prefersReduced: boolean }) {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Panel                                                              */
+/*  Panel                                                             */
 /* ------------------------------------------------------------------ */
 export default function AuthShowcase() {
   const prefersReduced = usePrefersReducedMotion()
@@ -682,14 +852,32 @@ export default function AuthShowcase() {
     bgY.set(0)
   }
 
-  const hud = [
-    { label: 'Resume Uploaded', cx: 40, cy: 7 },
-    { label: '92%', cx: 70, cy: 13 },
-    { label: 'Roadmap Ready', cx: 91, cy: 42 },
-    { label: 'Skill Match', cx: 70, cy: 88 },
-    { label: 'Python', cx: 13, cy: 72 },
-    { label: 'Docker', cx: 9, cy: 33 },
-    { label: 'ML Engineer', cx: 50, cy: 93 },
+  const hud: {
+    label: string
+    sub: string
+    icon: LucideIcon
+    cx: number
+    cy: number
+  }[] = [
+    {
+      label: 'Resume Uploaded',
+      sub: '5 skills extracted',
+      icon: FileText,
+      cx: 40,
+      cy: 7,
+    },
+    { label: 'Career Match', sub: '92%', icon: Target, cx: 70, cy: 13 },
+    {
+      label: 'Roadmap Ready',
+      sub: '3 steps left',
+      icon: Route,
+      cx: 91,
+      cy: 42,
+    },
+    { label: 'Skill Match', sub: 'High fit', icon: Sparkles, cx: 70, cy: 88 },
+    { label: 'Python', sub: 'Detected skill', icon: Code, cx: 13, cy: 72 },
+    { label: 'Docker', sub: 'Detected skill', icon: Box, cx: 9, cy: 33 },
+    { label: 'ML Engineer', sub: 'Top role', icon: Cpu, cx: 50, cy: 93 },
   ]
 
   return (
@@ -781,7 +969,7 @@ export default function AuthShowcase() {
           <TechBrackets />
           <div
             style={{ perspective: 1200 }}
-            className="relative aspect-square w-[95%] max-w-[34rem]"
+            className="relative aspect-square w-[98%] max-w-[40rem]"
           >
             <div
               ref={ref}
@@ -799,7 +987,9 @@ export default function AuthShowcase() {
               {hud.map((h, i) => (
                 <HudPill
                   key={h.label}
+                  icon={h.icon}
                   label={h.label}
+                  sub={h.sub}
                   cx={h.cx}
                   cy={h.cy}
                   index={i}
