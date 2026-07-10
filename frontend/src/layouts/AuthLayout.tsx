@@ -22,13 +22,13 @@ function BrandLogo({ className }: { className?: string }) {
 export default function AuthLayout() {
   const location = useLocation()
   return (
-    <div className="grid min-h-screen md:grid-cols-[42fr_58fr]">
+    <div className="grid min-h-screen md:grid-cols-2">
       {/* Left: premium monochrome "enter the workspace" showcase (desktop/tablet) */}
       <AuthShowcase />
 
       {/* Right: the auth form — unchanged */}
       <main className="flex min-h-screen items-center justify-center bg-background px-6 py-12">
-        <div className="w-full max-w-sm md:-translate-x-6">
+        <div className="w-full max-w-sm">
           <div className="mb-8 text-center md:hidden">
             <BrandLogo />
             <p className="mt-3 text-sm text-muted-foreground">

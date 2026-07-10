@@ -43,7 +43,7 @@ const PAGES: Record<string, PageConfig> = {
   },
   '/register': {
     heading: 'Build Your Career Intelligence',
-    sub: 'Create your account and start discovering the career paths your skills are best suited for.',
+    sub: 'Create your account and discover the careers your skills are best suited for.',
     lead: 'Already have an account?',
     cta: 'Sign in',
     to: '/login',
@@ -110,7 +110,7 @@ function ReadinessRing({
 function ProductWindow({ prefersReduced }: { prefersReduced: boolean }) {
   return (
     <motion.div
-      className="group relative w-full max-w-[25rem] overflow-hidden rounded-3xl border border-white/10 bg-white/[0.04] shadow-[0_30px_60px_-28px_rgba(0,0,0,0.55)] ring-1 ring-inset ring-white/10 backdrop-blur-2xl"
+      className="group relative w-full max-w-[31rem] overflow-hidden rounded-3xl border border-white/10 bg-white/[0.04] shadow-[0_30px_60px_-28px_rgba(0,0,0,0.55)] ring-1 ring-inset ring-white/10 backdrop-blur-2xl"
       initial={prefersReduced ? false : { opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: 'easeOut' }}
@@ -337,27 +337,27 @@ export default function AuthShowcase() {
       <div className="auth-layer auth-vignette" aria-hidden="true" />
 
       {/* content */}
-      <div className="relative z-10 flex h-full flex-col justify-between gap-10 px-8 py-10 md:px-10 lg:px-14">
+      <div className="relative z-10 flex h-full flex-col items-center justify-between gap-10 px-8 py-10 md:px-10 lg:px-14">
         {/* top: brand (links home) + per-page welcome */}
-        <header>
+        <header className="flex flex-col items-center text-center">
           <Link
             to="/"
             className="inline-flex w-fit cursor-pointer items-center gap-3 rounded-2xl opacity-95 outline-none transition-[transform,opacity] duration-200 hover:-translate-y-px hover:opacity-100 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-950"
           >
-            <span className="flex size-11 items-center justify-center rounded-2xl bg-white/10 ring-1 ring-white/20">
-              <Brain className="size-6 text-white" />
+            <span className="flex size-14 items-center justify-center rounded-2xl bg-white/10 ring-1 ring-white/20">
+              <Brain className="size-7 text-white" />
             </span>
-            <span className="text-2xl font-semibold tracking-tight text-white">
+            <span className="text-3xl font-semibold tracking-tight text-white">
               JobWeMet
             </span>
           </Link>
           <p className="mt-4 text-[11px] font-medium uppercase tracking-[0.2em] text-white/40">
             AI Career Intelligence
           </p>
-          <h1 className="mt-1.5 text-2xl font-semibold tracking-tight text-white leading-tight">
+          <h1 className="mt-2 text-3xl font-semibold tracking-tight text-white">
             {cfg.heading}
           </h1>
-          <p className="mt-2.5 max-w-[28rem] text-[13px] leading-relaxed text-neutral-400">
+          <p className="mt-3 mx-auto max-w-sm text-center text-sm leading-relaxed text-neutral-400">
             {cfg.sub}
           </p>
         </header>
@@ -368,7 +368,7 @@ export default function AuthShowcase() {
         </div>
 
         {/* bottom: contextual navigation */}
-        <div className="flex items-center justify-center gap-2 text-sm md:justify-start">
+        <div className="flex items-center justify-center gap-2 text-sm">
           <span className="text-neutral-400">{cfg.lead}</span>
           <Link
             to={cfg.to}
