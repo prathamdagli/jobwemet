@@ -72,5 +72,21 @@ service cloud.firestore {
       allow read: if signedIn() && resource.data.userId == request.auth.uid;
       allow write: if false;
     }
+
+    // Learning pipeline outputs: written exclusively by the Admin SDK learning
+    // pipeline (which bypasses these rules). Clients may read only their own
+    // results; all client writes are denied.
+    match /roadmaps/{resumeId} {
+      allow read: if signedIn() && resource.data.userId == request.auth.uid;
+      allow write: if false;
+    }
+    match /courseRecommendations/{resumeId} {
+      allow read: if signedIn() && resource.data.userId == request.auth.uid;
+      allow write: if false;
+    }
+    match /dashboardSummary/{resumeId} {
+      allow read: if signedIn() && resource.data.userId == request.auth.uid;
+      allow write: if false;
+    }
   }
 }

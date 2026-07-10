@@ -3,14 +3,19 @@ import { logger } from 'firebase-functions/v2';
 import type {
   CareerMatch,
   ConfidenceInfo,
+  CourseRecommendation,
+  DashboardInput,
+  DashboardSummary,
   EducationInfo,
   ExperienceInfo,
   ResumeAnalysis,
+  RoadmapPhase,
   SkillGapDifficulty,
   SkillGapItem,
   SkillGapPriority,
   SkillGroup,
 } from '../types';
+import { priorityToDifficulty, recommendStubCourses } from './courses';
 
 /**
  * Provider-independent AI contract. The rest of the app only ever talks to this
@@ -27,6 +32,15 @@ export interface AIService {
     currentSkills: string[],
     topCareer: CareerMatch | undefined,
   ): Promise<SkillGapItem[]>;
+  /** Ordered learning roadmap derived from a career match + missing skills. */
+  generateRoadmap(
+    careerName: string,
+    missingSkills: SkillGapItem[],
+  ): Promise<RoadmapPhase[]>;
+  /** One course recommendation per missing skill. */
+  recommendCourses(missingSkills: SkillGapItem[]): Promise<CourseRecommendation[]>;
+  /** Aggregate analysis, roadmap and courses into a dashboard summary. */
+  generateDashboardSummary(input: DashboardInput): Promise<DashboardSummary>;
 }
 
 function escapeRegex(s: string): string {
@@ -202,9 +216,60 @@ function buildGapItem(skill: string): SkillGapItem {
   return { skill, difficulty, priority, estimatedLearningTime };
 }
 
+function deriveDashboardSummary(input: DashboardInput): DashboardSummary {
+  const total = input.phases.length;
+  const completed = input.phases.filter((p) => p.completionStatus === 'completed').length;
+  const completedRoadmapPct = total ? Math.round((completed / total) * 100) : 0;
+  return {
+    overallReadiness: input.overallReadiness,
+    topCareer: input.topCareer,
+    topCareerConfidence: input.topCareerConfidence,
+    skillsCount: input.skillsCount,
+    missingSkillsCount: input.missingSkillsCount,
+    completedRoadmapPct,
+    currentPhase: input.phases[0]?.title ?? '',
+    recommendedCourse: input.recommendedCourseTitle,
+  };
+}
+
+function normalizeRoadmap(raw: unknown): RoadmapPhase[] {
+  const groups = (raw ?? []) as unknown[];
+  return groups.map((g, i) => {
+    const r = (g ?? {}) as Record<string, unknown>;
+    const status = r.completionStatus as RoadmapPhase['completionStatus'] | undefined;
+    return {
+      order: typeof r.order === 'number' ? r.order : i + 1,
+      title: typeof r.title === 'string' ? r.title : `Phase ${i + 1}`,
+      description: typeof r.description === 'string' ? r.description : '',
+      estimatedHours: typeof r.estimatedHours === 'number' ? r.estimatedHours : 0,
+      priority: (r.priority as SkillGapPriority) ?? 'medium',
+      requiredSkills: Array.isArray(r.requiredSkills) ? (r.requiredSkills as string[]) : [],
+      completionStatus: status ?? 'locked',
+      estimatedCompletionTime:
+        typeof r.estimatedCompletionTime === 'string' ? r.estimatedCompletionTime : '',
+    };
+  });
+}
+
+function normalizeCourses(raw: unknown): CourseRecommendation[] {
+  const groups = (raw ?? []) as unknown[];
+  return groups.map((g) => {
+    const r = (g ?? {}) as Record<string, unknown>;
+    return {
+      title: typeof r.title === 'string' ? r.title : '',
+      provider: typeof r.provider === 'string' ? r.provider : '',
+      skill: typeof r.skill === 'string' ? r.skill : '',
+      difficulty: (r.difficulty as SkillGapDifficulty) ?? 'moderate',
+      estimatedDuration: typeof r.estimatedDuration === 'string' ? r.estimatedDuration : '',
+      url: typeof r.url === 'string' ? r.url : '',
+      rating: typeof r.rating === 'number' ? r.rating : 0,
+      priority: (r.priority as SkillGapPriority) ?? 'medium',
+    };
+  });
+}
+
 export class StubAIService implements AIService {
-  async analyzeResume(rawText: string): Promise<ResumeAnalysis> {
-    const { technicalSkills, softSkills } = extractSkills(rawText);
+  async analyzeResume(rawText: string): Promise<ResumeAnalysis> {    const { technicalSkills, softSkills } = extractSkills(rawText);
     const experience = extractExperience(rawText);
     const education = extractEducation(rawText);
     const allSkills = [
@@ -258,6 +323,59 @@ export class StubAIService implements AIService {
     return profile.skills
       .filter((s) => !have.has(s.toLowerCase()))
       .map((s) => buildGapItem(s));
+  }
+
+  async generateRoadmap(
+    careerName: string,
+    missingSkills: SkillGapItem[],
+  ): Promise<RoadmapPhase[]> {
+    if (!missingSkills.length) {
+      return [
+        {
+          order: 1,
+          title: `Advance as ${careerName}`,
+          description: `Continue building expertise toward a ${careerName} role.`,
+          estimatedHours: 40,
+          priority: 'medium',
+          requiredSkills: [],
+          completionStatus: 'in_progress',
+          estimatedCompletionTime: '1 month',
+        },
+      ];
+    }
+
+    const priorityRank: Record<SkillGapPriority, number> = { high: 0, medium: 1, low: 2 };
+    const ordered = [...missingSkills].sort(
+      (a, b) => priorityRank[a.priority] - priorityRank[b.priority],
+    );
+
+    return ordered.map((item, index) => {
+      const hours = item.difficulty === 'hard' ? 50 : item.difficulty === 'moderate' ? 25 : 10;
+      return {
+        order: index + 1,
+        title: `Learn ${item.skill}`,
+        description: `Master ${item.skill} required for a ${careerName} role.`,
+        estimatedHours: hours,
+        priority: item.priority,
+        requiredSkills: [item.skill],
+        completionStatus: index === 0 ? 'in_progress' : 'locked',
+        estimatedCompletionTime: hours <= 10 ? '1-2 weeks' : hours <= 25 ? '3-4 weeks' : '2-3 months',
+      };
+    });
+  }
+
+  async recommendCourses(missingSkills: SkillGapItem[]): Promise<CourseRecommendation[]> {
+    return recommendStubCourses(
+      missingSkills.map((s) => ({
+        skill: s.skill,
+        difficulty: priorityToDifficulty(s.priority),
+        priority: s.priority,
+      })),
+    );
+  }
+
+  async generateDashboardSummary(input: DashboardInput): Promise<DashboardSummary> {
+    return deriveDashboardSummary(input);
   }
 }
 
@@ -374,6 +492,42 @@ export class GeminiAIService implements AIService {
     } catch {
       throw new Error('Malformed AI response');
     }
+  }
+
+  async generateRoadmap(
+    careerName: string,
+    missingSkills: SkillGapItem[],
+  ): Promise<RoadmapPhase[]> {
+    const prompt =
+      `Career target: ${careerName}. Missing skills: ${missingSkills
+        .map((s) => s.skill)
+        .join(', ')}. ` +
+      'Return JSON: [{"order":1,"title":"","description":"","estimatedHours":0,' +
+      '"priority":"high|medium|low","requiredSkills":[],"completionStatus":"in_progress|locked",' +
+      '"estimatedCompletionTime":""}] ordered by priority (first phase in_progress).';
+    const text = await this.callGemini(prompt, 60000);
+    try {
+      return normalizeRoadmap(JSON.parse(stripCodeFences(text)));
+    } catch {
+      throw new Error('Malformed AI response');
+    }
+  }
+
+  async recommendCourses(missingSkills: SkillGapItem[]): Promise<CourseRecommendation[]> {
+    const prompt =
+      `Missing skills: ${missingSkills.map((s) => s.skill).join(', ')}. ` +
+      'Return JSON: [{"title":"","provider":"","skill":"","difficulty":"easy|moderate|hard",' +
+      '"estimatedDuration":"","url":"","rating":4.5,"priority":"high|medium|low"}] one per skill.';
+    const text = await this.callGemini(prompt, 60000);
+    try {
+      return normalizeCourses(JSON.parse(stripCodeFences(text)));
+    } catch {
+      throw new Error('Malformed AI response');
+    }
+  }
+
+  async generateDashboardSummary(input: DashboardInput): Promise<DashboardSummary> {
+    return deriveDashboardSummary(input);
   }
 }
 

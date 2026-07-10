@@ -177,3 +177,55 @@ export interface ResumeAnalysis {
 
 /** Pipeline status for the skillAnalysis control document. */
 export type AnalysisStatus = 'processing' | 'completed' | 'failed';
+
+// ---------- Learning Pipeline (roadmap / courses / dashboard) ----------
+
+export type PhaseStatus = 'completed' | 'in_progress' | 'locked';
+
+/** One step in a generated learning roadmap. */
+export interface RoadmapPhase {
+  order: number;
+  title: string;
+  description: string;
+  estimatedHours: number;
+  priority: SkillGapPriority;
+  requiredSkills: string[];
+  completionStatus: PhaseStatus;
+  estimatedCompletionTime: string;
+}
+
+/** A recommended course for a single missing skill. */
+export interface CourseRecommendation {
+  title: string;
+  provider: string;
+  skill: string;
+  difficulty: SkillGapDifficulty;
+  estimatedDuration: string;
+  url: string;
+  rating: number;
+  priority: SkillGapPriority;
+}
+
+/** Inputs used to derive the dashboard summary. */
+export interface DashboardInput {
+  overallReadiness: number;
+  topCareer: string;
+  topCareerConfidence: number;
+  skillsCount: number;
+  missingSkillsCount: number;
+  phases: RoadmapPhase[];
+  recommendedCourseTitle: string;
+}
+
+/** One-read document that powers the Dashboard page. */
+export interface DashboardSummary {
+  overallReadiness: number;
+  topCareer: string;
+  topCareerConfidence: number;
+  skillsCount: number;
+  missingSkillsCount: number;
+  completedRoadmapPct: number;
+  currentPhase: string;
+  recommendedCourse: string;
+  lastUpdated?: Timestamp;
+}
