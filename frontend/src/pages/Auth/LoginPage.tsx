@@ -85,7 +85,7 @@ export default function LoginPage() {
 
   return (
     <div>
-      <header className="mb-6">
+      <header className="mb-5">
         <h1 className="text-2xl font-semibold tracking-tight text-foreground">
           Welcome back
         </h1>
@@ -99,15 +99,15 @@ export default function LoginPage() {
           id="login-error"
           role="alert"
           aria-live="polite"
-          className="mb-5 flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2.5 text-sm text-destructive"
+          className="mb-4 flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2.5 text-sm text-destructive"
         >
           <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
           <span>{error}</span>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} noValidate className="space-y-4">
-        <div className="space-y-1.5">
+      <form onSubmit={handleSubmit} noValidate className="space-y-3.5">
+        <div className="space-y-1">
           <Label htmlFor="email">Email</Label>
           <div className="relative">
             <Mail className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -127,7 +127,7 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <div className="space-y-1.5">
+        <div className="space-y-1">
           <div className="flex items-center justify-between">
             <Label htmlFor="password">Password</Label>
             <Link
@@ -183,7 +183,7 @@ export default function LoginPage() {
         </Button>
       </form>
 
-      <div className="relative my-5">
+      <div className="relative my-4">
         <div className="absolute inset-0 flex items-center">
           <span className="w-full border-t border-border" />
         </div>
@@ -210,7 +210,7 @@ export default function LoginPage() {
         Continue with Google
       </Button>
 
-      <p className="mt-4 text-center text-sm text-muted-foreground">
+      <p className="mt-3 text-center text-sm text-muted-foreground">
         Don&apos;t have an account?{' '}
         <Link
           to="/register"

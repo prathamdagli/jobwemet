@@ -46,8 +46,8 @@ export default function ForgotPasswordPage() {
   if (sent) {
     return (
       <div>
-        <div className="mb-6 flex flex-col items-center text-center">
-          <span className="mb-3 flex size-12 items-center justify-center rounded-full bg-success-500/10 text-success-600">
+        <div className="mb-5 flex flex-col items-center text-center">
+          <span className="mb-2 flex size-12 items-center justify-center rounded-full bg-success-500/10 text-success-600">
             <CheckCircle2 className="size-6" aria-hidden="true" />
           </span>
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">
@@ -73,7 +73,7 @@ export default function ForgotPasswordPage() {
 
         <Link
           to="/login"
-          className="mt-4 flex items-center justify-center gap-1.5 text-sm font-medium text-primary hover:underline underline-offset-4"
+          className="mt-3 flex items-center justify-center gap-1.5 text-sm font-medium text-primary hover:underline underline-offset-4"
         >
           <ArrowLeft className="size-4" />
           Back to sign in
@@ -84,7 +84,7 @@ export default function ForgotPasswordPage() {
 
   return (
     <div>
-      <header className="mb-6">
+      <header className="mb-5">
         <h1 className="text-2xl font-semibold tracking-tight text-foreground">
           Forgot password?
         </h1>
@@ -98,15 +98,15 @@ export default function ForgotPasswordPage() {
           id="forgot-error"
           role="alert"
           aria-live="polite"
-          className="mb-5 flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2.5 text-sm text-destructive"
+          className="mb-4 flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2.5 text-sm text-destructive"
         >
           <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
           <span>{error}</span>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} noValidate className="space-y-4">
-        <div className="space-y-1.5">
+      <form onSubmit={handleSubmit} noValidate className="space-y-3.5">
+        <div className="space-y-1">
           <Label htmlFor="email">Email</Label>
           <div className="relative">
             <Mail className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />

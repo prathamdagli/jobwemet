@@ -110,7 +110,7 @@ function ReadinessRing({
 function ProductWindow({ prefersReduced }: { prefersReduced: boolean }) {
   return (
     <motion.div
-      className="group relative w-full max-w-[37rem] overflow-hidden rounded-3xl border border-white/10 bg-white/[0.04] shadow-[0_30px_60px_-28px_rgba(0,0,0,0.55)] ring-1 ring-inset ring-white/10 backdrop-blur-2xl"
+      className="group relative w-full max-w-[48rem] overflow-hidden rounded-3xl border border-white/10 bg-white/[0.04] shadow-[0_30px_60px_-28px_rgba(0,0,0,0.55)] ring-1 ring-inset ring-white/10 backdrop-blur-2xl"
       initial={prefersReduced ? false : { opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: 'easeOut' }}
@@ -142,9 +142,9 @@ function ProductWindow({ prefersReduced }: { prefersReduced: boolean }) {
       </div>
 
       {/* body */}
-      <div className="relative space-y-3.5 p-5">
+      <div className="relative space-y-3 p-4">
         {/* resume upload */}
-        <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+        <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-2.5">
           <span className="flex size-9 items-center justify-center rounded-lg bg-white/5 text-white/70 ring-1 ring-white/10">
             <FileText className="size-4" aria-hidden="true" />
           </span>
@@ -166,7 +166,7 @@ function ProductWindow({ prefersReduced }: { prefersReduced: boolean }) {
           <p className="text-[10px] font-medium uppercase tracking-wide text-white/40">
             Skills detected
           </p>
-          <div className="mt-2 flex flex-wrap gap-1.5">
+          <div className="mt-1.5 flex flex-wrap gap-1.5">
             {SKILLS.map((s) => (
               <span
                 key={s}
@@ -179,7 +179,7 @@ function ProductWindow({ prefersReduced }: { prefersReduced: boolean }) {
         </div>
 
         {/* career match */}
-        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-2.5">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-[10px] font-medium uppercase tracking-wide text-white/40">
@@ -193,7 +193,7 @@ function ProductWindow({ prefersReduced }: { prefersReduced: boolean }) {
               92%
             </span>
           </div>
-          <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-neutral-700/50">
+          <div className="mt-2.5 h-1.5 w-full overflow-hidden rounded-full bg-neutral-700/50">
             <motion.div
               className="h-full rounded-full bg-white/80 shadow-[0_0_10px_rgba(255,255,255,0.35)]"
               initial={prefersReduced ? false : { width: 0 }}
@@ -210,7 +210,7 @@ function ProductWindow({ prefersReduced }: { prefersReduced: boolean }) {
             <p className="text-[10px] font-medium uppercase tracking-wide text-white/40">
               Learning Roadmap
             </p>
-            <ul className="mt-2 space-y-1.5">
+            <ul className="mt-2 space-y-1">
               {ROADMAP.map((r) => (
                 <li
                   key={r.label}
@@ -245,7 +245,7 @@ function ProductWindow({ prefersReduced }: { prefersReduced: boolean }) {
           </div>
 
           {/* overall readiness */}
-          <div className="flex flex-col items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+          <div className="flex flex-col items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03] p-2.5">
             <ReadinessRing value={68} prefersReduced={prefersReduced} />
             <p className="mt-1 text-[10px] uppercase tracking-wide text-white/40">
               Overall Readiness
@@ -310,7 +310,7 @@ export default function AuthShowcase() {
       <div className="auth-layer auth-vignette" aria-hidden="true" />
 
       {/* content */}
-      <div className="relative z-10 flex h-full flex-col items-center justify-between gap-8 px-8 py-8 md:px-10 lg:px-14">
+      <div className="relative z-10 flex h-full flex-col items-center justify-between gap-5 px-8 py-6 md:px-10 lg:px-14">
         {/* top: brand (links home) + per-page welcome */}
         <header className="flex flex-col items-center text-center">
           <Link
@@ -335,8 +335,8 @@ export default function AuthShowcase() {
           </p>
         </header>
 
-        {/* middle: one large product mockup, centered with breathing room */}
-        <div className="relative flex flex-1 items-center justify-center px-10">
+        {/* middle: product mockup, fills the panel width */}
+        <div className="relative flex flex-1 items-center justify-center px-6">
           <ProductWindow prefersReduced={prefersReduced} />
         </div>
 
