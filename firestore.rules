@@ -27,5 +27,20 @@ service cloud.firestore {
       allow read: if signedIn();
       allow write: if false;
     }
+
+    // Resume metadata: a top-level collection keyed by userId. A user may only
+    // touch their own resumes. Records are created by the Admin SDK (Storage
+    // onFinalize trigger) which bypasses rules; these rules gate client reads
+    // and any client-side writes.
+    match /resumes/{resumeId} {
+      allow read: if signedIn() && resource.data.userId == request.auth.uid;
+      allow write: if signedIn() && (
+        request.method == 'create'
+          ? request.resource.data.userId == request.auth.uid
+          : request.method == 'delete'
+            ? resource.data.userId == request.auth.uid
+            : request.resource.data.userId == request.auth.uid
+      );
+    }
   }
 }
