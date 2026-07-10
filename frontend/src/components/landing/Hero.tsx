@@ -1,25 +1,51 @@
-import { motion } from 'motion/react'
+import { useRef } from 'react'
+import { motion, useScroll, useTransform } from 'motion/react'
 import {
   fadeLeft,
   heroReveal,
   staggerContainer,
   useInViewReveal,
+  usePrefersReducedMotion,
 } from '@/motion'
+import HeroBackground from './HeroBackground'
 import HeroBadge from './HeroBadge'
 import HeroButtons from './HeroButtons'
 import HeroVisual from './HeroVisual'
+import HeroFloatingModules from './HeroFloatingModules'
 import HeroSecondaryPreview from './HeroSecondaryPreview'
 
 export default function Hero() {
   const { ref: visualRef, inView: visualInView } =
     useInViewReveal<HTMLDivElement>()
+  const prefersReduced = usePrefersReducedMotion()
+
+  // Scroll story: as the hero leaves, the dashboard gently compresses and settles
+  // while the floating modules drift apart. Physical, restrained — no parallax.
+  const sectionRef = useRef<HTMLElement>(null)
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ['start start', 'end start'],
+  })
+  const compress = useTransform(
+    scrollYProgress,
+    [0, 1],
+    prefersReduced ? [1, 1] : [1, 0.94],
+  )
+  const lift = useTransform(
+    scrollYProgress,
+    [0, 1],
+    prefersReduced ? [0, 0] : [0, 28],
+  )
 
   return (
     <section
+      ref={sectionRef}
       id="home"
       className="relative overflow-hidden bg-[#FCFCFC] px-6 pb-28 pt-20 lg:pt-24"
     >
-      <div className="mx-auto grid max-w-[1280px] items-center gap-16 lg:gap-20 lg:grid-cols-2">
+      <HeroBackground />
+
+      <div className="relative mx-auto grid max-w-[1280px] items-center gap-16 lg:gap-20 lg:grid-cols-2">
         <motion.div
           variants={staggerContainer}
           initial="hidden"
@@ -71,9 +97,11 @@ export default function Hero() {
           variants={fadeLeft}
           initial="hidden"
           animate={visualInView ? 'visible' : 'hidden'}
+          style={{ scale: compress, y: lift }}
           className="relative"
         >
           <HeroVisual />
+          <HeroFloatingModules scrollYProgress={scrollYProgress} />
         </motion.div>
       </div>
     </section>

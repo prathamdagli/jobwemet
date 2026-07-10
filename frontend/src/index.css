@@ -129,3 +129,157 @@
     @apply font-sans;
   }
 }
+
+/* ================================================================== */
+/*  Hero — cinematic layered background (monochrome, GPU-friendly)     */
+/*  Built from plain CSS layers + a JS-driven cursor spotlight. No new */
+/*  animation primitives are introduced; everything degrades under     */
+/*  prefers-reduced-motion.                                            */
+/* ================================================================== */
+.hero-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* subtle grid that fades toward the edges */
+.hero-grid {
+  background-image:
+    linear-gradient(
+      to right,
+      color-mix(in oklch, var(--foreground) 5%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      to bottom,
+      color-mix(in oklch, var(--foreground) 5%, transparent) 1px,
+      transparent 1px
+    );
+  background-size: 56px 56px;
+  -webkit-mask-image: radial-gradient(
+    ellipse 78% 72% at 50% 38%,
+    #000 28%,
+    transparent 76%
+  );
+  mask-image: radial-gradient(
+    ellipse 78% 72% at 50% 38%,
+    #000 28%,
+    transparent 76%
+  );
+}
+
+/* soft mesh lighting — neutral depth blobs */
+.hero-mesh {
+  background:
+    radial-gradient(
+      42% 38% at 16% 20%,
+      color-mix(in oklch, var(--foreground) 3.5%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      38% 32% at 84% 26%,
+      color-mix(in oklch, var(--foreground) 3%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      48% 42% at 50% 96%,
+      color-mix(in oklch, var(--foreground) 2.5%, transparent),
+      transparent 72%
+    );
+  filter: blur(6px);
+}
+
+/* static radial spotlight drawing focus to the centre */
+.hero-spotlight {
+  background: radial-gradient(
+    52% 46% at 50% 30%,
+    color-mix(in oklch, var(--foreground) 4%, transparent),
+    transparent 70%
+  );
+}
+
+/* animated vignette — gentle breathing depth at the edges */
+.hero-vignette {
+  background: radial-gradient(
+    125% 125% at 50% 45%,
+    transparent 52%,
+    color-mix(in oklch, var(--foreground) 9%, transparent) 100%
+  );
+  animation: hero-vignette-breathe 9s ease-in-out infinite;
+  transform-origin: 50% 45%;
+}
+
+/* cursor-following spotlight (position fed via CSS vars from JS) */
+.hero-cursor {
+  background: radial-gradient(
+    360px circle at var(--mx, 50%) var(--my, 32%),
+    color-mix(in oklch, var(--foreground) 7%, transparent),
+    transparent 60%
+  );
+}
+
+/* grain / noise texture (grayscale, very low opacity) */
+.hero-noise {
+  opacity: 0.04;
+}
+
+/* subtle loading shimmer on a thin bar inside the dashboard */
+.hero-shimmer {
+  background-image: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in oklch, var(--foreground) 10%, transparent),
+    transparent
+  );
+  background-size: 220% 100%;
+  animation: hero-shimmer 2.6s linear infinite;
+}
+
+/* tiny sparkline "graph movement" — restrained pulse on the tip */
+.hero-graph-tip {
+  animation: hero-tip-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes hero-vignette-breathe {
+  0%,
+  100% {
+    opacity: 0.65;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+}
+
+@keyframes hero-shimmer {
+  0% {
+    background-position: 220% 0;
+  }
+  100% {
+    background-position: -220% 0;
+  }
+}
+
+@keyframes hero-tip-pulse {
+  0%,
+  100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.35);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-vignette,
+  .hero-shimmer,
+  .hero-graph-tip {
+    animation: none;
+  }
+  .hero-vignette {
+    opacity: 0.8;
+  }
+}
