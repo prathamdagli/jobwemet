@@ -1,42 +1,44 @@
 import { useEffect, useRef, useState } from 'react'
 import {
-  Activity,
   AlertTriangle,
   ArrowUp,
   BarChart3,
-  Briefcase,
-  Clock,
+  Crown,
   Gauge,
   Layers,
   Lightbulb,
   Loader2,
   RefreshCw,
-  Rocket,
   Sparkles,
   Target,
   TrendingUp,
   Users,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { WidgetCard } from '@/components/dashboard/WidgetCard'
+import { MetricCard } from '@/components/dashboard/MetricCard'
+import { CircularProgress } from '@/components/dashboard/CircularProgress'
+import { PageHeader } from '@/components/dashboard/PageHeader'
 import { ProgressBar } from '@/components/dashboard/ProgressBar'
 import { InsightRow } from '@/components/careers/careers'
 import {
   CategoryHeader,
-  DistributionBar,
-  MetricTile,
   SkillRow,
   SoftSkillChip,
   type TechnicalSkill,
 } from '@/components/skills/skills'
 import { useSkills } from '@/hooks/useSkills'
-import { Reveal, Stagger } from '@/motion'
+import { Stagger, useCountUp } from '@/motion'
 
 function averageOf(skills: TechnicalSkill[]): number {
   if (skills.length === 0) return 0
   const total = skills.reduce((sum, skill) => sum + skill.confidence, 0)
   return Math.round(total / skills.length)
 }
+
+// Monochrome opacity steps so the composition bar reads as one system.
+const SEGMENT_OPACITY = [0.9, 0.7, 0.52, 0.36, 0.24]
 
 export default function SkillsPage() {
   const [analyzing, setAnalyzing] = useState(false)
@@ -61,26 +63,24 @@ export default function SkillsPage() {
     timerRef.current = setTimeout(() => setAnalyzing(false), 1600)
   }
 
+  const avgConfidence = averageOf(technicalSkills)
+  const skillGaps = technicalSkills.filter((s) => s.confidence < 70).length
+  const topStrengths = [...technicalSkills]
+    .sort((a, b) => b.confidence - a.confidence)
+    .slice(0, 5)
+
   return (
-    <div className="mx-auto max-w-7xl space-y-6 md:space-y-8">
-      <Reveal>
-        <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
-              AI Skill Analysis
-            </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              A breakdown of the skills extracted from your resume.
-            </p>
-            <p className="mt-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Clock className="size-3.5" aria-hidden="true" />
-              Last analyzed Jul 8, 2026
-            </p>
-          </div>
+    <div className="mx-auto max-w-7xl space-y-5 md:space-y-6">
+      <PageHeader
+        eyebrow="AI Skill Analysis"
+        title="Your skill profile"
+        description="A confidence-weighted breakdown of the technical and soft skills extracted from your resume — what you've mastered, where the gaps are, and what to learn next."
+        lastUpdated="Jul 8, 2026"
+        action={
           <Button
             onClick={handleReanalyze}
             disabled={analyzing}
-            size="lg"
+            size="sm"
             className="gap-1.5"
           >
             {analyzing ? (
@@ -88,45 +88,140 @@ export default function SkillsPage() {
             ) : (
               <RefreshCw className="size-4" aria-hidden="true" />
             )}
-            {analyzing ? 'Analyzing…' : 'Re-analyze Resume'}
+            {analyzing ? 'Analyzing…' : 'Re-analyze'}
           </Button>
-        </header>
-      </Reveal>
+        }
+        context={
+          <Badge variant="soft" size="xs" className="gap-1.5">
+            <Gauge className="size-3" aria-hidden="true" />
+            {avgConfidence}% avg confidence
+          </Badge>
+        }
+      />
 
-      <Stagger className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <MetricTile
-          label="Overall Skills"
-          value="84%"
-          sub="Strong Skill Alignment"
-          icon={Gauge}
-        />
-        <MetricTile
-          label="Technical Skills"
-          value="13"
-          sub="Across 5 Categories"
+      {/* KPI row — small variant tiles */}
+      <Stagger className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <MetricCard
+          variant="sm"
+          label="Skills Analyzed"
+          value={String(technicalSkills.length)}
+          sub={`across ${categories.length} categories`}
           icon={Layers}
         />
-        <MetricTile
-          label="Soft Skills"
-          value="5"
-          sub="Key Skills Identified"
-          icon={Users}
+        <MetricCard
+          variant="sm"
+          label="Avg Confidence"
+          value={`${avgConfidence}%`}
+          sub="AI-calculated"
+          icon={Gauge}
         />
-        <MetricTile
-          label="Experience Level"
-          value="Intermediate"
-          sub="2–4 Years Experience"
-          icon={Briefcase}
+        <MetricCard
+          variant="sm"
+          label="Categories"
+          value={String(categories.length)}
+          sub="distinct domains"
+          icon={Sparkles}
+        />
+        <MetricCard
+          variant="sm"
+          label="Skill Gaps"
+          value={String(skillGaps)}
+          sub="below 70% confidence"
+          icon={AlertTriangle}
         />
       </Stagger>
 
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+      {/* Dominant visualization + side panel — asymmetric */}
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-12">
         <WidgetCard
+          variant="feature"
+          padding="lg"
+          className="lg:col-span-8"
+          title="Skill Confidence Overview"
+          icon={Gauge}
+          action={
+            <Badge variant="soft" size="xs">
+              {topStrengths[0]?.name} · top strength
+            </Badge>
+          }
+        >
+          <div className="grid gap-6 md:grid-cols-2 md:items-center">
+            <div className="flex flex-col items-center justify-center text-center">
+              <CircularProgress
+                value={avgConfidence}
+                size={200}
+                strokeWidth={16}
+                label="Overall confidence"
+              >
+                <span className="text-5xl font-semibold tracking-tight text-foreground">
+                  {Math.round(useCountUp(avgConfidence))}%
+                </span>
+                <span className="mt-1 text-xs text-muted-foreground">
+                  Avg Confidence
+                </span>
+              </CircularProgress>
+              <p className="mt-4 max-w-xs text-xs leading-relaxed text-muted-foreground">
+                Confidence is the AI&apos;s weighted estimate of proficiency
+                derived from your resume — higher means the skill shows up
+                consistently and at depth.
+              </p>
+            </div>
+            <div>
+              <p className="mb-3 text-sm font-medium text-muted-foreground">
+                Confidence by category
+              </p>
+              <Stagger className="space-y-3.5">
+                {categories.map((category) => {
+                  const skills = technicalSkills.filter(
+                    (skill) => skill.category === category,
+                  )
+                  const average = averageOf(skills)
+                  return (
+                    <div key={category}>
+                      <CategoryHeader
+                        category={category}
+                        count={skills.length}
+                        average={average}
+                      />
+                      <ProgressBar value={average} size="sm" className="mt-2" />
+                    </div>
+                  )
+                })}
+              </Stagger>
+            </div>
+          </div>
+        </WidgetCard>
+
+        <WidgetCard
+          className="lg:col-span-4"
+          padding="lg"
+          title="Top Strengths"
+          icon={Crown}
+        >
+          <ol className="space-y-1">
+            {topStrengths.map((skill, i) => (
+              <li key={skill.name} className="flex items-center gap-2.5">
+                <span className="w-4 shrink-0 text-center text-xs font-semibold tabular-nums text-muted-foreground">
+                  {i + 1}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <SkillRow skill={skill} />
+                </div>
+              </li>
+            ))}
+          </ol>
+        </WidgetCard>
+      </div>
+
+      {/* Technical detail + soft skills */}
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-12">
+        <WidgetCard
+          className="lg:col-span-8"
+          padding="lg"
           title="Technical Skills"
           icon={Sparkles}
-          className="lg:col-span-2"
         >
-          <div className="space-y-8">
+          <Stagger className="space-y-8">
             {categories.map((category) => {
               const skills = technicalSkills.filter(
                 (skill) => skill.category === category,
@@ -148,11 +243,17 @@ export default function SkillsPage() {
                 </section>
               )
             })}
-          </div>
+          </Stagger>
         </WidgetCard>
 
-        <WidgetCard title="Soft Skills" icon={Users}>
-          <div className="grid grid-cols-1 gap-2">
+        <WidgetCard
+          variant="muted"
+          className="lg:col-span-4"
+          padding="lg"
+          title="Soft Skills"
+          icon={Users}
+        >
+          <Stagger className="grid grid-cols-1 gap-2.5">
             {softSkills.map((skill) => (
               <SoftSkillChip
                 key={skill.name}
@@ -160,17 +261,69 @@ export default function SkillsPage() {
                 confidence={skill.confidence}
               />
             ))}
+          </Stagger>
+        </WidgetCard>
+      </div>
+
+      {/* Distribution + insights */}
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-12">
+        <WidgetCard
+          variant="feature"
+          className="lg:col-span-8"
+          padding="lg"
+          title="Skill Distribution"
+          icon={BarChart3}
+          action={
+            <Badge variant="muted" size="xs">
+              {distribution.length} areas
+            </Badge>
+          }
+        >
+          <div>
+            <div
+              className="flex h-3 w-full overflow-hidden rounded-full bg-muted"
+              role="img"
+              aria-label="Composition of your skills by category"
+            >
+              {distribution.map((item, i) => (
+                <div
+                  key={item.label}
+                  className="h-full bg-foreground transition-opacity"
+                  style={{
+                    width: `${item.value}%`,
+                    opacity: SEGMENT_OPACITY[i % SEGMENT_OPACITY.length],
+                  }}
+                />
+              ))}
+            </div>
+            <ul className="mt-4 flex flex-wrap gap-x-4 gap-y-2">
+              {distribution.map((item, i) => (
+                <li
+                  key={item.label}
+                  className="flex items-center gap-1.5 text-xs text-muted-foreground"
+                >
+                  <span
+                    className="size-2 rounded-full bg-foreground"
+                    style={{
+                      opacity: SEGMENT_OPACITY[i % SEGMENT_OPACITY.length],
+                    }}
+                  />
+                  {item.label}
+                  <span className="font-medium text-foreground">
+                    {item.value}%
+                  </span>
+                </li>
+              ))}
+            </ul>
           </div>
-          <div className="my-4 border-t border-border" />
-          <ul className="space-y-2.5">
-            <InsightRow icon={TrendingUp} label="Top Strength" value="Python" />
-            <InsightRow icon={Activity} label="Most Used Skill" value="SQL" />
-            <InsightRow icon={Rocket} label="Fastest Growing" value="Docker" />
-            <InsightRow icon={Sparkles} label="AI Confidence" value="84%" />
-          </ul>
         </WidgetCard>
 
-        <WidgetCard title="AI Insights" icon={Lightbulb}>
+        <WidgetCard
+          className="lg:col-span-4"
+          padding="lg"
+          title="AI Insights"
+          icon={Lightbulb}
+        >
           <ul className="space-y-3">
             {insights.map((text, index) => (
               <li key={index} className="flex gap-2.5">
@@ -184,20 +337,13 @@ export default function SkillsPage() {
           </ul>
         </WidgetCard>
 
-        <WidgetCard title="Skill Distribution" icon={BarChart3}>
-          <div className="space-y-4">
-            {distribution.map((item) => (
-              <DistributionBar
-                key={item.label}
-                label={item.label}
-                value={item.value}
-              />
-            ))}
-          </div>
-        </WidgetCard>
-
-        <WidgetCard title="Recommended Actions" icon={Target}>
-          <ul className="space-y-3">
+        <WidgetCard
+          className="lg:col-span-12"
+          padding="lg"
+          title="Recommended Actions"
+          icon={Target}
+        >
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <InsightRow
               icon={TrendingUp}
               label="Top Strength"
@@ -218,7 +364,7 @@ export default function SkillsPage() {
               label="Estimated Improvement"
               value={action.improvement}
             />
-          </ul>
+          </div>
         </WidgetCard>
       </div>
     </div>

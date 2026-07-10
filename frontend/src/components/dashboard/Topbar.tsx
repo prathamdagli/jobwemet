@@ -1,9 +1,19 @@
-import { Bell, ChevronDown, Menu, PanelLeft, Search, Sun } from 'lucide-react'
+import {
+  Bell,
+  ChevronDown,
+  ChevronRight,
+  Menu,
+  PanelLeft,
+  Search,
+  Sun,
+} from 'lucide-react'
+import { useLocation } from 'react-router-dom'
 import { motion } from 'motion/react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { buttonHover, fadeIn, iconHover } from '@/motion'
 import { useAuth } from '@/hooks/useAuth'
+import { dashboardNav } from '@/config/dashboardNav'
 
 function getUserInitials(
   displayName?: string | null,
@@ -72,6 +82,10 @@ export default function Topbar({
   onOpenMobile,
   onToggleCollapse,
 }: TopbarProps) {
+  const { pathname } = useLocation()
+  const current =
+    dashboardNav.find((item) => item.to === pathname)?.label ?? 'Dashboard'
+
   return (
     <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur md:px-6">
       <div className="flex items-center gap-1">
@@ -93,6 +107,14 @@ export default function Topbar({
         >
           <PanelLeft className="size-5" />
         </Button>
+        <nav
+          aria-label="Breadcrumb"
+          className="hidden items-center gap-1.5 text-sm lg:flex"
+        >
+          <span className="font-medium text-muted-foreground">JobWeMet</span>
+          <ChevronRight className="size-3.5 text-muted-foreground/60" />
+          <span className="font-medium text-foreground">{current}</span>
+        </nav>
       </div>
 
       <motion.div

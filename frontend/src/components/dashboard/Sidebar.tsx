@@ -51,7 +51,7 @@ function NavItemLink({
       title={collapsed ? item.label : undefined}
       className={({ isActive }) =>
         cn(
-          'relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
+          'relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-[colors,transform] duration-200 hover:translate-x-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
           collapsed && 'justify-center px-0',
           isActive
             ? 'text-accent-foreground'

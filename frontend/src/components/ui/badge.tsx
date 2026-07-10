@@ -5,7 +5,7 @@ import { fast } from '@/motion'
 import { cn } from '@/lib/utils'
 
 const badgeVariants = cva(
-  'inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors',
+  'inline-flex items-center gap-1 rounded-full border font-medium transition-colors',
   {
     variants: {
       variant: {
@@ -13,9 +13,15 @@ const badgeVariants = cva(
         secondary: 'border-transparent bg-secondary text-secondary-foreground',
         outline: 'border-border text-foreground',
         muted: 'border-transparent bg-muted text-muted-foreground',
+        soft: 'border-transparent bg-foreground/10 text-foreground',
+      },
+      size: {
+        xs: 'px-1.5 py-0 text-[0.65rem]',
+        sm: 'px-2 py-0.5 text-xs',
+        md: 'px-2.5 py-0.5 text-xs',
       },
     },
-    defaultVariants: { variant: 'default' },
+    defaultVariants: { variant: 'default', size: 'md' },
   },
 )
 

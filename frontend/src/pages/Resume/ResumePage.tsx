@@ -1,8 +1,19 @@
 import { useRef, useState } from 'react'
-import { History, UploadCloud } from 'lucide-react'
+import {
+  AlertTriangle,
+  CheckCircle2,
+  FileText,
+  History,
+  Loader2,
+  Sparkles,
+  UploadCloud,
+} from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { MetricCard } from '@/components/dashboard/MetricCard'
+import { PageHeader } from '@/components/dashboard/PageHeader'
 import { WidgetCard } from '@/components/dashboard/WidgetCard'
-import { Reveal } from '@/motion'
+import { Stagger } from '@/motion'
 import {
   RecentResumes,
   type ResumeEntry,
@@ -13,35 +24,59 @@ import {
 } from '@/components/resume/ResumeDropzone'
 
 const PLACEHOLDER_RESUMES: ResumeEntry[] = [
-  { id: 'r1', name: 'Resume_v1.pdf', uploaded: 'Today' },
-  { id: 'r2', name: 'Resume_AI.pdf', uploaded: '2 days ago' },
-  { id: 'r3', name: 'Frontend_Resume.pdf', uploaded: 'Last week' },
+  {
+    id: 'r1',
+    name: 'Resume_v1.pdf',
+    uploaded: 'Today',
+    status: 'Processing',
+    preview: 'Extracting skills, experience & education…',
+  },
+  {
+    id: 'r2',
+    name: 'Resume_AI.pdf',
+    uploaded: '2 days ago',
+    status: 'Parsed',
+    preview: 'AI Engineer · Python, PyTorch, ML Ops, System Design',
+  },
+  {
+    id: 'r3',
+    name: 'Frontend_Resume.pdf',
+    uploaded: 'Last week',
+    status: 'Failed',
+    preview: "Couldn't extract text — this looks like a scanned image.",
+  },
 ]
 
 export default function ResumePage() {
   const dropRef = useRef<ResumeDropzoneHandle>(null)
   const [recent, setRecent] = useState<ResumeEntry[]>(PLACEHOLDER_RESUMES)
 
+  const parsedCount = recent.filter(
+    (r) => (r.status ?? 'Parsed') === 'Parsed',
+  ).length
+  const processingCount = recent.filter((r) => r.status === 'Processing').length
+  const failedCount = recent.filter((r) => r.status === 'Failed').length
+
   function handleUploaded(name: string) {
     setRecent((prev) => [
-      { id: `u-${Date.now()}`, name, uploaded: 'Just now' },
+      {
+        id: `u-${Date.now()}`,
+        name,
+        uploaded: 'Just now',
+        status: 'Parsed',
+        preview: 'AI-extracted · skills, experience & education detected.',
+      },
       ...prev,
     ])
   }
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
-      <Reveal>
-        <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
-              Resume
-            </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Upload your resume to unlock AI-powered skill extraction and
-              career matching.
-            </p>
-          </div>
+    <div className="mx-auto max-w-7xl space-y-5 md:space-y-6">
+      <PageHeader
+        eyebrow="Resume"
+        title="Resume Library"
+        description="Upload your resume and our AI extracts your skills, experience, and education — then matches you to careers in seconds."
+        action={
           <Button
             onClick={() => dropRef.current?.open()}
             size="lg"
@@ -50,15 +85,89 @@ export default function ResumePage() {
             <UploadCloud className="size-4" aria-hidden="true" />
             Upload Resume
           </Button>
-        </header>
-      </Reveal>
+        }
+        context={
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/40 px-2.5 py-1 text-xs text-muted-foreground">
+            <Sparkles className="size-3.5" aria-hidden="true" />
+            AI extraction
+          </span>
+        }
+      />
 
-      <Reveal>
-        <ResumeDropzone ref={dropRef} onUploaded={handleUploaded} />
-      </Reveal>
+      {/* Dominant upload zone + supporting insight panel */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
+        <div className="lg:col-span-8">
+          <ResumeDropzone ref={dropRef} onUploaded={handleUploaded} />
+        </div>
+        <div className="lg:col-span-4">
+          <WidgetCard
+            variant="feature"
+            padding="lg"
+            title="Library at a glance"
+            icon={History}
+            className="h-full"
+          >
+            <div className="space-y-4">
+              <Stagger className="grid grid-cols-2 gap-3">
+                <MetricCard
+                  variant="sm"
+                  label="Resumes"
+                  value={String(recent.length)}
+                  icon={FileText}
+                />
+                <MetricCard
+                  variant="sm"
+                  label="Parsed"
+                  value={String(parsedCount)}
+                  icon={CheckCircle2}
+                />
+              </Stagger>
+              <div className="flex flex-wrap gap-2">
+                <Badge variant="soft" size="xs" className="gap-1">
+                  <CheckCircle2 className="size-3.5" aria-hidden="true" />
+                  {parsedCount} parsed
+                </Badge>
+                <Badge variant="muted" size="xs" className="gap-1">
+                  <Loader2 className="size-3.5" aria-hidden="true" />
+                  {processingCount} parsing
+                </Badge>
+                {failedCount > 0 && (
+                  <Badge variant="outline" size="xs" className="gap-1">
+                    <AlertTriangle className="size-3.5" aria-hidden="true" />
+                    {failedCount} failed
+                  </Badge>
+                )}
+              </div>
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                Your latest parsed version is used automatically for career
+                matching and skill gap analysis.
+              </p>
+            </div>
+          </WidgetCard>
+        </div>
+      </div>
 
-      <WidgetCard title="Recently Uploaded Resumes" icon={History}>
-        <RecentResumes items={recent} />
+      {/* Recent uploads */}
+      <WidgetCard
+        title="Recent uploads"
+        icon={History}
+        padding="lg"
+        action={
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5"
+            onClick={() => dropRef.current?.open()}
+          >
+            <UploadCloud className="size-4" aria-hidden="true" />
+            Add resume
+          </Button>
+        }
+      >
+        <RecentResumes
+          items={recent}
+          onUpload={() => dropRef.current?.open()}
+        />
       </WidgetCard>
     </div>
   )

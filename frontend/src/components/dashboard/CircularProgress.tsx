@@ -54,6 +54,18 @@ export function CircularProgress({
         aria-label={label ?? `${clamped}%`}
         className="-rotate-90"
       >
+        <defs>
+          <linearGradient
+            id="circular-progress-grad"
+            x1="0"
+            y1="0"
+            x2="1"
+            y2="1"
+          >
+            <stop offset="0%" stopColor="currentColor" stopOpacity="0.65" />
+            <stop offset="100%" stopColor="currentColor" />
+          </linearGradient>
+        </defs>
         <circle
           cx={size / 2}
           cy={size / 2}
@@ -75,7 +87,8 @@ export function CircularProgress({
           }}
           animate={{ strokeDashoffset: inView ? offset : circumference }}
           transition={slow}
-          className="stroke-foreground"
+          className="text-foreground"
+          stroke="url(#circular-progress-grad)"
         />
       </svg>
       {children && (

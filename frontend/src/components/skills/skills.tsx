@@ -120,17 +120,14 @@ export function SkillRow({ skill }: { skill: TechnicalSkill }) {
   return (
     <motion.div
       variants={listReveal}
-      className="flex items-center justify-between gap-4 py-2.5"
+      className="-mx-2 flex items-center justify-between gap-4 rounded-lg px-2 py-2.5 transition-colors hover:bg-muted/40"
     >
       <div className="min-w-0">
         <div className="flex items-center gap-2">
           <span className="truncate text-sm font-medium text-foreground">
             {skill.name}
           </span>
-          <Badge
-            variant={level.variant}
-            className="shrink-0 px-1.5 py-0 text-[0.65rem] font-medium"
-          >
+          <Badge variant={level.variant} size="xs">
             {level.label}
           </Badge>
         </div>
@@ -168,15 +165,19 @@ export function CategoryHeader({
   const Icon = CATEGORY_ICONS[category] ?? Code
   return (
     <div className="flex items-center justify-between gap-3">
-      <div className="flex items-center gap-2">
-        <Icon className="size-4 text-muted-foreground" aria-hidden="true" />
+      <div className="flex items-center gap-2.5">
+        <span className="flex size-7 items-center justify-center rounded-lg bg-foreground/10">
+          <Icon className="size-3.5 text-foreground" aria-hidden="true" />
+        </span>
         <h3 className="text-sm font-semibold tracking-tight text-foreground">
           {category}
         </h3>
-        <span className="text-xs text-muted-foreground">{count} skills</span>
+        <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+          {count} skills
+        </span>
       </div>
       <span className="text-xs font-medium text-muted-foreground">
-        {average}%
+        {average}% avg
       </span>
     </div>
   )
@@ -201,12 +202,11 @@ export function SoftSkillChip({
   return (
     <motion.div
       variants={listReveal}
-      className="flex items-center gap-2.5 rounded-lg border border-border bg-muted/40 px-3 py-2"
+      className="flex items-center gap-3 rounded-xl border border-border bg-muted/40 px-3 py-2.5 transition-colors hover:bg-muted"
     >
-      <Icon
-        className="size-4 shrink-0 text-muted-foreground"
-        aria-hidden="true"
-      />
+      <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-foreground/10">
+        <Icon className="size-4 text-foreground" aria-hidden="true" />
+      </span>
       <span className="truncate text-sm font-medium text-foreground">
         {name}
       </span>
@@ -228,9 +228,9 @@ export function DistributionBar({
     <div>
       <div className="mb-1.5 flex items-center justify-between text-sm">
         <span className="font-medium text-foreground">{label}</span>
-        <span className="text-xs font-medium text-muted-foreground">
+        <Badge variant="muted" size="xs">
           {value}%
-        </span>
+        </Badge>
       </div>
       <ProgressBar value={value} />
     </div>

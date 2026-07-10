@@ -23,26 +23,30 @@ export function SettingRow({
   return (
     <div
       className={cn(
-        'flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between',
+        'flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6',
         className,
       )}
     >
-      <div className="min-w-0">
+      <div className="min-w-0 flex-1">
         {htmlFor ? (
           <label
             htmlFor={htmlFor}
-            className="block text-sm font-medium text-foreground"
+            className="block text-sm font-semibold tracking-tight text-foreground"
           >
             {title}
           </label>
         ) : (
-          <p className="text-sm font-medium text-foreground">{title}</p>
+          <p className="text-sm font-semibold tracking-tight text-foreground">
+            {title}
+          </p>
         )}
         {description && (
-          <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
+          <p className="mt-0.5 max-w-prose text-xs leading-relaxed text-muted-foreground">
+            {description}
+          </p>
         )}
       </div>
-      <div className="shrink-0">{children}</div>
+      <div className="shrink-0 sm:text-right">{children}</div>
     </div>
   )
 }

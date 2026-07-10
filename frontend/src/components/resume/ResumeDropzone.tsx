@@ -7,6 +7,7 @@ import {
   type DragEvent,
   type KeyboardEvent,
 } from 'react'
+import { motion } from 'motion/react'
 import {
   AlertCircle,
   CheckCircle2,
@@ -17,6 +18,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ProgressBar } from '@/components/dashboard/ProgressBar'
+import { widgetHover } from '@/motion'
 import { cn } from '@/lib/utils'
 
 const MAX_SIZE = 10 * 1024 * 1024
@@ -70,9 +72,12 @@ function FilePreviewCard({
 }: FilePreviewCardProps) {
   const isSuccess = status === 'success'
   return (
-    <div className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 shadow-sm sm:flex-row sm:items-center">
-      <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
-        <FileText className="size-6" aria-hidden="true" />
+    <motion.div
+      {...widgetHover}
+      className="flex flex-col gap-4 rounded-3xl border border-border bg-card p-6 shadow-sm sm:flex-row sm:items-center"
+    >
+      <span className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
+        <FileText className="size-7" aria-hidden="true" />
       </span>
       <div className="min-w-0 flex-1">
         <div className="flex items-center justify-between gap-3">
@@ -115,7 +120,7 @@ function FilePreviewCard({
           Remove
         </Button>
       </div>
-    </div>
+    </motion.div>
   )
 }
 
@@ -217,7 +222,7 @@ export const ResumeDropzone = forwardRef<
           onReplace={handleReplace}
         />
       ) : (
-        <div
+        <motion.div
           role="button"
           tabIndex={0}
           aria-label="Upload resume. Drag and drop a file here, or press Enter to browse."
@@ -237,37 +242,47 @@ export const ResumeDropzone = forwardRef<
             setDragActive(false)
           }}
           onDrop={handleDrop}
+          {...widgetHover}
           className={cn(
-            'flex flex-col items-center justify-center rounded-2xl border-2 border-dashed px-6 py-12 text-center transition-colors',
+            'relative flex flex-col items-center justify-center overflow-hidden rounded-3xl border-2 border-dashed px-6 py-14 text-center outline-none transition-colors',
+            'focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
             dragActive
               ? 'border-primary bg-primary/5'
-              : 'border-border bg-card hover:border-foreground/30 hover:bg-muted/40',
+              : 'border-border bg-gradient-to-br from-muted/40 to-card hover:border-foreground/30',
           )}
         >
           <span
             className={cn(
-              'mb-4 flex size-14 items-center justify-center rounded-2xl transition-colors',
+              'mb-5 flex size-16 items-center justify-center rounded-2xl transition-colors',
               dragActive
-                ? 'bg-primary text-primary-foreground'
+                ? 'bg-primary text-primary-foreground shadow-md'
                 : 'bg-muted text-muted-foreground',
             )}
           >
-            <UploadCloud className="size-7" aria-hidden="true" />
+            <UploadCloud className="size-8" aria-hidden="true" />
           </span>
-          <p className="text-base font-medium text-foreground">
-            Drag &amp; drop your resume here
+          <p className="text-lg font-semibold tracking-tight text-foreground">
+            Drag &amp; drop your resume
           </p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            or{' '}
-            <span className="font-medium text-primary underline-offset-4 hover:underline">
-              browse
-            </span>{' '}
-            to choose a file
+          <p className="mt-1 max-w-sm text-sm text-muted-foreground">
+            Drop a PDF or DOCX here, or click to browse your files.
           </p>
-          <p className="mt-3 text-xs text-muted-foreground">
+          <Button
+            type="button"
+            size="lg"
+            className="mt-6 gap-1.5"
+            onClick={(e) => {
+              e.stopPropagation()
+              inputRef.current?.click()
+            }}
+          >
+            <UploadCloud className="size-4" aria-hidden="true" />
+            Browse files
+          </Button>
+          <p className="mt-4 text-xs text-muted-foreground">
             PDF or DOCX · Max 10 MB
           </p>
-        </div>
+        </motion.div>
       )}
 
       {error && (
