@@ -81,7 +81,7 @@ export function CareerCard({ career }: { career: Career }) {
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-controls={panelId}
-        className="mt-4 inline-flex w-fit items-center gap-1 text-xs font-medium text-foreground outline-none transition-colors hover:text-foreground/70 focus-visible:rounded focus-visible:ring-3 focus-visible:ring-ring/50"
+        className="mt-4 inline-flex w-fit items-center gap-1 text-xs font-medium text-foreground outline-none transition-colors hover:text-foreground/70 focus-visible:ring-3 focus-visible:ring-ring/50"
       >
         {open ? 'Hide details' : 'Why this matches'}
         <ChevronDown
@@ -173,11 +173,15 @@ export function CareerCard({ career }: { career: Career }) {
       )}
 
       <div className="mt-5 flex flex-col gap-2 sm:flex-row">
-        <Button size="lg" className="flex-1" render={<Link to="/roadmap" />}>
+        <Button
+          size="default"
+          className="flex-1"
+          render={<Link to="/roadmap" />}
+        >
           View Roadmap
         </Button>
         <Button
-          size="lg"
+          size="default"
           variant="outline"
           className="flex-1"
           render={<Link to="/skills" />}
@@ -199,7 +203,7 @@ export function TopMatchBanner({ career }: { career: Career }) {
       initial="hidden"
       animate={inView ? 'visible' : 'hidden'}
       aria-label="Top career match"
-      className="relative flex h-full flex-col justify-between gap-6 overflow-hidden rounded-3xl border border-foreground/10 bg-gradient-to-br from-muted/50 to-card p-6 shadow-md md:flex-row md:items-center md:p-8"
+      className="relative flex h-full flex-col justify-between gap-6 overflow-hidden rounded-2xl border border-foreground/10 bg-gradient-to-br from-muted/50 to-card p-6 shadow-md md:flex-row md:items-center md:p-8"
     >
       <div className="min-w-0">
         <div className="flex items-center gap-2">
@@ -208,12 +212,12 @@ export function TopMatchBanner({ career }: { career: Career }) {
             #1 Career Match
           </span>
           <Badge variant="soft" size="xs" className="gap-1">
-            <ArrowUpRight className="size-3" aria-hidden="true" />
+            <ArrowUpRight className="size-3.5" aria-hidden="true" />
             Excellent fit
           </Badge>
         </div>
 
-        <h2 className="mt-3 text-3xl font-semibold tracking-tight text-foreground md:text-4xl">
+        <h2 className="mt-3 text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
           {career.title}
         </h2>
         <p className="mt-1.5 text-sm text-muted-foreground">
@@ -276,7 +280,7 @@ export function FilterSelect({ label, options }: FilterSelectProps) {
     <div className="flex flex-col gap-1.5">
       <label
         htmlFor={id}
-        className="text-[0.7rem] font-medium uppercase tracking-wide text-muted-foreground"
+        className="text-xs font-medium uppercase tracking-wide text-muted-foreground"
       >
         {label}
       </label>

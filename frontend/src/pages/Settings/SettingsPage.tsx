@@ -36,14 +36,14 @@ const LAST_UPDATED = 'Jul 9, 2026'
 
 export default function SettingsPage() {
   return (
-    <div className="mx-auto max-w-7xl space-y-6 md:space-y-8">
+    <div className="mx-auto max-w-7xl space-y-5 md:space-y-6">
       <PageHeader
         eyebrow="Settings"
         title="Your account & preferences"
         description="Manage your profile, security, and how JobWeMet works for you — all in one place."
         lastUpdated={LAST_UPDATED}
         action={
-          <Button size="lg" className="gap-1.5">
+          <Button size="sm" className="gap-1.5">
             <Pencil className="size-4" aria-hidden="true" />
             Save Changes
           </Button>
@@ -69,7 +69,7 @@ export default function SettingsPage() {
               </div>
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
-                  <p className="text-xl font-semibold tracking-tight text-foreground">
+                  <p className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
                     {FULL_NAME}
                   </p>
                   <Badge variant="soft" size="xs">
@@ -86,11 +86,11 @@ export default function SettingsPage() {
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Button size="lg" className="gap-1.5">
+              <Button size="sm" className="gap-1.5">
                 <Pencil className="size-4" aria-hidden="true" />
                 Edit Profile
               </Button>
-              <Button variant="outline" size="lg" className="gap-1.5">
+              <Button variant="outline" size="sm" className="gap-1.5">
                 <Camera className="size-4" aria-hidden="true" />
                 Change Avatar
               </Button>

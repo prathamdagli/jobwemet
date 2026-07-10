@@ -79,7 +79,7 @@ export default function ResumePage() {
         action={
           <Button
             onClick={() => dropRef.current?.open()}
-            size="lg"
+            size="sm"
             className="gap-1.5"
           >
             <UploadCloud className="size-4" aria-hidden="true" />
@@ -108,7 +108,7 @@ export default function ResumePage() {
             className="h-full"
           >
             <div className="space-y-4">
-              <Stagger className="grid grid-cols-2 gap-3">
+              <Stagger className="grid grid-cols-2 gap-4">
                 <MetricCard
                   variant="sm"
                   label="Resumes"

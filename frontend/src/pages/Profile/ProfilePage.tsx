@@ -100,7 +100,7 @@ export default function ProfilePage() {
                   </div>
                 )}
                 <div className="min-w-0">
-                  <h2 className="truncate text-xl font-semibold tracking-tight text-foreground">
+                  <h2 className="truncate text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
                     {profile.fullName}
                   </h2>
                   <p className="mt-0.5 flex items-center gap-1.5 text-sm text-muted-foreground">
@@ -173,7 +173,7 @@ export default function ProfilePage() {
           className="lg:col-span-4"
         >
           <div className="flex flex-col">
-            <p className="text-3xl font-semibold tracking-tight text-foreground">
+            <p className="text-4xl font-semibold tracking-tight text-foreground">
               {completion}%
               <span className="ml-1 text-sm font-normal text-muted-foreground">
                 complete
@@ -321,7 +321,7 @@ export default function ProfilePage() {
                 className="flex items-start gap-3"
               >
                 <div className="flex flex-col items-center">
-                  <span className="flex size-8 shrink-0 items-center justify-center rounded-full border border-border bg-muted">
+                  <span className="flex size-9 shrink-0 items-center justify-center rounded-full border border-border bg-muted">
                     <item.icon
                       className="size-4 text-muted-foreground"
                       aria-hidden="true"
@@ -353,7 +353,7 @@ export default function ProfilePage() {
             <Button
               key={action.label}
               variant="outline"
-              size="lg"
+              size="sm"
               className="gap-1.5"
               render={<Link to={action.to} />}
             >

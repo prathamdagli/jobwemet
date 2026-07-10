@@ -166,15 +166,15 @@ export function CategoryHeader({
   return (
     <div className="flex items-center justify-between gap-3">
       <div className="flex items-center gap-2.5">
-        <span className="flex size-7 items-center justify-center rounded-lg bg-foreground/10">
+        <span className="flex size-8 items-center justify-center rounded-md bg-foreground/10">
           <Icon className="size-3.5 text-foreground" aria-hidden="true" />
         </span>
         <h3 className="text-sm font-semibold tracking-tight text-foreground">
           {category}
         </h3>
-        <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+        <Badge variant="muted" size="xs">
           {count} skills
-        </span>
+        </Badge>
       </div>
       <span className="text-xs font-medium text-muted-foreground">
         {average}% avg
@@ -204,7 +204,7 @@ export function SoftSkillChip({
       variants={listReveal}
       className="flex items-center gap-3 rounded-xl border border-border bg-muted/40 px-3 py-2.5 transition-colors hover:bg-muted"
     >
-      <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-foreground/10">
+      <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-foreground/10">
         <Icon className="size-4 text-foreground" aria-hidden="true" />
       </span>
       <span className="truncate text-sm font-medium text-foreground">
@@ -227,7 +227,7 @@ export function DistributionBar({
   return (
     <div>
       <div className="mb-1.5 flex items-center justify-between text-sm">
-        <span className="font-medium text-foreground">{label}</span>
+        <span className="font-semibold text-foreground">{label}</span>
         <Badge variant="muted" size="xs">
           {value}%
         </Badge>

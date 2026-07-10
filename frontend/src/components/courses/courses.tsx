@@ -135,7 +135,7 @@ export function SidebarStat({
   return (
     <motion.li
       variants={listReveal}
-      className="flex flex-col gap-1.5 rounded-lg border border-border bg-muted/40 px-3 py-2.5"
+      className="flex flex-col gap-1.5 rounded-xl border border-border bg-muted/40 px-3 py-2.5"
     >
       <span className="flex items-center gap-2 text-sm text-muted-foreground">
         <Icon className="size-4 shrink-0" aria-hidden="true" />

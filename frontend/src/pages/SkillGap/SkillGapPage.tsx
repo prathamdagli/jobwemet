@@ -136,14 +136,14 @@ export default function SkillGapPage() {
                 toward the heavier infrastructure skills.
               </p>
               <div className="mt-5 flex flex-wrap items-center gap-3">
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background/60 px-2.5 py-1 text-xs text-muted-foreground">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/40 px-2.5 py-1 text-xs text-muted-foreground">
                   <Target className="size-3.5" aria-hidden="true" />
                   Goal:{' '}
                   <span className="font-medium text-foreground">
                     AI Engineer
                   </span>
                 </span>
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background/60 px-2.5 py-1 text-xs text-muted-foreground">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/40 px-2.5 py-1 text-xs text-muted-foreground">
                   <Clock className="size-3.5" aria-hidden="true" />
                   {estHours}h to close
                 </span>

@@ -22,7 +22,7 @@ export function SkillCategoryGroup({
         <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           {title}
         </h3>
-        <span className="text-[0.65rem] font-medium tabular-nums text-muted-foreground/70">
+        <span className="text-xs font-medium tabular-nums text-muted-foreground/70">
           {skills.length}
         </span>
       </div>
@@ -31,7 +31,7 @@ export function SkillCategoryGroup({
           <Badge
             key={skill}
             variant={isMissing ? 'muted' : 'outline'}
-            className="px-2.5 py-1 text-sm"
+            size="sm"
           >
             {skill}
           </Badge>
@@ -75,7 +75,7 @@ export function PriorityItem({
   return (
     <motion.li
       variants={listReveal}
-      className="group relative flex flex-col gap-3 rounded-xl border border-border bg-card p-4 shadow-sm transition-[box-shadow,border-color] duration-300 hover:border-foreground/15 hover:shadow-md sm:flex-row sm:items-center sm:justify-between"
+      className="group relative flex flex-col gap-3 rounded-2xl border border-border bg-card p-4 shadow-sm transition-[box-shadow,border-color] duration-300 hover:border-foreground/15 hover:shadow-md sm:flex-row sm:items-center sm:justify-between"
     >
       <div className="flex min-w-0 items-center gap-3">
         <span
@@ -86,7 +86,7 @@ export function PriorityItem({
         </span>
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="font-medium text-foreground">{skill}</span>
+            <span className="font-semibold text-foreground">{skill}</span>
             <Badge
               variant={priorityBadgeVariant(priority)}
               size="xs"
@@ -123,10 +123,10 @@ export function RecommendationItem({ text }: { text: string }) {
   return (
     <motion.li
       variants={listReveal}
-      className="flex items-start gap-2.5 rounded-lg border border-border bg-muted/40 p-3"
+      className="flex items-start gap-2.5 rounded-xl border border-border bg-muted/40 p-3"
     >
       <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-foreground/10">
-        <Sparkles className="size-3 text-foreground" aria-hidden="true" />
+        <Sparkles className="size-4 text-foreground" aria-hidden="true" />
       </span>
       <span className="text-sm leading-relaxed text-foreground">{text}</span>
     </motion.li>

@@ -40,9 +40,9 @@ function ResumeCard({ item }: { item: ResumeEntry }) {
   const isProcessing = status === 'Processing'
 
   return (
-    <div className="group flex flex-col gap-3 rounded-2xl border border-border bg-card p-4 transition-colors hover:border-foreground/15 sm:flex-row sm:items-center">
+    <div className="group flex flex-col gap-3 rounded-2xl border border-border bg-card p-5 transition-colors hover:border-foreground/15 hover:shadow-md sm:flex-row sm:items-center">
       <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
-        <FileText className="size-5" aria-hidden="true" />
+        <FileText className="size-4" aria-hidden="true" />
       </span>
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center justify-between gap-2">
@@ -106,7 +106,7 @@ export function RecentResumes({
 
   return (
     <Stagger>
-      <ul className="space-y-3">
+      <ul className="space-y-4">
         {items.map((item) => (
           <motion.li key={item.id} variants={listReveal}>
             <ResumeCard item={item} />

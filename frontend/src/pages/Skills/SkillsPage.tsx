@@ -93,7 +93,7 @@ export default function SkillsPage() {
         }
         context={
           <Badge variant="soft" size="xs" className="gap-1.5">
-            <Gauge className="size-3" aria-hidden="true" />
+            <Gauge className="size-3.5" aria-hidden="true" />
             {avgConfidence}% avg confidence
           </Badge>
         }
@@ -132,7 +132,7 @@ export default function SkillsPage() {
       </Stagger>
 
       {/* Dominant visualization + side panel — asymmetric */}
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-12">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
         <WidgetCard
           variant="feature"
           padding="lg"
@@ -167,10 +167,10 @@ export default function SkillsPage() {
               </p>
             </div>
             <div>
-              <p className="mb-3 text-sm font-medium text-muted-foreground">
+              <p className="mb-3 text-sm font-semibold text-foreground">
                 Confidence by category
               </p>
-              <Stagger className="space-y-3.5">
+              <Stagger className="space-y-4">
                 {categories.map((category) => {
                   const skills = technicalSkills.filter(
                     (skill) => skill.category === category,
@@ -214,14 +214,14 @@ export default function SkillsPage() {
       </div>
 
       {/* Technical detail + soft skills */}
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-12">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
         <WidgetCard
           className="lg:col-span-8"
           padding="lg"
           title="Technical Skills"
           icon={Sparkles}
         >
-          <Stagger className="space-y-8">
+          <Stagger className="space-y-6">
             {categories.map((category) => {
               const skills = technicalSkills.filter(
                 (skill) => skill.category === category,
@@ -253,7 +253,7 @@ export default function SkillsPage() {
           title="Soft Skills"
           icon={Users}
         >
-          <Stagger className="grid grid-cols-1 gap-2.5">
+          <Stagger className="grid grid-cols-1 gap-2">
             {softSkills.map((skill) => (
               <SoftSkillChip
                 key={skill.name}
@@ -266,7 +266,7 @@ export default function SkillsPage() {
       </div>
 
       {/* Distribution + insights */}
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-12">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
         <WidgetCard
           variant="feature"
           className="lg:col-span-8"
@@ -281,7 +281,7 @@ export default function SkillsPage() {
         >
           <div>
             <div
-              className="flex h-3 w-full overflow-hidden rounded-full bg-muted"
+              className="flex h-2.5 w-full overflow-hidden rounded-full bg-muted"
               role="img"
               aria-label="Composition of your skills by category"
             >

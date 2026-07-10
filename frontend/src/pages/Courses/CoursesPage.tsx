@@ -57,9 +57,7 @@ function SectionTitle({
     <div className="mb-4 flex items-end justify-between gap-3">
       <div className="flex items-center gap-2">
         <Icon className="size-4 text-muted-foreground" aria-hidden="true" />
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          {title}
-        </h2>
+        <h2 className="text-sm font-semibold text-foreground">{title}</h2>
       </div>
       {hint && <span className="text-xs text-muted-foreground">{hint}</span>}
     </div>
@@ -95,7 +93,7 @@ function RecommendedCourse({
           </span>
         </CircularProgress>
         <div className="min-w-0">
-          <Badge variant="soft" size="xs" className="gap-1">
+          <Badge variant="soft" size="sm" className="gap-1">
             <Sparkles className="size-3" aria-hidden="true" />
             AI Pick
           </Badge>
@@ -142,7 +140,7 @@ function RecentCourseItem({ course }: { course: Course }) {
   return (
     <Link
       to="/courses"
-      className="group flex w-64 shrink-0 snap-start items-center gap-3 rounded-xl border border-border bg-card p-3 shadow-sm transition-colors hover:border-foreground/15 hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className="group flex w-64 shrink-0 snap-start items-center gap-3 rounded-2xl border border-border bg-card p-4 shadow-sm transition-colors hover:border-foreground/15 hover:bg-muted/30 hover:shadow-md focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
     >
       <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted text-foreground/50 transition-colors group-hover:bg-foreground/10">
         <Sparkles className="size-5" aria-hidden="true" />
@@ -323,7 +321,7 @@ export default function CoursesPage() {
                   <span className="text-3xl font-semibold tabular-nums text-foreground">
                     {featuredMatch}%
                   </span>
-                  <span className="mt-1 text-[0.65rem] text-muted-foreground">
+                  <span className="mt-1 text-xs text-muted-foreground">
                     AI Match
                   </span>
                 </CircularProgress>
@@ -375,14 +373,14 @@ export default function CoursesPage() {
                 </div>
                 <div className="mt-5 flex flex-wrap gap-2">
                   <Button
-                    size="lg"
+                    size="sm"
                     className="gap-1.5"
                     render={<Link to="/courses" />}
                   >
                     Continue Learning
                     <ArrowRight className="size-4" aria-hidden="true" />
                   </Button>
-                  <Button size="lg" variant="outline">
+                  <Button size="sm" variant="outline">
                     Save Course
                   </Button>
                 </div>

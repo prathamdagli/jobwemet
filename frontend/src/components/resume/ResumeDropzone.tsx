@@ -74,10 +74,10 @@ function FilePreviewCard({
   return (
     <motion.div
       {...widgetHover}
-      className="flex flex-col gap-4 rounded-3xl border border-border bg-card p-6 shadow-sm sm:flex-row sm:items-center"
+      className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-6 shadow-sm sm:flex-row sm:items-center"
     >
-      <span className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
-        <FileText className="size-7" aria-hidden="true" />
+      <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+        <FileText className="size-5" aria-hidden="true" />
       </span>
       <div className="min-w-0 flex-1">
         <div className="flex items-center justify-between gap-3">
@@ -92,7 +92,7 @@ function FilePreviewCard({
         ) : (
           <>
             <p className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
+              <Loader2 className="size-4 animate-spin" aria-hidden="true" />
               Uploading… {progress}%
             </p>
             <ProgressBar value={progress} className="mt-2" />
@@ -244,7 +244,7 @@ export const ResumeDropzone = forwardRef<
           onDrop={handleDrop}
           {...widgetHover}
           className={cn(
-            'relative flex flex-col items-center justify-center overflow-hidden rounded-3xl border-2 border-dashed px-6 py-14 text-center outline-none transition-colors',
+            'relative flex flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed px-6 py-12 text-center outline-none transition-colors',
             'focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
             dragActive
               ? 'border-primary bg-primary/5'
@@ -253,15 +253,15 @@ export const ResumeDropzone = forwardRef<
         >
           <span
             className={cn(
-              'mb-5 flex size-16 items-center justify-center rounded-2xl transition-colors',
+              'mb-5 flex size-14 items-center justify-center rounded-xl transition-colors',
               dragActive
                 ? 'bg-primary text-primary-foreground shadow-md'
                 : 'bg-muted text-muted-foreground',
             )}
           >
-            <UploadCloud className="size-8" aria-hidden="true" />
+            <UploadCloud className="size-6" aria-hidden="true" />
           </span>
-          <p className="text-lg font-semibold tracking-tight text-foreground">
+          <p className="text-base font-semibold tracking-tight text-foreground">
             Drag &amp; drop your resume
           </p>
           <p className="mt-1 max-w-sm text-sm text-muted-foreground">
@@ -269,7 +269,7 @@ export const ResumeDropzone = forwardRef<
           </p>
           <Button
             type="button"
-            size="lg"
+            size="sm"
             className="mt-6 gap-1.5"
             onClick={(e) => {
               e.stopPropagation()

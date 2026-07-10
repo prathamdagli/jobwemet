@@ -132,7 +132,7 @@ export default function JobsPage() {
                 />
               ))}
             </ul>
-            <div className="mt-4 flex items-start gap-2 rounded-lg border border-border bg-card px-3 py-2.5">
+            <div className="mt-4 flex items-start gap-2 rounded-lg border border-border bg-muted/40 px-3 py-2.5">
               <Award
                 className="mt-0.5 size-4 shrink-0 text-muted-foreground"
                 aria-hidden="true"
@@ -152,7 +152,7 @@ export default function JobsPage() {
         variant="muted"
         padding="sm"
       >
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           <FilterSelect
             label="Minimum Match"
             options={['Any', '70%+', '80%+', '90%+']}
@@ -180,7 +180,7 @@ export default function JobsPage() {
       {/* Ranked matches */}
       <section aria-label="Ranked career matches" className="space-y-4">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-lg font-semibold tracking-tight text-foreground">
+          <h2 className="text-base font-semibold tracking-tight text-foreground">
             All Matches
           </h2>
           <Badge variant="outline" size="sm">

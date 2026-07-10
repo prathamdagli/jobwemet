@@ -175,7 +175,7 @@ export default function RoadmapPage() {
           <Button
             onClick={handleRegenerate}
             disabled={regenerating}
-            size="lg"
+            size="sm"
             className="gap-1.5"
           >
             {regenerating ? (
@@ -237,11 +237,11 @@ export default function RoadmapPage() {
             >
               <div className="grid gap-5 md:grid-cols-2 md:items-center">
                 <div>
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-foreground/15 bg-background/60 px-2.5 py-1 text-xs font-medium text-foreground">
+                  <span className="inline-flex items-center gap-1.5 rounded-full border-border bg-muted/40 px-2.5 py-1 text-xs font-medium text-muted-foreground">
                     <Route className="size-3.5" aria-hidden="true" />
                     Current Module
                   </span>
-                  <h2 className="mt-3 text-2xl font-semibold tracking-tight text-foreground">
+                  <h2 className="mt-3 text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
                     {currentModule.title}
                   </h2>
                   <p className="mt-2 max-w-md text-sm leading-relaxed text-muted-foreground">
