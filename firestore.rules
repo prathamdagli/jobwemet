@@ -42,5 +42,19 @@ service cloud.firestore {
             : request.resource.data.userId == request.auth.uid
       );
     }
+
+    // Resume processing pipeline: a top-level collection keyed by userId, one
+    // doc per resume. Same owner-only access as resumes; records are written
+    // by the Admin SDK processing pipeline.
+    match /resumeProcessing/{resumeId} {
+      allow read: if signedIn() && resource.data.userId == request.auth.uid;
+      allow write: if signedIn() && (
+        request.method == 'create'
+          ? request.resource.data.userId == request.auth.uid
+          : request.method == 'delete'
+            ? resource.data.userId == request.auth.uid
+            : request.resource.data.userId == request.auth.uid
+      );
+    }
   }
 }

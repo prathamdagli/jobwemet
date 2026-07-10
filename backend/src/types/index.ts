@@ -71,3 +71,51 @@ export type ResumeCreate = Omit<ResumeRecord, 'uploadedAt' | 'updatedAt' | 'stat
   uploadedAt: FieldValue;
   updatedAt: FieldValue;
 };
+
+/** Lifecycle status of the resume processing pipeline. */
+export type ProcessingStatus = 'queued' | 'processing' | 'completed' | 'failed';
+
+/**
+ * Where the pipeline currently is. Mirrors the orchestration stages:
+ * uploaded → validating → extracting_text → saving → completed | failed.
+ */
+export type ProcessingStep =
+  | 'uploaded'
+  | 'validating'
+  | 'extracting_text'
+  | 'saving'
+  | 'completed'
+  | 'failed';
+
+/** Resume processing pipeline document stored at resumeProcessing/{resumeId}. */
+export interface ResumeProcessing {
+  resumeId: string;
+  userId: string;
+  status: ProcessingStatus;
+  currentStep: ProcessingStep;
+  progress: number;
+  rawText: string;
+  error: string;
+  startedAt: Timestamp;
+  completedAt: Timestamp | null;
+  updatedAt: Timestamp;
+}
+
+/** Write-time shape for the initial (queued) record. */
+export type ResumeProcessingCreate = Omit<
+  ResumeProcessing,
+  'startedAt' | 'updatedAt' | 'completedAt'
+> & {
+  startedAt: FieldValue;
+  updatedAt: FieldValue;
+  completedAt: null;
+};
+
+/** Patch accepted by updateProcessingStatus (timestamps handled internally). */
+export interface ProcessingUpdate {
+  status?: ProcessingStatus;
+  currentStep?: ProcessingStep;
+  progress?: number;
+  rawText?: string;
+  completedAt?: FieldValue | null;
+}
