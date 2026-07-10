@@ -283,3 +283,117 @@
     opacity: 0.8;
   }
 }
+
+/* ================================================================== */
+/*  Auth showcase — dark monochrome layered background                */
+/*  A premium "enter the workspace" backdrop for the auth panel.      */
+/*  Mirrors the hero's layer system but tuned for a dark surface with */
+/*  explicit white/black alphas so it reads consistently regardless   */
+/*  of the active theme (the hero layers key off --foreground, which  */
+/*  is dark in light mode and would vanish on a near-black panel).    */
+/* ================================================================== */
+.auth-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* faint grid that fades toward the edges */
+.auth-grid {
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 54px 54px;
+  -webkit-mask-image: radial-gradient(
+    ellipse 80% 70% at 50% 40%,
+    #000 25%,
+    transparent 78%
+  );
+  mask-image: radial-gradient(
+    ellipse 80% 70% at 50% 40%,
+    #000 25%,
+    transparent 78%
+  );
+}
+
+/* static radial spotlight drawing focus to the centre */
+.auth-spotlight {
+  background: radial-gradient(
+    58% 50% at 50% 32%,
+    rgba(255, 255, 255, 0.07),
+    transparent 70%
+  );
+  animation: auth-spotlight-breathe 8s ease-in-out infinite;
+}
+
+/* soft mesh lighting — neutral depth blobs */
+.auth-mesh {
+  background:
+    radial-gradient(
+      42% 38% at 16% 22%,
+      rgba(255, 255, 255, 0.06),
+      transparent 70%
+    ),
+    radial-gradient(
+      38% 32% at 84% 28%,
+      rgba(255, 255, 255, 0.05),
+      transparent 70%
+    ),
+    radial-gradient(
+      48% 42% at 50% 96%,
+      rgba(255, 255, 255, 0.04),
+      transparent 72%
+    );
+  filter: blur(8px);
+}
+
+/* animated vignette — gentle breathing depth at the edges */
+.auth-vignette {
+  background: radial-gradient(
+    125% 125% at 50% 50%,
+    transparent 52%,
+    rgba(0, 0, 0, 0.55) 100%
+  );
+  animation: auth-vignette-breathe 10s ease-in-out infinite;
+  transform-origin: 50% 50%;
+}
+
+/* grain / noise texture (grayscale, very low opacity) */
+.auth-noise {
+  opacity: 0.035;
+}
+
+@keyframes auth-spotlight-breathe {
+  0%,
+  100% {
+    opacity: 0.75;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes auth-vignette-breathe {
+  0%,
+  100% {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-spotlight,
+  .auth-vignette {
+    animation: none;
+  }
+  .auth-spotlight {
+    opacity: 0.85;
+  }
+  .auth-vignette {
+    opacity: 0.9;
+  }
+}
