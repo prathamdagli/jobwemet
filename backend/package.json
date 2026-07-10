@@ -1,5 +1,5 @@
 {
-  "name": "jobwemet-functions",
+  "name": "jobwemet-backend",
   "description": "JobWeMet Cloud Functions (2nd gen, TypeScript)",
   "version": "0.1.0",
   "private": true,
@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "firebase-admin": "^13.4.0",
-    "firebase-functions": "^6.3.0"
+    "firebase-functions": "^7.2.5"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^8.18.0",
