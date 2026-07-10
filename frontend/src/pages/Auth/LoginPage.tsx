@@ -85,7 +85,7 @@ export default function LoginPage() {
 
   return (
     <div>
-      <header className="mb-8">
+      <header className="mb-6">
         <h1 className="text-2xl font-semibold tracking-tight text-foreground">
           Welcome back
         </h1>
@@ -106,7 +106,7 @@ export default function LoginPage() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} noValidate className="space-y-5">
+      <form onSubmit={handleSubmit} noValidate className="space-y-4">
         <div className="space-y-1.5">
           <Label htmlFor="email">Email</Label>
           <div className="relative">
@@ -183,7 +183,7 @@ export default function LoginPage() {
         </Button>
       </form>
 
-      <div className="relative my-6">
+      <div className="relative my-5">
         <div className="absolute inset-0 flex items-center">
           <span className="w-full border-t border-border" />
         </div>
@@ -210,7 +210,7 @@ export default function LoginPage() {
         Continue with Google
       </Button>
 
-      <p className="mt-6 text-center text-sm text-muted-foreground">
+      <p className="mt-4 text-center text-sm text-muted-foreground">
         Don&apos;t have an account?{' '}
         <Link
           to="/register"

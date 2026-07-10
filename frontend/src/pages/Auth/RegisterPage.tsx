@@ -96,7 +96,7 @@ export default function RegisterPage() {
 
   return (
     <div>
-      <header className="mb-8">
+      <header className="mb-5">
         <h1 className="text-2xl font-semibold tracking-tight text-foreground">
           Create your account
         </h1>
@@ -117,7 +117,7 @@ export default function RegisterPage() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} noValidate className="space-y-5">
+      <form onSubmit={handleSubmit} noValidate className="space-y-4">
         <div className="space-y-1.5">
           <Label htmlFor="fullName">Full name</Label>
           <div className="relative">
@@ -191,7 +191,7 @@ export default function RegisterPage() {
 
           {password && (
             <div
-              className="mt-2"
+              className="mt-1.5"
               role="progressbar"
               aria-label="Password strength"
               aria-valuemin={0}
@@ -244,7 +244,7 @@ export default function RegisterPage() {
         </Button>
       </form>
 
-      <div className="relative my-6">
+      <div className="relative my-4">
         <div className="absolute inset-0 flex items-center">
           <span className="w-full border-t border-border" />
         </div>
@@ -271,7 +271,7 @@ export default function RegisterPage() {
         Continue with Google
       </Button>
 
-      <p className="mt-6 text-center text-sm text-muted-foreground">
+      <p className="mt-4 text-center text-sm text-muted-foreground">
         Already have an account?{' '}
         <Link
           to="/login"
