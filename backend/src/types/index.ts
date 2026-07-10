@@ -119,3 +119,61 @@ export interface ProcessingUpdate {
   rawText?: string;
   completedAt?: FieldValue | null;
 }
+
+// ---------- AI / Resume Analysis ----------
+
+/** A categorized group of extracted technical skills. */
+export interface SkillGroup {
+  category: string;
+  skills: string[];
+}
+
+export interface ExperienceInfo {
+  years: number;
+  currentRole: string;
+  previousRoles: string[];
+  projects: string[];
+}
+
+export interface EducationInfo {
+  highestQualification: string;
+}
+
+export interface CareerMatch {
+  careerName: string;
+  /** 0-100 */
+  confidence: number;
+  reason: string;
+  topMatchingSkills: string[];
+}
+
+export type SkillGapPriority = 'high' | 'medium' | 'low';
+export type SkillGapDifficulty = 'easy' | 'moderate' | 'hard';
+
+export interface SkillGapItem {
+  skill: string;
+  priority: SkillGapPriority;
+  difficulty: SkillGapDifficulty;
+  estimatedLearningTime: string;
+}
+
+export interface ConfidenceInfo {
+  /** 0-100 */
+  overall: number;
+  skills: number;
+  careerMatch: number;
+}
+
+/** Structured analysis returned by the AI provider. */
+export interface ResumeAnalysis {
+  technicalSkills: SkillGroup[];
+  softSkills: string[];
+  experience: ExperienceInfo;
+  education: EducationInfo;
+  careers: CareerMatch[];
+  missingSkills: SkillGapItem[];
+  confidence: ConfidenceInfo;
+}
+
+/** Pipeline status for the skillAnalysis control document. */
+export type AnalysisStatus = 'processing' | 'completed' | 'failed';

@@ -56,5 +56,21 @@ service cloud.firestore {
             : request.resource.data.userId == request.auth.uid
       );
     }
+
+    // AI analysis outputs: written exclusively by the Admin SDK analysis
+    // pipeline (which bypasses these rules). Clients may read only their own
+    // results; all client writes are denied.
+    match /skillAnalysis/{resumeId} {
+      allow read: if signedIn() && resource.data.userId == request.auth.uid;
+      allow write: if false;
+    }
+    match /careerMatches/{resumeId} {
+      allow read: if signedIn() && resource.data.userId == request.auth.uid;
+      allow write: if false;
+    }
+    match /skillGap/{resumeId} {
+      allow read: if signedIn() && resource.data.userId == request.auth.uid;
+      allow write: if false;
+    }
   }
 }
