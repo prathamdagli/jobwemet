@@ -1,224 +1,190 @@
+import { useMemo } from 'react'
 import { motion } from 'motion/react'
-import { Brain, Route, Target, type LucideIcon } from 'lucide-react'
-import {
-  fadeUp,
-  staggerContainer,
-  useCountUp,
-  usePrefersReducedMotion,
-} from '@/motion'
+import { Brain } from 'lucide-react'
+import { useMouseTilt, usePrefersReducedMotion } from '@/motion'
+import { cn } from '@/lib/utils'
 
 /**
  * AuthShowcase — the left panel of the auth layout, reimagined as an onboarding
  * experience rather than another marketing hero.
  *
  * The brief: the user is *entering* the AI workspace, so the centrepiece is a
- * living network of connected skills (Python / React / SQL -> AI -> AI Engineer
- * + Roadmap) with animated connection lines and a pulsing AI core — not a
- * dashboard window and not floating card copies of the landing page. A large
- * logo and short welcome message set the tone; three feature highlights and
- * three count-up metrics sit below. Dark, monochrome, and fully reduced-motion
- * aware.
+ * living "Digital AI Core": floating concentric rings, orbiting skill capsules,
+ * an animated particle field, subtle neural connections, rotating data-stream
+ * rings, a breathing radial glow, a scan-line sweep, and a mouse-reactive 3D
+ * parallax. Around it sit only the JobWeMet logo, a welcome heading, and one
+ * short sentence. Dark, monochrome, and fully reduced-motion aware.
  */
 
 /* ------------------------------------------------------------------ */
-/*  Very subtle drifting particles                                    */
+/*  Primitive: a floating concentric ring (solid or dashed)            */
 /* ------------------------------------------------------------------ */
-function Particles() {
-  const prefersReduced = usePrefersReducedMotion()
-  if (prefersReduced) return null
-  const dots = [
-    { top: '18%', left: '14%', d: 6, delay: 0 },
-    { top: '68%', left: '82%', d: 4, delay: 1.2 },
-    { top: '38%', left: '86%', d: 5, delay: 0.6 },
-    { top: '80%', left: '18%', d: 3, delay: 1.8 },
-  ]
+function FloatRing({
+  diameter,
+  dashed = false,
+  borderClass,
+  duration,
+  direction,
+  depth = 0,
+  spin = true,
+  prefersReduced,
+}: {
+  diameter: string
+  dashed?: boolean
+  borderClass: string
+  duration: number
+  direction: 1 | -1
+  depth?: number
+  spin?: boolean
+  prefersReduced: boolean
+}) {
   return (
-    <div className="pointer-events-none absolute inset-0" aria-hidden="true">
-      {dots.map((p, i) => (
-        <motion.span
-          key={i}
-          className="absolute"
-          style={{ top: p.top, left: p.left }}
-          animate={{ opacity: [0, 0.6, 0], y: [0, -14, 0] }}
-          transition={{
-            duration: 6,
-            delay: p.delay,
-            repeat: Infinity,
-            ease: 'easeInOut',
-          }}
-        >
-          <span
-            className="block rounded-full bg-white/50"
-            style={{ width: p.d, height: p.d }}
-          />
-        </motion.span>
-      ))}
+    <div
+      className="absolute left-1/2 top-1/2"
+      style={{
+        transform: 'translate(-50%, -50%)',
+        transformStyle: 'preserve-3d',
+      }}
+    >
+      <div
+        style={{
+          transform: `translateZ(${depth}px)`,
+          transformStyle: 'preserve-3d',
+        }}
+      >
+        <motion.div
+          className={cn(
+            'rounded-full border',
+            dashed && 'border-dashed',
+            borderClass,
+          )}
+          style={{ width: diameter, height: diameter }}
+          animate={{ rotate: prefersReduced || !spin ? 0 : 360 * direction }}
+          transition={{ duration, repeat: Infinity, ease: 'linear' }}
+        />
+      </div>
     </div>
   )
 }
 
 /* ------------------------------------------------------------------ */
-/*  The skill network — the centrepiece illustration                  */
+/*  Orbiting skill capsules                                            */
 /* ------------------------------------------------------------------ */
-type NodeKind = 'skill' | 'core' | 'career' | 'roadmap'
-
-interface NetNode {
-  id: string
-  x: number
-  y: number
-  label: string
-  kind: NodeKind
-}
-
-const NODES: NetNode[] = [
-  { id: 'python', x: 88, y: 255, label: 'Python', kind: 'skill' },
-  { id: 'react', x: 186, y: 292, label: 'React', kind: 'skill' },
-  { id: 'sql', x: 64, y: 150, label: 'SQL', kind: 'skill' },
-  { id: 'ai', x: 205, y: 165, label: 'AI', kind: 'core' },
-  { id: 'career', x: 322, y: 108, label: 'AI Engineer', kind: 'career' },
-  { id: 'roadmap', x: 315, y: 248, label: 'Roadmap', kind: 'roadmap' },
-]
-
-const EDGES: [string, string][] = [
-  ['python', 'ai'],
-  ['react', 'ai'],
-  ['sql', 'ai'],
-  ['ai', 'career'],
-  ['ai', 'roadmap'],
-]
-
-function SkillNode({
-  node,
-  index,
-  prefersReduced,
-}: {
-  node: NetNode
-  index: number
-  prefersReduced: boolean
-}) {
-  const w =
-    node.kind === 'skill'
-      ? 78
-      : node.kind === 'core'
-        ? 70
-        : node.kind === 'career'
-          ? 108
-          : 96
-  const h = 34
-  const { x, y } = node
-  const emphasized = node.kind === 'career' || node.kind === 'core'
-
+function Capsule({ label }: { label: string }) {
   return (
-    <motion.g
-      initial={{ opacity: 0, scale: 0.85 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{
-        duration: 0.5,
-        delay: 0.3 + index * 0.12,
-        ease: [0.22, 1, 0.36, 1],
-      }}
-      style={{ transformOrigin: `${x}px ${y}px` }}
-    >
-      {/* AI core: rotating processing ring + pulsing halo */}
-      {node.kind === 'core' && (
-        <>
-          {!prefersReduced && (
-            <motion.circle
-              cx={x}
-              cy={y}
-              r="30"
-              fill="none"
-              stroke="currentColor"
-              strokeOpacity="0.22"
-              strokeWidth="1"
-              strokeDasharray="4 6"
-              animate={{ rotate: 360 }}
-              transition={{ duration: 16, repeat: Infinity, ease: 'linear' }}
-              style={{ transformOrigin: `${x}px ${y}px` }}
-            />
-          )}
-          {!prefersReduced && (
-            <motion.circle
-              cx={x}
-              cy={y}
-              r="22"
-              fill="none"
-              stroke="currentColor"
-              strokeOpacity="0.6"
-              strokeWidth="1.5"
-              animate={{ scale: [1, 1.5], opacity: [0.6, 0] }}
-              transition={{ duration: 2.4, repeat: Infinity, ease: 'easeOut' }}
-              style={{ transformOrigin: `${x}px ${y}px` }}
-            />
-          )}
-        </>
-      )}
-
-      <rect
-        x={x - w / 2}
-        y={y - h / 2}
-        width={w}
-        height={h}
-        rx="17"
-        fill={emphasized ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.06)'}
-        stroke={emphasized ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.4)'}
-        strokeWidth="1.25"
-      />
-      <text
-        x={x}
-        y={y}
-        dominantBaseline="central"
-        textAnchor="middle"
-        fill="rgba(255,255,255,0.92)"
-        fontSize={node.kind === 'core' ? 13 : 11}
-        fontWeight={node.kind === 'core' ? 700 : 500}
-      >
-        {node.label}
-      </text>
-    </motion.g>
+    <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-white/15 bg-white/[0.06] px-3 py-1 text-[11px] font-medium tracking-tight text-white/90 shadow-[0_1px_2px_rgba(0,0,0,0.4)]">
+      <span className="size-1 rounded-full bg-white/70" />
+      {label}
+    </span>
   )
 }
 
-function SkillNetwork() {
-  const prefersReduced = usePrefersReducedMotion()
-  const pos = Object.fromEntries(NODES.map((n) => [n.id, n]))
+function Orbit({
+  radiusPct,
+  duration,
+  direction,
+  capsules,
+  prefersReduced,
+}: {
+  radiusPct: number
+  duration: number
+  direction: 1 | -1
+  capsules: string[]
+  prefersReduced: boolean
+}) {
+  return (
+    <div
+      style={{ transform: 'translateZ(26px)', transformStyle: 'preserve-3d' }}
+    >
+      <motion.div
+        className="absolute inset-0"
+        style={{ transformStyle: 'preserve-3d' }}
+        animate={{ rotate: prefersReduced ? 0 : 360 * direction }}
+        transition={{ duration, repeat: Infinity, ease: 'linear' }}
+      >
+        {capsules.map((label, i) => {
+          const a = (i / capsules.length) * Math.PI * 2 - Math.PI / 2
+          const lx = 50 + radiusPct * Math.cos(a)
+          const ly = 50 + radiusPct * Math.sin(a)
+          return (
+            <div
+              key={label}
+              className="absolute"
+              style={{
+                left: `${lx}%`,
+                top: `${ly}%`,
+                transform: 'translate(-50%, -50%)',
+              }}
+            >
+              <motion.div
+                style={{ transformOrigin: 'center' }}
+                animate={{ rotate: prefersReduced ? 0 : -360 * direction }}
+                transition={{ duration, repeat: Infinity, ease: 'linear' }}
+              >
+                <Capsule label={label} />
+              </motion.div>
+            </div>
+          )
+        })}
+      </motion.div>
+    </div>
+  )
+}
+
+/* ------------------------------------------------------------------ */
+/*  Subtle neural network connections                                  */
+/* ------------------------------------------------------------------ */
+function NeuralWeb({ prefersReduced }: { prefersReduced: boolean }) {
+  const nodes = useMemo(() => {
+    const count = 7
+    return Array.from({ length: count }, (_, i) => {
+      const a = (i / count) * Math.PI * 2 - Math.PI / 2
+      return { x: 50 + 36 * Math.cos(a), y: 50 + 36 * Math.sin(a) }
+    })
+  }, [])
+
   return (
     <svg
-      viewBox="0 0 400 340"
-      className="w-full max-w-[16rem] text-white/70 sm:max-w-[20rem] lg:max-w-md"
+      className="absolute inset-0 size-full"
+      viewBox="0 0 100 100"
       fill="none"
       aria-hidden="true"
     >
-      {EDGES.map(([f, t], i) => {
-        const a = pos[f]
-        const b = pos[t]
+      {nodes.map((n, i) => {
+        const next = nodes[(i + 1) % nodes.length]
         return (
           <motion.line
-            key={`${f}-${t}`}
-            x1={a.x}
-            y1={a.y}
-            x2={b.x}
-            y2={b.y}
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeOpacity="0.45"
-            strokeLinecap="round"
-            initial={{ pathLength: 0, opacity: 0 }}
-            animate={{ pathLength: 1, opacity: 1 }}
-            transition={{
-              duration: 0.9,
-              delay: 0.4 + i * 0.18,
-              ease: [0.22, 1, 0.36, 1],
-            }}
+            key={`l-${i}`}
+            x1={n.x}
+            y1={n.y}
+            x2={next.x}
+            y2={next.y}
+            stroke="white"
+            strokeOpacity={0.12}
+            strokeWidth={0.3}
+            strokeDasharray="2 3"
+            animate={
+              prefersReduced ? undefined : { strokeDashoffset: [0, -10] }
+            }
+            transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
           />
         )
       })}
-      {NODES.map((n, i) => (
-        <SkillNode
-          key={n.id}
-          node={n}
-          index={i}
-          prefersReduced={prefersReduced}
+      {nodes.map((n, i) => (
+        <motion.circle
+          key={`n-${i}`}
+          cx={n.x}
+          cy={n.y}
+          r={0.9}
+          fill="white"
+          fillOpacity={0.5}
+          animate={prefersReduced ? undefined : { opacity: [0.3, 0.7, 0.3] }}
+          transition={{
+            duration: 2.4,
+            repeat: Infinity,
+            ease: 'easeInOut',
+            delay: i * 0.2,
+          }}
         />
       ))}
     </svg>
@@ -226,51 +192,266 @@ function SkillNetwork() {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Feature highlights + count-up metrics                             */
+/*  Animated particle system                                           */
 /* ------------------------------------------------------------------ */
-const FEATURES: { icon: LucideIcon; title: string; desc: string }[] = [
-  {
-    icon: Brain,
-    title: 'AI Career Intelligence',
-    desc: 'Predicts your strongest career matches.',
-  },
-  {
-    icon: Route,
-    title: 'Personalized Roadmaps',
-    desc: 'Creates learning paths unique to you.',
-  },
-  {
-    icon: Target,
-    title: 'Skill Gap Analysis',
-    desc: 'Finds exactly what to learn next.',
-  },
-]
-
-const METRICS = [
-  { value: '18+', label: 'Skills Analysed' },
-  { value: '92%', label: 'Prediction Accuracy' },
-  { value: '1000+', label: 'Learning Resources' },
-] as const
-
-function Metric({ value, label }: { value: string; label: string }) {
-  const match = value.match(/^(\D*)(\d+)(.*)$/)
-  const target = match ? Number(match[2]) : 0
-  const counted = useCountUp(target, { duration: 1.3, delay: 0.2 })
-  const [, prefix, , suffix] = match ?? []
+function Particles({ prefersReduced }: { prefersReduced: boolean }) {
+  const dots = useMemo(
+    () => [
+      { x: '14%', y: '22%', d: 3, dur: 7, delay: 0 },
+      { x: '82%', y: '18%', d: 2, dur: 9, delay: 1.4 },
+      { x: '24%', y: '78%', d: 2.5, dur: 8, delay: 0.6 },
+      { x: '76%', y: '72%', d: 3.5, dur: 10, delay: 2 },
+      { x: '50%', y: '12%', d: 2, dur: 6.5, delay: 1 },
+      { x: '10%', y: '52%', d: 2.5, dur: 9.5, delay: 0.3 },
+      { x: '90%', y: '50%', d: 2, dur: 7.5, delay: 1.8 },
+      { x: '40%', y: '90%', d: 3, dur: 8.5, delay: 0.9 },
+      { x: '64%', y: '88%', d: 2, dur: 9, delay: 2.4 },
+      { x: '32%', y: '40%', d: 1.5, dur: 6, delay: 1.2 },
+    ],
+    [],
+  )
   return (
-    <div className="px-4 text-center first:pl-0 last:pr-0">
-      <p className="text-xl font-semibold tracking-tight text-white">
-        {prefix}
-        {Math.round(counted)}
-        {suffix}
-      </p>
-      <p className="mt-1 text-[10px] uppercase tracking-wide text-neutral-500">
-        {label}
-      </p>
+    <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+      {dots.map((p, i) => (
+        <motion.span
+          key={i}
+          className="absolute rounded-full bg-white/60"
+          style={{ left: p.x, top: p.y, width: p.d, height: p.d }}
+          animate={
+            prefersReduced
+              ? undefined
+              : { y: [0, -10, 0], opacity: [0.2, 0.6, 0.2] }
+          }
+          transition={{
+            duration: p.dur,
+            delay: p.delay,
+            repeat: Infinity,
+            ease: 'easeInOut',
+          }}
+        />
+      ))}
     </div>
   )
 }
 
+/* ------------------------------------------------------------------ */
+/*  The Digital AI Core — the hero visualization                       */
+/* ------------------------------------------------------------------ */
+function AICore() {
+  const prefersReduced = usePrefersReducedMotion()
+  const { ref, style, onMouseMove, onMouseLeave } = useMouseTilt({
+    maxTilt: 10,
+  })
+
+  const rings: {
+    diameter: string
+    dashed: boolean
+    borderClass: string
+    duration: number
+    direction: 1 | -1
+    depth: number
+    spin?: boolean
+  }[] = [
+    {
+      diameter: '30%',
+      dashed: false,
+      borderClass: 'border-white/[0.05]',
+      duration: 1,
+      direction: 1,
+      depth: 0,
+      spin: false,
+    },
+    {
+      diameter: '44%',
+      dashed: true,
+      borderClass: 'border-white/[0.06]',
+      duration: 90,
+      direction: 1,
+      depth: 8,
+    },
+    {
+      diameter: '58%',
+      dashed: false,
+      borderClass: 'border-white/[0.04]',
+      duration: 1,
+      direction: 1,
+      depth: 0,
+      spin: false,
+    },
+    {
+      diameter: '70%',
+      dashed: true,
+      borderClass: 'border-white/[0.05]',
+      duration: 120,
+      direction: -1,
+      depth: -6,
+    },
+  ]
+
+  const streams: {
+    diameter: string
+    duration: number
+    direction: 1 | -1
+  }[] = [
+    { diameter: '50%', duration: 26, direction: 1 },
+    { diameter: '62%', duration: 34, direction: -1 },
+  ]
+
+  const orbits: {
+    radiusPct: number
+    duration: number
+    direction: 1 | -1
+    capsules: string[]
+  }[] = [
+    {
+      radiusPct: 22,
+      duration: 38,
+      direction: 1,
+      capsules: ['Python', 'React', 'SQL'],
+    },
+    {
+      radiusPct: 33,
+      duration: 50,
+      direction: -1,
+      capsules: ['ML', 'Data', 'Cloud'],
+    },
+    {
+      radiusPct: 45,
+      duration: 62,
+      direction: 1,
+      capsules: ['Design', 'UX', 'AI'],
+    },
+  ]
+
+  return (
+    <div className="relative" style={{ perspective: 1000 }}>
+      <div
+        ref={ref}
+        style={style}
+        onMouseMove={onMouseMove}
+        onMouseLeave={onMouseLeave}
+        className="relative aspect-square w-[20rem] sm:w-[24rem] lg:w-[28rem]"
+      >
+        {/* breathing radial glow */}
+        <div
+          className="absolute left-1/2 top-1/2"
+          style={{ transform: 'translate(-50%, -50%)' }}
+        >
+          <motion.div
+            className="rounded-full"
+            style={{
+              width: '78%',
+              height: '78%',
+              background:
+                'radial-gradient(circle, rgba(255,255,255,0.14), rgba(255,255,255,0.04) 45%, transparent 72%)',
+              filter: 'blur(8px)',
+            }}
+            animate={
+              prefersReduced
+                ? undefined
+                : { scale: [1, 1.08, 1], opacity: [0.7, 1, 0.7] }
+            }
+            transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+          />
+        </div>
+
+        {/* neural connections behind everything */}
+        <NeuralWeb prefersReduced={prefersReduced} />
+
+        {/* concentric decorative rings */}
+        {rings.map((r, i) => (
+          <FloatRing key={`ring-${i}`} {...r} prefersReduced={prefersReduced} />
+        ))}
+
+        {/* rotating data-stream rings */}
+        {streams.map((s, i) => (
+          <FloatRing
+            key={`stream-${i}`}
+            diameter={s.diameter}
+            dashed
+            borderClass="border-white/[0.08]"
+            duration={s.duration}
+            direction={s.direction}
+            depth={14}
+            prefersReduced={prefersReduced}
+          />
+        ))}
+
+        {/* orbiting skill capsules */}
+        {orbits.map((o, i) => (
+          <Orbit key={`orbit-${i}`} {...o} prefersReduced={prefersReduced} />
+        ))}
+
+        {/* central core */}
+        <div
+          className="absolute left-1/2 top-1/2"
+          style={{ transform: 'translate(-50%, -50%)' }}
+        >
+          <motion.div
+            className="rounded-full"
+            style={{
+              width: 70,
+              height: 70,
+              background:
+                'radial-gradient(circle, rgba(255,255,255,0.95), rgba(255,255,255,0.25) 55%, transparent 75%)',
+            }}
+            animate={
+              prefersReduced
+                ? undefined
+                : { scale: [1, 1.12, 1], opacity: [0.85, 1, 0.85] }
+            }
+            transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+          />
+          <motion.div
+            className="absolute left-1/2 top-1/2 rounded-full border border-white/25"
+            style={{
+              width: 132,
+              height: 132,
+              transform: 'translate(-50%, -50%)',
+            }}
+            animate={
+              prefersReduced
+                ? undefined
+                : { scale: [1, 1.18, 1], opacity: [0.4, 0, 0.4] }
+            }
+            transition={{ duration: 3.4, repeat: Infinity, ease: 'easeOut' }}
+          />
+          <motion.div
+            className="absolute left-1/2 top-1/2 rounded-full border border-dashed border-white/40"
+            style={{
+              width: 96,
+              height: 96,
+              transform: 'translate(-50%, -50%)',
+            }}
+            animate={{ rotate: prefersReduced ? 0 : 360 }}
+            transition={{ duration: 18, repeat: Infinity, ease: 'linear' }}
+          />
+        </div>
+
+        {/* particle field */}
+        <Particles prefersReduced={prefersReduced} />
+
+        {/* scan-line sweep */}
+        {!prefersReduced && (
+          <motion.div
+            className="pointer-events-none absolute inset-x-0 h-px"
+            style={{
+              top: 0,
+              background:
+                'linear-gradient(90deg, transparent, rgba(255,255,255,0.55), transparent)',
+            }}
+            animate={{ y: ['0%', '100%'], opacity: [0, 0.9, 0] }}
+            transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut' }}
+          />
+        )}
+      </div>
+    </div>
+  )
+}
+
+/* ------------------------------------------------------------------ */
+/*  Panel                                                              */
+/* ------------------------------------------------------------------ */
 export default function AuthShowcase() {
   return (
     <aside className="relative hidden min-h-screen overflow-hidden bg-neutral-950 md:flex md:flex-col">
@@ -278,7 +459,6 @@ export default function AuthShowcase() {
       <div className="auth-layer auth-spotlight" aria-hidden="true" />
       <div className="auth-layer auth-grid" aria-hidden="true" />
       <div className="auth-layer auth-mesh" aria-hidden="true" />
-      <Particles />
       <svg className="auth-layer auth-noise" aria-hidden="true">
         <filter id="auth-noise-filter">
           <feTurbulence
@@ -295,7 +475,7 @@ export default function AuthShowcase() {
 
       {/* content */}
       <div className="relative z-10 flex h-full flex-col justify-between gap-8 px-8 py-10 md:px-10 lg:px-14">
-        {/* top: large logo + welcome message */}
+        {/* top: logo + welcome heading + one short sentence */}
         <header>
           <div className="flex items-center gap-3">
             <span className="flex size-11 items-center justify-center rounded-2xl bg-white/10 ring-1 ring-white/20">
@@ -309,54 +489,18 @@ export default function AuthShowcase() {
             Welcome to JobWeMet
           </h1>
           <p className="mt-3 max-w-sm text-sm leading-relaxed text-neutral-400">
-            One intelligent workspace that analyzes your resume, maps your
-            skills, predicts careers, and builds your learning roadmap.
+            An intelligent workspace that maps your skills to the career
+            you&rsquo;re meant for.
           </p>
         </header>
 
-        {/* middle: the living skill network */}
+        {/* middle: the Digital AI Core — the hero of the auth pages */}
         <div className="relative flex flex-1 items-center justify-center">
-          <SkillNetwork />
+          <AICore />
         </div>
 
-        {/* bottom: feature highlights + metrics */}
-        <footer className="space-y-7">
-          <motion.ul
-            variants={staggerContainer}
-            initial="hidden"
-            animate="visible"
-            className="space-y-3"
-          >
-            {FEATURES.map((f) => {
-              const Icon: LucideIcon = f.icon
-              return (
-                <motion.li
-                  key={f.title}
-                  variants={fadeUp}
-                  className="flex items-start gap-3"
-                >
-                  <span className="mt-0.5 inline-flex size-7 shrink-0 items-center justify-center rounded-lg bg-white/10 ring-1 ring-white/15">
-                    <Icon className="size-3.5 text-white" />
-                  </span>
-                  <div>
-                    <p className="text-xs font-semibold text-neutral-100">
-                      {f.title}
-                    </p>
-                    <p className="text-[11px] leading-snug text-neutral-400">
-                      {f.desc}
-                    </p>
-                  </div>
-                </motion.li>
-              )
-            })}
-          </motion.ul>
-
-          <div className="flex items-center justify-center divide-x divide-white/10">
-            {METRICS.map((m) => (
-              <Metric key={m.label} value={m.value} label={m.label} />
-            ))}
-          </div>
-        </footer>
+        {/* intentionally empty — no feature cards, no statistics */}
+        <div aria-hidden="true" className="hidden" />
       </div>
     </aside>
   )
