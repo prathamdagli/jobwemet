@@ -7,11 +7,12 @@ import { usePrefersReducedMotion } from '@/motion'
  * AuthShowcase — the left panel of the auth layout, presented as a premium
  * product preview in the spirit of Linear / Stripe / Clerk / Vercel auth pages.
  *
- * A large wordmark (a link home) and a per-page welcome line sit above a
- * single, realistic JobWeMet application window rendered with glassmorphism,
- * a macOS-style title bar and a quiet dark environment. Motion is intentionally
- * minimal: a fade-in, a small hover lift, one-shot progress + readiness
- * animations and a faint shimmer on the upload card.
+ * A large wordmark (a link home), a small caption, a per-page title and a
+ * one-line description sit above a single, realistic JobWeMet application
+ * window rendered with glassmorphism, a macOS-style title bar and a quiet
+ * dark environment. Motion is intentionally minimal: a fade-in, a small hover
+ * lift, one-shot progress + readiness animations and a faint shimmer on the
+ * upload card.
  *
  * No HUD, no floating widgets, no orbiting nodes — just the product.
  */
@@ -34,22 +35,22 @@ type PageConfig = {
 
 const PAGES: Record<string, PageConfig> = {
   '/login': {
-    heading: 'Welcome Back',
-    sub: 'Sign in to continue building your AI-powered career.',
+    heading: 'Your AI Career Workspace',
+    sub: 'Resume analysis, career matching, learning roadmap, and skill insights — all in one intelligent workspace.',
     lead: 'New to JobWeMet?',
     cta: 'Create an account',
     to: '/register',
   },
   '/register': {
-    heading: 'Create Your Account',
-    sub: 'Start your AI-powered career journey in minutes.',
+    heading: 'Build Your Career Intelligence',
+    sub: 'Create your account and start discovering the career paths your skills are best suited for.',
     lead: 'Already have an account?',
     cta: 'Sign in',
     to: '/login',
   },
   '/forgot-password': {
-    heading: 'Reset Your Password',
-    sub: "We'll help you get back into your workspace.",
+    heading: 'Recover Your Workspace',
+    sub: 'Reset your password and continue where you left off.',
     lead: 'Remembered your password?',
     cta: 'Back to Sign in',
     to: '/login',
@@ -109,13 +110,13 @@ function ReadinessRing({
 function ProductWindow({ prefersReduced }: { prefersReduced: boolean }) {
   return (
     <motion.div
-      className="group relative w-full max-w-[37rem] overflow-hidden rounded-2xl border border-white/10 bg-white/[0.04] shadow-[0_40px_80px_-24px_rgba(0,0,0,0.75)] ring-1 ring-inset ring-white/10 backdrop-blur-2xl"
+      className="group relative w-full max-w-[31rem] overflow-hidden rounded-3xl border border-white/10 bg-white/[0.04] shadow-[0_30px_60px_-28px_rgba(0,0,0,0.55)] ring-1 ring-inset ring-white/10 backdrop-blur-2xl"
       initial={prefersReduced ? false : { opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: 'easeOut' }}
       whileHover={{
         y: -4,
-        boxShadow: '0 52px 100px -24px rgba(0,0,0,0.85)',
+        boxShadow: '0 40px 80px -28px rgba(0,0,0,0.7)',
       }}
     >
       {/* glass reflection */}
@@ -129,7 +130,7 @@ function ProductWindow({ prefersReduced }: { prefersReduced: boolean }) {
       />
 
       {/* macOS-style title bar */}
-      <div className="relative flex items-center justify-center border-b border-white/10 bg-white/[0.03] px-4 py-2.5 backdrop-blur-sm">
+      <div className="relative flex items-center justify-center border-b border-white/10 bg-white/[0.03] px-4 py-3 backdrop-blur-sm">
         <div className="absolute left-4 flex items-center gap-2">
           <span className="size-2.5 rounded-full bg-white/25" />
           <span className="size-2.5 rounded-full bg-white/15" />
@@ -141,15 +142,15 @@ function ProductWindow({ prefersReduced }: { prefersReduced: boolean }) {
       </div>
 
       {/* body */}
-      <div className="relative space-y-6 p-6">
+      <div className="relative space-y-6 p-7">
         {/* resume upload */}
-        <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-3">
+        <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-3.5">
           <span className="flex size-9 items-center justify-center rounded-lg bg-white/5 text-white/70 ring-1 ring-white/10">
             <FileText className="size-4" aria-hidden="true" />
           </span>
           <div className="min-w-0 flex-1">
             <div className="flex items-center justify-between gap-2">
-              <p className="truncate text-sm font-medium text-white/90">
+              <p className="truncate text-[13px] font-medium text-white/90">
                 Resume.pdf
               </p>
               <span className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-medium text-white/70">
@@ -169,7 +170,7 @@ function ProductWindow({ prefersReduced }: { prefersReduced: boolean }) {
             {SKILLS.map((s) => (
               <span
                 key={s}
-                className="rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-xs text-white/75"
+                className="rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[13px] text-white/75"
               >
                 {s}
               </span>
@@ -178,21 +179,21 @@ function ProductWindow({ prefersReduced }: { prefersReduced: boolean }) {
         </div>
 
         {/* career match */}
-        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
+        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3.5">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-[10px] font-medium uppercase tracking-wide text-white/40">
                 Career Match
               </p>
-              <p className="mt-0.5 text-sm font-medium text-white/90">
+              <p className="mt-0.5 text-[13px] font-medium text-white/90">
                 AI Engineer
               </p>
             </div>
-            <span className="text-2xl font-semibold tracking-tight text-white">
+            <span className="text-xl font-semibold tracking-tight text-white">
               92%
             </span>
           </div>
-          <div className="mt-2.5 h-1.5 w-full overflow-hidden rounded-full bg-neutral-700/50">
+          <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-neutral-700/50">
             <motion.div
               className="h-full rounded-full bg-white/80 shadow-[0_0_10px_rgba(255,255,255,0.35)]"
               initial={prefersReduced ? false : { width: 0 }}
@@ -209,7 +210,10 @@ function ProductWindow({ prefersReduced }: { prefersReduced: boolean }) {
           </p>
           <ul className="mt-2 space-y-2">
             {ROADMAP.map((r) => (
-              <li key={r.label} className="flex items-center gap-2.5 text-sm">
+              <li
+                key={r.label}
+                className="flex items-center gap-2.5 text-[13px]"
+              >
                 <span
                   className={
                     r.state === 'done'
@@ -239,11 +243,11 @@ function ProductWindow({ prefersReduced }: { prefersReduced: boolean }) {
         </div>
 
         {/* recommended next step */}
-        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
+        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3.5">
           <p className="text-[10px] font-medium uppercase tracking-wide text-white/40">
             Recommended Next Step
           </p>
-          <p className="mt-1 text-sm font-medium text-white/90">
+          <p className="mt-1 text-[13px] font-medium text-white/90">
             Docker Fundamentals
           </p>
           <p className="mt-0.5 text-[11px] text-white/40">
@@ -259,9 +263,9 @@ function ProductWindow({ prefersReduced }: { prefersReduced: boolean }) {
         </div>
 
         {/* overall readiness */}
-        <div className="flex items-center justify-between gap-4 rounded-xl border border-white/10 bg-white/[0.03] p-3">
+        <div className="flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/[0.03] p-3.5">
           <div>
-            <p className="text-sm text-white/60">
+            <p className="text-[13px] text-white/60">
               You&rsquo;re almost job-ready.
             </p>
             <p className="mt-1 text-[11px] text-white/35">
@@ -333,7 +337,7 @@ export default function AuthShowcase() {
       <div className="auth-layer auth-vignette" aria-hidden="true" />
 
       {/* content */}
-      <div className="relative z-10 flex h-full flex-col justify-between gap-10 px-8 py-10 md:px-10 lg:px-14">
+      <div className="relative z-10 flex h-full flex-col justify-between gap-12 px-8 py-10 md:px-10 lg:px-14">
         {/* top: brand (links home) + per-page welcome */}
         <header>
           <Link
@@ -347,7 +351,10 @@ export default function AuthShowcase() {
               JobWeMet
             </span>
           </Link>
-          <h1 className="mt-6 text-3xl font-semibold tracking-tight text-white">
+          <p className="mt-5 text-[11px] font-medium uppercase tracking-[0.2em] text-white/40">
+            AI Career Intelligence
+          </p>
+          <h1 className="mt-2 text-3xl font-semibold tracking-tight text-white">
             {cfg.heading}
           </h1>
           <p className="mt-3 max-w-sm text-sm leading-relaxed text-neutral-400">
@@ -355,8 +362,8 @@ export default function AuthShowcase() {
           </p>
         </header>
 
-        {/* middle: one large product mockup */}
-        <div className="relative flex flex-1 items-center justify-center">
+        {/* middle: one large product mockup, centered with breathing room */}
+        <div className="relative flex flex-1 items-center justify-center px-6">
           <ProductWindow prefersReduced={prefersReduced} />
         </div>
 
