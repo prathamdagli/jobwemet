@@ -85,7 +85,7 @@ function ReadinessRing({
   prefersReduced: boolean
 }) {
   return (
-    <div className="relative size-[7rem] shrink-0">
+    <div className="relative size-[9rem] shrink-0">
       <svg
         viewBox="0 0 100 100"
         className="size-full -rotate-90"
@@ -127,7 +127,7 @@ function ReadinessRing({
 function ProductWindow({ prefersReduced }: { prefersReduced: boolean }) {
   return (
     <motion.div
-      className="group relative w-full max-w-[48rem] overflow-hidden rounded-3xl border border-white/10 bg-white/[0.04] shadow-[0_30px_60px_-28px_rgba(0,0,0,0.55)] ring-1 ring-inset ring-white/10 backdrop-blur-2xl"
+      className="group relative w-full max-w-[62rem] overflow-hidden rounded-3xl border border-white/10 bg-white/[0.04] shadow-[0_30px_60px_-28px_rgba(0,0,0,0.55)] ring-1 ring-inset ring-white/10 backdrop-blur-2xl"
       initial={prefersReduced ? false : { opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: 'easeOut' }}
@@ -147,23 +147,23 @@ function ProductWindow({ prefersReduced }: { prefersReduced: boolean }) {
       />
 
       {/* macOS-style title bar */}
-      <div className="relative flex items-center justify-center border-b border-white/10 bg-white/[0.03] px-4 py-3 backdrop-blur-sm">
-        <div className="absolute left-4 flex items-center gap-2">
-          <span className="size-2.5 rounded-full bg-white/25" />
-          <span className="size-2.5 rounded-full bg-white/15" />
-          <span className="size-2.5 rounded-full bg-white/10" />
+      <div className="relative flex items-center justify-center border-b border-white/10 bg-white/[0.03] px-4 py-2 backdrop-blur-sm">
+        <div className="absolute left-4 flex items-center gap-1.5">
+          <span className="size-2 rounded-full bg-white/25" />
+          <span className="size-2 rounded-full bg-white/15" />
+          <span className="size-2 rounded-full bg-white/10" />
         </div>
-        <span className="text-xs font-medium text-white/40">
+        <span className="text-[11px] font-medium text-white/40">
           JobWeMet — Career Dashboard
         </span>
       </div>
 
-      {/* body: fake sidebar rail + main content */}
+      {/* body: fake sidebar rail + main content (two columns) */}
       <div className="flex">
         {/* left navigation rail — visual only */}
         <nav
           aria-hidden="true"
-          className="flex w-14 shrink-0 flex-col items-center gap-1.5 border-r border-white/10 bg-white/[0.02] py-4"
+          className="flex w-14 shrink-0 flex-col items-center gap-2 border-r border-white/10 bg-white/[0.02] py-4"
         >
           {NAV.map((item) => (
             <span
@@ -179,59 +179,50 @@ function ProductWindow({ prefersReduced }: { prefersReduced: boolean }) {
           ))}
         </nav>
 
-        {/* main content */}
-        <div className="min-w-0 flex-1 space-y-2.5 p-4">
+        {/* main content: two-column grid for horizontal balance */}
+        <div className="min-w-0 flex-1 grid grid-cols-2 gap-3 p-3">
           {/* resume uploaded */}
-          <div className="flex items-center gap-2.5 rounded-xl border border-white/10 bg-white/[0.03] p-2.5">
-            <span className="flex size-8 items-center justify-center rounded-md bg-white/5 text-white/70 ring-1 ring-white/10">
-              <FileText className="size-3.5" aria-hidden="true" />
+          <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+            <span className="flex size-9 items-center justify-center rounded-lg bg-white/5 text-white/70 ring-1 ring-white/10">
+              <FileText className="size-4" aria-hidden="true" />
             </span>
             <div className="min-w-0 flex-1">
               <div className="flex items-center justify-between gap-2">
-                <p className="truncate text-[12px] font-medium text-white/90">
+                <p className="truncate text-[13px] font-medium text-white/90">
                   Resume.pdf
                 </p>
-                <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-white/10 px-2 py-0.5 text-[9px] font-medium text-white/70">
+                <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-medium text-white/70">
                   <Check className="size-2.5" aria-hidden="true" /> Uploaded
                 </span>
               </div>
-              <div className="hero-shimmer mt-1.5 h-0.5 w-full rounded-full" />
+              <div className="hero-shimmer mt-2 h-0.5 w-full rounded-full" />
             </div>
           </div>
 
-          {/* skills detected */}
-          <div>
-            <p className="text-[9px] font-medium uppercase tracking-wide text-white/40">
-              Skills detected
+          {/* overall readiness */}
+          <div className="flex flex-col items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+            <ReadinessRing value={68} prefersReduced={prefersReduced} />
+            <p className="mt-1 text-[10px] uppercase tracking-wide text-white/40">
+              Overall Readiness
             </p>
-            <div className="mt-1.5 flex flex-wrap gap-1.5">
-              {SKILLS.map((s) => (
-                <span
-                  key={s}
-                  className="rounded-full border border-white/10 bg-white/[0.04] px-2 py-0.5 text-[12px] text-white/75"
-                >
-                  {s}
-                </span>
-              ))}
-            </div>
           </div>
 
           {/* career match */}
-          <div className="rounded-xl border border-white/10 bg-white/[0.03] p-2.5">
-            <div className="flex items-center justify-between">
+          <div className="flex h-full flex-col justify-between rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+            <div className="flex items-start justify-between">
               <div>
-                <p className="text-[9px] font-medium uppercase tracking-wide text-white/40">
+                <p className="text-[10px] font-medium uppercase tracking-wide text-white/40">
                   Career Match
                 </p>
-                <p className="mt-0.5 text-[12px] font-medium text-white/90">
+                <p className="mt-1 text-[14px] font-medium text-white/90">
                   AI Engineer
                 </p>
               </div>
-              <span className="text-lg font-semibold tracking-tight text-white">
+              <span className="text-xl font-semibold tracking-tight text-white">
                 92%
               </span>
             </div>
-            <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-neutral-700/50">
+            <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-neutral-700/50">
               <motion.div
                 className="h-full rounded-full bg-white/80 shadow-[0_0_10px_rgba(255,255,255,0.35)]"
                 initial={prefersReduced ? false : { width: 0 }}
@@ -241,67 +232,73 @@ function ProductWindow({ prefersReduced }: { prefersReduced: boolean }) {
             </div>
           </div>
 
-          {/* roadmap | readiness */}
-          <div className="grid grid-cols-[1fr_auto] items-start gap-3">
-            {/* learning roadmap */}
-            <div>
-              <p className="text-[9px] font-medium uppercase tracking-wide text-white/40">
-                Learning Roadmap
-              </p>
-              <ul className="mt-1.5 space-y-1">
-                {ROADMAP.map((r) => (
-                  <li
-                    key={r.label}
-                    className="flex items-center gap-2 text-[12px]"
-                  >
-                    <span
-                      className={
-                        r.state === 'done'
-                          ? 'flex size-3.5 items-center justify-center rounded-full bg-white/80 text-neutral-950'
-                          : r.state === 'active'
-                            ? 'size-3.5 rounded-full border-2 border-white/70'
-                            : 'size-3.5 rounded-full border-2 border-white/20'
-                      }
-                    >
-                      {r.state === 'done' && (
-                        <Check className="size-2.5" aria-hidden="true" />
-                      )}
-                      {r.state === 'active' && (
-                        <span className="size-1.5 rounded-full bg-white/70" />
-                      )}
-                    </span>
-                    <span
-                      className={
-                        r.state === 'todo' ? 'text-white/40' : 'text-white/80'
-                      }
-                    >
-                      {r.label}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* overall readiness */}
-            <div className="flex flex-col items-center justify-center rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2">
-              <ReadinessRing value={68} prefersReduced={prefersReduced} />
-              <p className="mt-1 text-[9px] uppercase tracking-wide text-white/40">
-                Readiness
-              </p>
+          {/* skills detected */}
+          <div className="flex h-full flex-col justify-center rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+            <p className="text-[10px] font-medium uppercase tracking-wide text-white/40">
+              Skills detected
+            </p>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {SKILLS.map((s) => (
+                <span
+                  key={s}
+                  className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[13px] text-white/75"
+                >
+                  {s}
+                </span>
+              ))}
             </div>
           </div>
 
+          {/* learning roadmap */}
+          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+            <p className="text-[10px] font-medium uppercase tracking-wide text-white/40">
+              Learning Roadmap
+            </p>
+            <ul className="mt-2 space-y-1.5">
+              {ROADMAP.map((r) => (
+                <li
+                  key={r.label}
+                  className="flex items-center gap-2 text-[13px]"
+                >
+                  <span
+                    className={
+                      r.state === 'done'
+                        ? 'flex size-4 items-center justify-center rounded-full bg-white/80 text-neutral-950'
+                        : r.state === 'active'
+                          ? 'size-4 rounded-full border-2 border-white/70'
+                          : 'size-4 rounded-full border-2 border-white/20'
+                    }
+                  >
+                    {r.state === 'done' && (
+                      <Check className="size-3" aria-hidden="true" />
+                    )}
+                    {r.state === 'active' && (
+                      <span className="size-1.5 rounded-full bg-white/70" />
+                    )}
+                  </span>
+                  <span
+                    className={
+                      r.state === 'todo' ? 'text-white/40' : 'text-white/80'
+                    }
+                  >
+                    {r.label}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
           {/* recent recommendation */}
-          <div className="flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.03] p-2.5">
+          <div className="flex h-full items-center justify-between rounded-2xl border border-white/10 bg-white/[0.03] p-3">
             <div className="min-w-0">
-              <p className="text-[9px] font-medium uppercase tracking-wide text-white/40">
+              <p className="text-[10px] font-medium uppercase tracking-wide text-white/40">
                 Recent Recommendation
               </p>
-              <p className="mt-0.5 truncate text-[12px] font-medium text-white/90">
+              <p className="mt-1 truncate text-[14px] font-medium text-white/90">
                 Docker Fundamentals
               </p>
             </div>
-            <span className="shrink-0 rounded-full border border-white/15 bg-white/[0.04] px-2.5 py-1 text-[10px] font-medium text-white/80">
+            <span className="shrink-0 rounded-full border border-white/15 bg-white/[0.04] px-3 py-1 text-[11px] font-medium text-white/80">
               6h course
             </span>
           </div>
@@ -364,7 +361,7 @@ export default function AuthShowcase() {
       <div className="auth-layer auth-vignette" aria-hidden="true" />
 
       {/* content */}
-      <div className="relative z-10 flex h-full flex-col items-center justify-between gap-5 px-8 py-6 md:px-10 lg:px-14">
+      <div className="relative z-10 flex h-full flex-col items-center justify-between gap-5 px-8 py-6 md:px-10 lg:px-8">
         {/* top: brand (links home) + per-page welcome */}
         <header className="flex flex-col items-center text-center">
           <Link
@@ -390,7 +387,7 @@ export default function AuthShowcase() {
         </header>
 
         {/* middle: product mockup, fills the panel width */}
-        <div className="relative flex flex-1 items-center justify-center px-4">
+        <div className="relative flex flex-1 items-center justify-center px-2">
           <ProductWindow prefersReduced={prefersReduced} />
         </div>
 
