@@ -73,6 +73,12 @@ def get_current_user(authorization: str = Header(default="")) -> models.Firebase
     if token:
         try:
             decoded = get_auth().verify_id_token(token)
+            database.ensure_user(
+                decoded["uid"],
+                decoded.get("email"),
+                decoded.get("name"),
+                decoded.get("picture"),
+            )
             return models.FirebaseUser(
                 uid=decoded["uid"],
                 email=decoded.get("email"),

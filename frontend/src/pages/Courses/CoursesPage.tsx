@@ -166,7 +166,8 @@ function RecentCourseItem({ course }: { course: Course }) {
 export default function CoursesPage() {
   const { courses, aiInsights, sidebarStats } = useCourses()
   const { profile } = useProfile()
-  const { loading, error, refresh } = useAppState()
+  const { loading, error, refresh, activeResumeId, recommendCourses } =
+    useAppState()
   const goal = profile.targetCareer || 'your goal'
   const [refreshing, setRefreshing] = useState(false)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -177,11 +178,19 @@ export default function CoursesPage() {
     }
   }, [])
 
-  function handleRefresh() {
+  async function handleRefresh() {
     if (refreshing) return
-    refresh()
     setRefreshing(true)
-    timerRef.current = setTimeout(() => setRefreshing(false), 1600)
+    try {
+      if (activeResumeId) {
+        // Regenerate course recommendations for the active resume.
+        await recommendCourses(activeResumeId)
+      } else {
+        refresh()
+      }
+    } finally {
+      timerRef.current = setTimeout(() => setRefreshing(false), 1600)
+    }
   }
 
   // Derived KPIs (no data-hook changes — computed from the returned array).

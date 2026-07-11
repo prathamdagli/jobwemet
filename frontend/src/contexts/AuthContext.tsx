@@ -1,6 +1,7 @@
 import { createContext, useEffect, useState, type ReactNode } from 'react'
 import { onAuthStateChanged, type User } from 'firebase/auth'
 import { auth } from '../firebase/firebase'
+import { configureApi } from '../services/api/client'
 import {
   registerWithEmail,
   loginWithEmail,
@@ -38,6 +39,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })
     return () => unsubscribe()
   }, [])
+
+  // Feed the API client the latest Firebase ID token so every backend request
+  // is authenticated and the token is refreshed automatically when expired.
+  useEffect(() => {
+    configureApi(() => (user ? user.getIdToken() : Promise.resolve(null)))
+  }, [user])
 
   const value: AuthContextValue = {
     user,

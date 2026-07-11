@@ -56,7 +56,7 @@ function CountUpPercent({ value }: { value: number }) {
 export default function SkillsPage() {
   const [analyzing, setAnalyzing] = useState(false)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const { loading, error, refresh } = useAppState()
+  const { loading, error, refresh, activeResumeId, runAnalysis } = useAppState()
   const { profile } = useProfile()
   const {
     technicalSkills,
@@ -72,11 +72,19 @@ export default function SkillsPage() {
     },
     [],
   )
-  function handleReanalyze() {
+  async function handleReanalyze() {
     if (analyzing) return
-    refresh()
     setAnalyzing(true)
-    timerRef.current = setTimeout(() => setAnalyzing(false), 1600)
+    try {
+      if (activeResumeId) {
+        // Re-run the AI analysis on the active resume, then refresh all data.
+        await runAnalysis(activeResumeId)
+      } else {
+        refresh()
+      }
+    } finally {
+      timerRef.current = setTimeout(() => setAnalyzing(false), 1600)
+    }
   }
 
   const avgConfidence = averageOf(technicalSkills)

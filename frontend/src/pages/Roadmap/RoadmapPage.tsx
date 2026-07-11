@@ -107,7 +107,8 @@ function Collapsible({
 export default function RoadmapPage() {
   const { modules, insights, stats } = useRoadmap()
   const { profile } = useProfile()
-  const { loading, error, refresh } = useAppState()
+  const { loading, error, refresh, activeResumeId, regenerateRoadmap } =
+    useAppState()
   const goal = profile.targetCareer || 'your goal'
   const [regenerating, setRegenerating] = useState(false)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -118,11 +119,19 @@ export default function RoadmapPage() {
     }
   }, [])
 
-  function handleRegenerate() {
+  async function handleRegenerate() {
     if (regenerating) return
-    refresh()
     setRegenerating(true)
-    timerRef.current = setTimeout(() => setRegenerating(false), 1600)
+    try {
+      if (activeResumeId) {
+        // Regenerate the roadmap for the active resume, then refresh all data.
+        await regenerateRoadmap(activeResumeId)
+      } else {
+        refresh()
+      }
+    } finally {
+      timerRef.current = setTimeout(() => setRegenerating(false), 1600)
+    }
   }
 
   const completed = modules.filter((m) => m.status === 'completed')

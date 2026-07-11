@@ -60,6 +60,32 @@ def save_user(user: models.User) -> models.User:
     return user
 
 
+def ensure_user(
+    uid: str,
+    email: str | None = None,
+    display_name: str | None = None,
+    photo_url: str | None = None,
+) -> None:
+    """Idempotently create the ``users/{uid}`` doc for a brand-new user.
+
+    The frontend no longer writes Firestore directly (and the old
+    sign-up Cloud Function is gone), so the first authenticated
+    request bootstraps the profile from the token claims. Safe to call
+    on every request — it only writes when the doc is absent.
+    """
+    if get_user(uid) is not None:
+        return
+    save_user(
+        models.User(
+            uid=uid,
+            displayName=display_name or email or "New User",
+            email=email or "",
+            photoURL=photo_url,
+            provider="password",
+        )
+    )
+
+
 # --- Resumes -------------------------------------------------------------
 
 

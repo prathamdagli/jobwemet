@@ -19,8 +19,7 @@ import { Button } from '@/components/ui/button'
 import { ProgressBar } from '@/components/dashboard/ProgressBar'
 import { widgetHover } from '@/motion'
 import { cn } from '@/lib/utils'
-import { useAuth } from '@/hooks/useAuth'
-import { uploadResumeFile } from '@/services/firebase'
+import { useAppState } from '@/hooks/useAppState'
 
 const MAX_SIZE = 10 * 1024 * 1024
 const ACCEPT_ATTR =
@@ -133,7 +132,7 @@ export const ResumeDropzone = forwardRef<
   ResumeDropzoneHandle,
   ResumeDropzoneProps
 >(function ResumeDropzone({ onUploaded }, ref) {
-  const { user } = useAuth()
+  const { uploadResume } = useAppState()
   const inputRef = useRef<HTMLInputElement>(null)
   const [dragActive, setDragActive] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -143,18 +142,10 @@ export const ResumeDropzone = forwardRef<
 
   async function startUpload(file: File) {
     setError(null)
-    const uid = user?.uid
-    if (!uid) {
-      setError('Sign in to upload a resume.')
-      return
-    }
     setSelected({ file, progress: 0, status: 'uploading' })
     try {
-      await uploadResumeFile(
-        uid,
-        file,
-        (pct) => setSelected((s) => (s ? { ...s, progress: pct } : s)),
-        crypto.randomUUID(),
+      await uploadResume(file, (pct) =>
+        setSelected((s) => (s ? { ...s, progress: pct } : s)),
       )
       setSelected((s) => (s ? { ...s, progress: 100, status: 'success' } : s))
       onUploaded?.(file.name)

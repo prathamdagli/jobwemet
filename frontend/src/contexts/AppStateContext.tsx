@@ -7,33 +7,48 @@ import {
   useState,
 } from 'react'
 import type { ReactNode } from 'react'
+import type { User } from 'firebase/auth'
 import { useAuth } from '@/hooks/useAuth'
+import { EMPTY_SLOTS, type DataSlots } from '@/services/firebase'
 import {
-  EMPTY_SLOTS,
-  subscribeCareerMatches,
-  subscribeCourses,
-  subscribeDashboard,
-  subscribeUserProfile,
-  subscribeResumeProcessing,
-  subscribeRoadmap,
-  subscribeSkillAnalysis,
-  subscribeSkillGap,
-  subscribeUserResumes,
-  type DataSlots,
-  type FirestoreError,
-} from '@/services/firebase'
+  api,
+  type PutSettingsBody,
+  type Settings,
+  type UpdateProfileBody,
+} from '@/services/api/client'
 import { buildAppData } from '@/services/firebase/mappers'
 import type { AppData } from '@/types'
 
 export interface AppStateContextValue {
   /** The full application data tree shared across every page. */
   data: AppData
-  /** True while the initial subscription data is settling in. */
+  /** True while the data is (re)loading. */
   loading: boolean
-  /** Populated when a subscription fails. */
+  /** Populated when a load or action fails. */
   error: string | null
-  /** Clear transient errors. Realtime listeners keep data fresh automatically. */
+  /** Re-fetch every slice from the backend. */
   refresh: () => void
+  /** The resume the derived slices are keyed to (latest non-deleted). */
+  activeResumeId: string | null
+  /** The user's persisted app settings (or null until loaded). */
+  settings: Settings | null
+  /** Upload a resume, run the analysis pipeline, then refresh everything. */
+  uploadResume: (
+    file: File,
+    onProgress?: (percent: number) => void,
+  ) => Promise<void>
+  /** Cascade-delete a resume, then refresh. */
+  deleteResume: (resumeId: string) => Promise<void>
+  /** Re-run the AI analysis for a resume, then refresh. */
+  runAnalysis: (resumeId: string) => Promise<void>
+  /** Re-generate the roadmap for a resume, then refresh. */
+  regenerateRoadmap: (resumeId: string) => Promise<void>
+  /** Recommend courses for the skill gap, then refresh. */
+  recommendCourses: (resumeId: string) => Promise<void>
+  /** Persist profile fields, then refresh. */
+  updateProfile: (body: UpdateProfileBody) => Promise<void>
+  /** Persist settings (+ optional profile fields), then refresh. */
+  putSettings: (body: PutSettingsBody) => Promise<void>
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
@@ -48,162 +63,204 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   )
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [settings, setSettings] = useState<Settings | null>(null)
 
   const slots = useRef<DataSlots>({ ...EMPTY_SLOTS })
-  const mainUnsubs = useRef<Array<() => void>>([])
-  const derivedUnsubs = useRef<Array<() => void>>([])
-  const currentResumeId = useRef<string | null>(null)
-  const userRef = useRef(user)
+  const userRef = useRef<User | null>(user)
+  // Guards against races when the user changes mid-fetch.
+  const loadSeq = useRef(0)
 
   const recompute = useCallback(() => {
     setData(buildAppData(slots.current, userRef.current))
   }, [])
 
-  // Subscribe to the resume-derived collections (analysis, matches, gap,
-  // roadmap, courses, dashboard) for a single active resume, re-attaching
-  // whenever the latest resume changes.
-  const attachDerived = useCallback(
-    (resumeId: string | null) => {
-      derivedUnsubs.current.forEach((u) => u())
-      derivedUnsubs.current = []
-      if (!resumeId) return
+  const loadAll = useCallback(async () => {
+    const seq = ++loadSeq.current
+    setLoading(true)
+    setError(null)
+    try {
+      const [
+        profile,
+        resumes,
+        dashboard,
+        analysis,
+        careers,
+        skillGap,
+        roadmap,
+        courses,
+        settingsResp,
+      ] = await Promise.all([
+        api.getProfile().catch(() => null),
+        api.listResumes().catch(() => []),
+        api.getDashboard().catch(() => null),
+        api.getSkills().catch(() => null),
+        api.getCareers().catch(() => null),
+        api.getSkillGap().catch(() => null),
+        api.getRoadmap().catch(() => null),
+        api.getCourses().catch(() => null),
+        api.getSettings().catch(() => null),
+      ])
+      // A newer load started while we were awaiting — discard stale data.
+      if (seq !== loadSeq.current) return
 
-      const onErr = (e: FirestoreError) =>
-        setError(e.message || 'Failed to load resume data.')
+      const next: DataSlots = { ...EMPTY_SLOTS }
+      next.profile = profile
+      next.resumes = resumes
+      next.dashboard = dashboard
+      next.analysis = analysis
+      next.careerMatches = careers
+      next.skillGap = skillGap
+      next.roadmap = roadmap
+      next.courses = courses
 
-      derivedUnsubs.current.push(
-        subscribeSkillAnalysis(
-          resumeId,
-          (d) => {
-            slots.current.analysis = d
-            recompute()
-          },
-          onErr,
-        ),
-        subscribeCareerMatches(
-          resumeId,
-          (d) => {
-            slots.current.careerMatches = d
-            recompute()
-          },
-          onErr,
-        ),
-        subscribeSkillGap(
-          resumeId,
-          (d) => {
-            slots.current.skillGap = d
-            recompute()
-          },
-          onErr,
-        ),
-        subscribeRoadmap(
-          resumeId,
-          (d) => {
-            slots.current.roadmap = d
-            recompute()
-          },
-          onErr,
-        ),
-        subscribeCourses(
-          resumeId,
-          (d) => {
-            slots.current.courses = d
-            recompute()
-          },
-          onErr,
-        ),
-        subscribeDashboard(
-          resumeId,
-          (d) => {
-            slots.current.dashboard = d
-            recompute()
-          },
-          onErr,
-        ),
+      // No GET /processing endpoint exists — derive a per-resume status
+      // from the analysis that the backend produces for the active resume.
+      const activeId = resumes.find((r) => r.status !== 'deleted')?.id ?? null
+      next.processing = {}
+      for (const r of resumes) {
+        next.processing[r.id] = {
+          status: analysis && r.id === activeId ? 'completed' : 'queued',
+        }
+      }
+
+      slots.current = next
+      userRef.current = user
+      setSettings(settingsResp?.settings ?? null)
+      recompute()
+    } catch (err) {
+      if (seq !== loadSeq.current) return
+      setError(
+        err instanceof Error ? err.message : 'Failed to load application data.',
       )
-    },
-    [recompute],
-  )
+    } finally {
+      if (seq === loadSeq.current) setLoading(false)
+    }
+  }, [recompute, user])
 
   useEffect(() => {
     userRef.current = user
     if (!user) {
-      mainUnsubs.current.forEach((u) => u())
-      mainUnsubs.current = []
-      derivedUnsubs.current.forEach((u) => u())
-      derivedUnsubs.current = []
-      currentResumeId.current = null
+      // The user logged out (or never signed in) — clear all state. These
+      // synchronous resets are intentional on the auth-transition effect.
+      /* eslint-disable react-hooks/set-state-in-effect */
+      loadSeq.current++
       slots.current = { ...EMPTY_SLOTS }
-      // Direct auth-driven reset to empty state — intentional sync, not derived.
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setData(buildAppData(EMPTY_SLOTS, null))
+      setSettings(null)
       setLoading(false)
       setError(null)
+      /* eslint-enable react-hooks/set-state-in-effect */
       return
     }
-
-    setLoading(true)
-    setError(null)
-    const onErr = (e: FirestoreError) =>
-      setError(e.message || 'Failed to load application data.')
-
-    const local: Array<() => void> = []
-
-    local.push(
-      subscribeUserProfile(
-        user.uid,
-        (doc) => {
-          slots.current.profile = doc
-          setLoading(false)
-          recompute()
-        },
-        onErr,
-      ),
-    )
-
-    local.push(
-      subscribeUserResumes(
-        user.uid,
-        (docs) => {
-          slots.current.resumes = docs
-          const latest = docs.find((r) => r.status !== 'deleted')?.id ?? null
-          if (latest !== currentResumeId.current) {
-            currentResumeId.current = latest
-            attachDerived(latest)
-          }
-          recompute()
-        },
-        onErr,
-      ),
-    )
-
-    local.push(
-      subscribeResumeProcessing(
-        user.uid,
-        (map) => {
-          slots.current.processing = map
-          recompute()
-        },
-        onErr,
-      ),
-    )
-
-    mainUnsubs.current = local
-    return () => {
-      local.forEach((u) => u())
-      derivedUnsubs.current.forEach((u) => u())
-      derivedUnsubs.current = []
-      mainUnsubs.current = []
-    }
-  }, [user?.uid, attachDerived, recompute])
+    void loadAll()
+    // Re-run only when the signed-in uid changes, not on every token refresh
+    // (which mints a new user object); loadAll already closes over `user`.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.uid, loadAll])
 
   const refresh = useCallback(() => {
-    setError(null)
-  }, [])
+    void loadAll()
+  }, [loadAll])
+
+  const uploadResume = useCallback(
+    async (file: File, onProgress?: (percent: number) => void) => {
+      const { resumeId } = await api.uploadResume(file, onProgress)
+      // Run the full pipeline so every derived page populates automatically.
+      await Promise.allSettled([
+        api.processResume(resumeId),
+        api.analyzeResume(resumeId),
+        api.generateRoadmap(resumeId),
+        api.recommendCourses(resumeId),
+      ])
+      await loadAll()
+    },
+    [loadAll],
+  )
+
+  const deleteResume = useCallback(
+    async (resumeId: string) => {
+      await api.deleteResume(resumeId)
+      await loadAll()
+    },
+    [loadAll],
+  )
+
+  const runAnalysis = useCallback(
+    async (resumeId: string) => {
+      await api.regenerateAnalysis(resumeId)
+      await loadAll()
+    },
+    [loadAll],
+  )
+
+  const regenerateRoadmap = useCallback(
+    async (resumeId: string) => {
+      await api.regenerateRoadmap(resumeId)
+      await loadAll()
+    },
+    [loadAll],
+  )
+
+  const recommendCourses = useCallback(
+    async (resumeId: string) => {
+      await api.recommendCourses(resumeId)
+      await loadAll()
+    },
+    [loadAll],
+  )
+
+  const updateProfile = useCallback(
+    async (body: UpdateProfileBody) => {
+      await api.updateProfile(body)
+      await loadAll()
+    },
+    [loadAll],
+  )
+
+  const putSettings = useCallback(
+    async (body: PutSettingsBody) => {
+      await api.putSettings(body)
+      await loadAll()
+    },
+    [loadAll],
+  )
+
+  const activeResumeId = useMemo(
+    () => data.resume.recent[0]?.id ?? null,
+    [data.resume.recent],
+  )
 
   const value = useMemo<AppStateContextValue>(
-    () => ({ data, loading, error, refresh }),
-    [data, loading, error, refresh],
+    () => ({
+      data,
+      loading,
+      error,
+      refresh,
+      activeResumeId,
+      settings,
+      uploadResume,
+      deleteResume,
+      runAnalysis,
+      regenerateRoadmap,
+      recommendCourses,
+      updateProfile,
+      putSettings,
+    }),
+    [
+      data,
+      loading,
+      error,
+      refresh,
+      activeResumeId,
+      settings,
+      uploadResume,
+      deleteResume,
+      runAnalysis,
+      regenerateRoadmap,
+      recommendCourses,
+      updateProfile,
+      putSettings,
+    ],
   )
 
   return (

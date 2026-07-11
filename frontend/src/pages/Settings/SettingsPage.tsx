@@ -27,12 +27,12 @@ import { PageHeader } from '@/components/dashboard/PageHeader'
 import { WidgetCard } from '@/components/dashboard/WidgetCard'
 import { MetricCard } from '@/components/dashboard/MetricCard'
 import { SettingRow } from '@/components/settings/settings'
-import { useAuth } from '@/hooks/useAuth'
+import { useAppState } from '@/hooks/useAppState'
 import { useProfile } from '@/hooks/useProfile'
-import { updateProfile } from '@/services/firebase'
+import type { Settings } from '@/services/api/client'
 
 export default function SettingsPage() {
-  const { user } = useAuth()
+  const { settings, putSettings } = useAppState()
   const { profile } = useProfile()
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -57,17 +57,64 @@ export default function SettingsPage() {
     })
   }, [profile.fullName, profile.phone, profile.targetCareer, profile.location])
 
+  const defaultSettings: Settings = {
+    theme: 'system',
+    language: 'en',
+    timezone: null,
+    notifications: { email: true, push: true, browser: true },
+    privacy: { profileVisible: true, shareAcademicData: true },
+    careerPreferences: {
+      targetRole: null,
+      industry: null,
+      remotePreferred: false,
+    },
+    defaultResume: null,
+  }
+  const [settingsForm, setSettingsForm] = useState<Settings>(defaultSettings)
+
+  // Sync the persisted settings into local state when the app data refreshes.
+  useEffect(() => {
+    if (!settings) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSettingsForm({
+      theme: settings.theme ?? 'system',
+      language: settings.language ?? 'en',
+      timezone: settings.timezone ?? null,
+      notifications: {
+        email: settings.notifications?.email ?? true,
+        push: settings.notifications?.push ?? true,
+        browser: settings.notifications?.browser ?? true,
+      },
+      privacy: {
+        profileVisible: settings.privacy?.profileVisible ?? true,
+        shareAcademicData: settings.privacy?.shareAcademicData ?? true,
+      },
+      careerPreferences: {
+        targetRole: settings.careerPreferences?.targetRole ?? null,
+        industry: settings.careerPreferences?.industry ?? null,
+        remotePreferred: settings.careerPreferences?.remotePreferred ?? false,
+      },
+      defaultResume: settings.defaultResume ?? null,
+    })
+  }, [settings])
+
   async function handleSave() {
-    if (!user) return
     setSaving(true)
     setError(null)
     setSaved(false)
     try {
-      await updateProfile(user.uid, {
+      await putSettings({
         displayName: form.fullName,
         targetCareer: form.targetCareer,
         location: form.location,
         phone: form.phone,
+        theme: settingsForm.theme,
+        language: settingsForm.language,
+        timezone: settingsForm.timezone,
+        notifications: settingsForm.notifications,
+        privacy: settingsForm.privacy,
+        careerPreferences: settingsForm.careerPreferences,
+        defaultResume: settingsForm.defaultResume,
       })
       setSaved(true)
     } catch (err) {
@@ -333,19 +380,46 @@ export default function SettingsPage() {
               title="Email Notifications"
               description="Receive important account emails."
             >
-              <Switch defaultChecked aria-label="Email Notifications" />
+              <Switch
+                checked={settingsForm.notifications.email}
+                onCheckedChange={(v) =>
+                  setSettingsForm((f) => ({
+                    ...f,
+                    notifications: { ...f.notifications, email: v },
+                  }))
+                }
+                aria-label="Email Notifications"
+              />
             </SettingRow>
             <SettingRow
               title="Career Updates"
               description="Get notified about new career matches."
             >
-              <Switch defaultChecked aria-label="Career Updates" />
+              <Switch
+                checked={settingsForm.notifications.push}
+                onCheckedChange={(v) =>
+                  setSettingsForm((f) => ({
+                    ...f,
+                    notifications: { ...f.notifications, push: v },
+                  }))
+                }
+                aria-label="Career Updates"
+              />
             </SettingRow>
             <SettingRow
               title="Course Recommendations"
               description="Personalized course suggestions."
             >
-              <Switch defaultChecked aria-label="Course Recommendations" />
+              <Switch
+                checked={settingsForm.notifications.browser}
+                onCheckedChange={(v) =>
+                  setSettingsForm((f) => ({
+                    ...f,
+                    notifications: { ...f.notifications, browser: v },
+                  }))
+                }
+                aria-label="Course Recommendations"
+              />
             </SettingRow>
             <SettingRow
               title="Weekly Progress Report"
@@ -369,7 +443,28 @@ export default function SettingsPage() {
               description="Interface appearance."
               htmlFor="theme"
             >
-              <Select id="theme" defaultValue="System" className="sm:w-56">
+              <Select
+                id="theme"
+                value={
+                  settingsForm.theme === 'light'
+                    ? 'Light'
+                    : settingsForm.theme === 'dark'
+                      ? 'Dark'
+                      : 'System'
+                }
+                onChange={(e) =>
+                  setSettingsForm((f) => ({
+                    ...f,
+                    theme:
+                      e.target.value === 'Light'
+                        ? 'light'
+                        : e.target.value === 'Dark'
+                          ? 'dark'
+                          : 'system',
+                  }))
+                }
+                className="sm:w-56"
+              >
                 <option>System</option>
                 <option>Light</option>
                 <option>Dark</option>
@@ -380,7 +475,32 @@ export default function SettingsPage() {
               description="Preferred language for the app."
               htmlFor="language"
             >
-              <Select id="language" defaultValue="English" className="sm:w-56">
+              <Select
+                id="language"
+                value={
+                  settingsForm.language === 'es'
+                    ? 'Spanish'
+                    : settingsForm.language === 'de'
+                      ? 'German'
+                      : settingsForm.language === 'fr'
+                        ? 'French'
+                        : 'English'
+                }
+                onChange={(e) =>
+                  setSettingsForm((f) => ({
+                    ...f,
+                    language:
+                      e.target.value === 'Spanish'
+                        ? 'es'
+                        : e.target.value === 'German'
+                          ? 'de'
+                          : e.target.value === 'French'
+                            ? 'fr'
+                            : 'en',
+                  }))
+                }
+                className="sm:w-56"
+              >
                 <option>English</option>
                 <option>Spanish</option>
                 <option>German</option>
@@ -394,7 +514,10 @@ export default function SettingsPage() {
             >
               <Select
                 id="timezone"
-                defaultValue="UTC-08:00 Pacific"
+                value={settingsForm.timezone ?? 'UTC-08:00 Pacific'}
+                onChange={(e) =>
+                  setSettingsForm((f) => ({ ...f, timezone: e.target.value }))
+                }
                 className="sm:w-56"
               >
                 <option>UTC-08:00 Pacific</option>
@@ -420,7 +543,22 @@ export default function SettingsPage() {
               description="Used when generating roadmaps."
               htmlFor="goal"
             >
-              <Select id="goal" defaultValue="AI Engineer" className="sm:w-56">
+              <Select
+                id="goal"
+                value={
+                  settingsForm.careerPreferences.targetRole ?? 'AI Engineer'
+                }
+                onChange={(e) =>
+                  setSettingsForm((f) => ({
+                    ...f,
+                    careerPreferences: {
+                      ...f.careerPreferences,
+                      targetRole: e.target.value,
+                    },
+                  }))
+                }
+                className="sm:w-56"
+              >
                 <option>AI Engineer</option>
                 <option>Data Scientist</option>
                 <option>ML Engineer</option>
@@ -433,7 +571,16 @@ export default function SettingsPage() {
             >
               <Select
                 id="resume"
-                defaultValue={profile.fullName ? 'Latest resume' : 'No resume'}
+                value={
+                  settingsForm.defaultResume ? 'Latest resume' : 'No resume'
+                }
+                onChange={(e) =>
+                  setSettingsForm((f) => ({
+                    ...f,
+                    defaultResume:
+                      e.target.value === 'Latest resume' ? 'latest' : '',
+                  }))
+                }
                 className="sm:w-56"
               >
                 <option>Latest resume</option>
@@ -461,13 +608,31 @@ export default function SettingsPage() {
               title="Public Profile"
               description="Make your profile visible to recruiters."
             >
-              <Switch defaultChecked aria-label="Public Profile" />
+              <Switch
+                checked={settingsForm.privacy.profileVisible}
+                onCheckedChange={(v) =>
+                  setSettingsForm((f) => ({
+                    ...f,
+                    privacy: { ...f.privacy, profileVisible: v },
+                  }))
+                }
+                aria-label="Public Profile"
+              />
             </SettingRow>
             <SettingRow
               title="Share Usage Data"
               description="Help improve JobWeMet with anonymous data."
             >
-              <Switch defaultChecked aria-label="Share Usage Data" />
+              <Switch
+                checked={settingsForm.privacy.shareAcademicData}
+                onCheckedChange={(v) =>
+                  setSettingsForm((f) => ({
+                    ...f,
+                    privacy: { ...f.privacy, shareAcademicData: v },
+                  }))
+                }
+                aria-label="Share Usage Data"
+              />
             </SettingRow>
             <SettingRow
               title="Email Discoverability"
