@@ -3,18 +3,20 @@
 Every AI call in the application goes through this module — no endpoint
 or domain module imports a provider SDK directly. Today a deterministic
 ``stub`` provider is used when no real key is configured; otherwise the
-configured provider (Gemini) is used for the four generative stages of the
-resume pipeline: skill extraction, career matching, skill-gap analysis and
-roadmap generation. (Course recommendations are catalog-driven and live in
-``courses.py`` by design, not here.)
+configured provider (OpenRouter) is used for the four generative stages of
+the resume pipeline: skill extraction, career matching, skill-gap analysis
+and roadmap generation. (Course recommendations are catalog-driven and live
+in ``courses.py`` by design, not here.)
 
-Adding OpenAI or Claude later means adding one provider class and a branch
+Adding another provider later means adding one provider class and a branch
 in :func:`get_provider`; nothing else in the app changes.
 """
 from __future__ import annotations
 
 import json
+import logging
 import re
+import time
 from abc import ABC, abstractmethod
 from typing import Optional
 
@@ -22,8 +24,14 @@ import requests
 
 from . import config
 
+logger = logging.getLogger(__name__)
+
 # How long to wait on a provider before giving up.
-_TIMEOUT_SECONDS = 60
+_TIMEOUT_SECONDS = 30
+
+# Errors worth retrying once (transient / bad output). Auth and quota
+# failures are not retried — retrying them cannot help.
+_RETRYABLE = {"ai_timeout", "ai_unavailable", "ai_error", "ai_malformed"}
 
 
 class AIError(Exception):
@@ -55,53 +63,56 @@ class StubProvider(AIProvider):
 
     Lets the full pipeline run end-to-end (and keeps Swagger honest)
     without spending tokens or requiring secrets. This is the intentional
-    fallback only — production runs the Gemini provider.
+    fallback only — production runs the OpenRouter provider.
     """
 
     name = "stub"
 
     def complete(self, prompt: str, *, system: Optional[str] = None) -> str:
         return (
-            "[stub] AI provider is not configured. Set AI_PROVIDER=gemini "
-            "and GEMINI_API_KEY in .env to enable real generation."
+            "[stub] AI provider is not configured. Set AI_PROVIDER=openrouter "
+            "and OPENROUTER_API_KEY in .env to enable real generation."
         )
 
 
-class GeminiProvider(AIProvider):
-    """Google Gemini via the Generative Language REST API."""
+class OpenRouterProvider(AIProvider):
+    """OpenRouter chat-completions API (OpenAI-compatible)."""
 
-    name = "gemini"
+    name = "openrouter"
 
-    def __init__(self, api_key: str, model: str) -> None:
+    def __init__(self, api_key: str, base_url: str, model: str) -> None:
         self._api_key = api_key
         self._model = model
-        self._url = (
-            "https://generativelanguage.googleapis.com/v1beta/models/"
-            f"{model}:generateContent"
-        )
+        self._url = f"{base_url.rstrip('/')}/chat/completions"
 
     def complete(self, prompt: str, *, system: Optional[str] = None) -> str:
-        parts = []
+        messages = []
         if system:
-            parts.append({"text": system})
-        parts.append({"text": prompt})
+            messages.append({"role": "system", "content": system})
+        messages.append({"role": "user", "content": prompt})
 
         payload = {
-            "contents": [{"role": "user", "parts": parts}],
-            "generationConfig": {"temperature": 0.3, "maxOutputTokens": 4096},
+            "model": self._model,
+            "messages": messages,
+            "temperature": 0.2,
+            "response_format": {"type": "json_object"},
         }
+        headers = {
+            "Authorization": f"Bearer {self._api_key}",
+            "Content-Type": "application/json",
+        }
+
+        started = time.monotonic()
         try:
             resp = requests.post(
                 self._url,
-                params={"key": self._api_key},
+                headers=headers,
                 json=payload,
                 timeout=_TIMEOUT_SECONDS,
             )
         except requests.exceptions.Timeout:
             raise AIError(
-                "The AI provider timed out. Please try again later.",
-                status_code=504,
-                code="ai_timeout",
+                "The AI provider timed out.", status_code=504, code="ai_timeout"
             )
         except requests.exceptions.RequestException as exc:
             raise AIError(
@@ -110,35 +121,76 @@ class GeminiProvider(AIProvider):
                 code="ai_unavailable",
             )
 
+        latency_ms = int((time.monotonic() - started) * 1000)
+        request_id = resp.headers.get("x-request-id")
+        try:
+            usage = resp.json().get("usage")
+        except Exception:
+            usage = None
+        # Log operational signal only — never the prompt or the API key.
+        logger.info(
+            "openrouter model=%s latency_ms=%d request_id=%s usage=%s",
+            self._model,
+            latency_ms,
+            request_id,
+            usage,
+        )
+
+        # Map the documented status codes onto stable error envelopes.
+        if resp.status_code in (401, 403):
+            raise AIError(
+                "Invalid or unauthorized OpenRouter API key.",
+                status_code=401,
+                code="ai_auth",
+            )
+        if resp.status_code == 404:
+            raise AIError(
+                "OpenRouter model or endpoint not found.",
+                status_code=404,
+                code="ai_not_found",
+            )
+        if resp.status_code == 408:
+            raise AIError(
+                "The AI provider request timed out.",
+                status_code=408,
+                code="ai_timeout",
+            )
         if resp.status_code == 429:
             raise AIError(
-                "AI provider quota exceeded. If the message says "
-                "'limit: 0', the Generative Language API is not enabled or "
-                "has no billing on the key's GCP project. Enable it in the "
-                "Google Cloud / AI Studio console. Raw: "
+                "AI provider quota exceeded. Check the OpenRouter key's "
+                "credits / rate limits, then retry. Raw: "
                 f"{resp.text[:300]}",
                 status_code=429,
                 code="ai_quota",
             )
-        # 400 normally means the key query param was rejected; 401/403 are
-        # explicit auth failures. Surface them as a 401 so the client knows
-        # to check the configured key.
-        if resp.status_code in (400, 401, 403):
+        if resp.status_code == 503:
             raise AIError(
-                "Invalid or unauthorized Gemini API key.",
-                status_code=401,
-                code="ai_auth",
+                "The AI provider is temporarily unavailable.",
+                status_code=503,
+                code="ai_unavailable",
+            )
+        if resp.status_code == 504:
+            raise AIError(
+                "The AI provider gateway timed out.",
+                status_code=504,
+                code="ai_timeout",
+            )
+        if resp.status_code >= 500:
+            raise AIError(
+                f"OpenRouter API error {resp.status_code}: {resp.text[:300]}",
+                status_code=502,
+                code="ai_error",
             )
         if resp.status_code != 200:
             raise AIError(
-                f"Gemini API error {resp.status_code}: {resp.text[:300]}",
+                f"OpenRouter API error {resp.status_code}: {resp.text[:300]}",
                 status_code=502,
                 code="ai_error",
             )
 
         try:
             data = resp.json()
-            text = data["candidates"][0]["content"]["parts"][0]["text"]
+            text = data["choices"][0]["message"]["content"]
         except (KeyError, IndexError, ValueError) as exc:
             raise AIError(
                 "The AI provider returned an empty or malformed response.",
@@ -156,8 +208,10 @@ class GeminiProvider(AIProvider):
 
 def get_provider() -> AIProvider:
     """Return the configured provider (factory)."""
-    if config.AI_PROVIDER == "gemini" and config.GEMINI_API_KEY:
-        return GeminiProvider(config.GEMINI_API_KEY, config.GEMINI_MODEL)
+    if config.AI_PROVIDER == "openrouter" and config.OPENROUTER_API_KEY:
+        return OpenRouterProvider(
+            config.OPENROUTER_API_KEY, config.OPENROUTER_BASE_URL, config.OPENROUTER_MODEL
+        )
     return StubProvider()
 
 
@@ -174,6 +228,7 @@ def _is_stub() -> bool:
 # --------------------------------------------------------------------------
 # JSON extraction — robust against markdown fences / prose around the JSON.
 # --------------------------------------------------------------------------
+
 
 def _parse_ai_json(raw: str) -> dict:
     text = raw.strip()
@@ -199,6 +254,21 @@ def _parse_ai_json(raw: str) -> dict:
         status_code=502,
         code="ai_malformed",
     )
+
+
+def _generate(prompt: str, system: Optional[str] = None) -> dict:
+    """Call the model and parse its JSON, retrying once on retryable failure.
+
+    A single retry covers transient errors (timeout / 5xx / unreachable) and
+    malformed JSON. The retry is exactly once; a second failure is surfaced
+    as an :class:`AIError` so the request degrades gracefully.
+    """
+    try:
+        return _parse_ai_json(chat(prompt, system=system))
+    except AIError as exc:
+        if exc.code in _RETRYABLE:
+            return _parse_ai_json(chat(prompt, system=system))
+        raise
 
 
 # --------------------------------------------------------------------------
@@ -246,9 +316,10 @@ def _as_int(v, default: int = 0) -> int:
 
 _SYSTEM = (
     "You are JobWeMet's career-intelligence engine. You always reply with a "
-    "single, strict JSON object and nothing else — no prose, no markdown "
-    "outside the JSON. Use only the exact field names and value sets "
-    "requested. Numbers stay numbers, not strings."
+    "single, strict JSON object and nothing else — no prose, no markdown, "
+    "no code fences, no explanations. Return ONLY valid JSON. Use only the "
+    "exact field names and value sets requested. Numbers stay numbers, "
+    "not strings."
 )
 
 
@@ -256,9 +327,9 @@ _SYSTEM = (
 # Domain helpers — build structured data for the pipeline.
 #
 # Each returns a plain dict the caller wraps in a Pydantic model. When the
-# Gemini provider is active the dict is produced by a real generation call;
-# when only the stub is configured a deterministic placeholder is returned
-# (intentional fallback, never billed).
+# OpenRouter provider is active the dict is produced by a real generation
+# call; when only the stub is configured a deterministic placeholder is
+# returned (intentional fallback, never billed).
 # --------------------------------------------------------------------------
 
 
@@ -292,11 +363,11 @@ def analyze_resume_text(resume_text: str, target_career: str) -> dict:
         '  "confidence": {"overall": 0-100, "skills": 0-100, "careerMatch": 0-100}\n'
         "}\n"
         f"Target career (may be 'unspecified'): {target_career or 'unspecified'}.\n"
-        "Use real numbers for confidence (0-100). Resume text:\n\"\"\"\n"
+        "Use real numbers for confidence (0-100). Return ONLY valid JSON. Resume text:\n\"\"\"\n"
         + (resume_text or "")[:12000]
         + "\n\"\"\""
     )
-    data = _parse_ai_json(chat(prompt, system=_SYSTEM))
+    data = _generate(prompt, system=_SYSTEM)
     groups = [
         {"category": _as_str(g.get("category")),
          "skills": [str(s) for s in _as_list(g.get("skills"))]}
@@ -345,9 +416,10 @@ def build_career_matches(skills: list[str], target_career: str) -> dict:
         '"reason": string, "topMatchingSkills": ["string"]}]}\n'
         f"Target career (may be 'unspecified'): {target_career or 'unspecified'}.\n"
         f"Candidate skills: {list(_as_list(skills))}.\n"
-        "Include 3-6 careers. confidence must be a float between 0 and 1."
+        "Include 3-6 careers. confidence must be a float between 0 and 1. "
+        "Return ONLY valid JSON."
     )
-    data = _parse_ai_json(chat(prompt, system=_SYSTEM))
+    data = _generate(prompt, system=_SYSTEM)
     careers = [
         {
             "careerName": _as_str(c.get("careerName")),
@@ -381,9 +453,10 @@ def build_skill_gap(skills: list[str], target_career: str) -> dict:
         '"difficulty": "easy"|"moderate"|"hard", "estimatedLearningTime": string}]}\n'
         f"Target career (may be 'unspecified'): {target_career or 'unspecified'}.\n"
         f"Candidate skills: {list(_as_list(skills))}.\n"
-        "priority and difficulty MUST be one of the listed allowed values."
+        "priority and difficulty MUST be one of the listed allowed values. "
+        "Return ONLY valid JSON."
     )
-    data = _parse_ai_json(chat(prompt, system=_SYSTEM))
+    data = _generate(prompt, system=_SYSTEM)
     missing = [
         {
             "skill": _as_str(s.get("skill")),
@@ -426,9 +499,9 @@ def build_roadmap(skills: list[str], target_career: str) -> dict:
         f"Target career (may be 'unspecified'): {target_career or 'unspecified'}.\n"
         f"Candidate skills: {list(_as_list(skills))}.\n"
         "Order phases logically. priority, completionStatus MUST be one of "
-        "the listed allowed values."
+        "the listed allowed values. Return ONLY valid JSON."
     )
-    data = _parse_ai_json(chat(prompt, system=_SYSTEM))
+    data = _generate(prompt, system=_SYSTEM)
     phases = [
         {
             "order": _as_int(p.get("order"), i),

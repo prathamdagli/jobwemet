@@ -51,13 +51,22 @@ ALLOWED_ORIGINS: list[str] = [
 ]
 
 # --- AI provider ----------------------------------------------------------
-# Active provider: "stub" | "gemini" | "openai" (later). "stub" returns
-# deterministic placeholder output when no real provider key is configured.
+# Active provider: "stub" | "openrouter". "stub" returns deterministic
+# placeholder output (no network, no billing) when no key is configured.
+# "openrouter" routes the four generative stages of the resume pipeline to
+# OpenRouter's chat-completions API.
 AI_PROVIDER: str = os.getenv("AI_PROVIDER", "stub")
 
-GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
-GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-flash-latest")
-OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
+# OpenRouter credentials/endpoint. The key is required whenever
+# AI_PROVIDER=openrouter. OPENROUTER_MODEL defaults to the free
+# `openai/gpt-oss-120b:free` model and is configurable from .env (never
+# hard-coded elsewhere). OPENROUTER_BASE_URL is also configurable so a
+# gateway/proxy can be swapped in without code changes.
+OPENROUTER_API_KEY: str = os.getenv("OPENROUTER_API_KEY", "")
+OPENROUTER_MODEL: str = os.getenv("OPENROUTER_MODEL", "openai/gpt-oss-120b:free")
+OPENROUTER_BASE_URL: str = os.getenv(
+    "OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1"
+)
 
 # When True, every request must carry a valid Firebase ID token.
 # When False (local dev / emulator), requests without a token fall back
@@ -71,9 +80,10 @@ RESUME_STORAGE_PREFIX = "users"
 RESUME_STORAGE_FOLDER = "resumes"
 
 # --- Startup validation ---------------------------------------------------
-# Providers that may be configured today. OpenAI/Claude can be added later
-# without touching the rest of the app (everything routes through ai.py).
-ALLOWED_AI_PROVIDERS = {"stub", "gemini", "openai"}
+# Providers that may be configured today. Another provider (e.g. a future
+# OpenAI/Claude backend) can be added without touching the rest of the app —
+# everything routes through ai.py.
+ALLOWED_AI_PROVIDERS = {"stub", "openrouter"}
 
 
 def validate_env() -> None:
@@ -90,9 +100,9 @@ def validate_env() -> None:
             f"got {AI_PROVIDER!r}."
         )
 
-    if AI_PROVIDER == "gemini" and not GEMINI_API_KEY:
+    if AI_PROVIDER == "openrouter" and not OPENROUTER_API_KEY:
         errors.append(
-            "AI_PROVIDER=gemini requires GEMINI_API_KEY to be set "
+            "AI_PROVIDER=openrouter requires OPENROUTER_API_KEY to be set "
             "(otherwise no real generation can happen)."
         )
 
@@ -107,3 +117,5 @@ def validate_env() -> None:
         raise RuntimeError(
             "Invalid backend configuration:\n  - " + "\n  - ".join(errors)
         )
+
+# Trigger reload

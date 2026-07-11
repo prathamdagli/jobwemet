@@ -54,8 +54,8 @@ services):
   the Admin SDK. Ownership is enforced server-side by always scoping queries to
   the authenticated user's `uid`.
 - The **AI pipeline is provider-abstracted** (`ai.py`): a deterministic
-  `stub` provider runs when no key is set, and `gemini` plugs in via an env
-  flag. Adding OpenAI/Claude later is a single provider class.
+  `stub` provider runs when no key is set, and `openrouter` plugs in via an env
+  flag. Adding another provider later is a single provider class.
 - **All responses** share one shape — see [API contract](#api-contract).
 
 ---
@@ -71,7 +71,7 @@ services):
 │   ├── models.py           Pydantic models (camelCase, 1:1 with Firestore docs)
 │   ├── firebase.py         Admin SDK init + auth/firestore/storage clients
 │   ├── database.py         Firestore read/write helpers (uid-scoped)
-│   ├── ai.py               AI provider abstraction (stub | gemini)
+│   ├── ai.py               AI provider abstraction (stub | openrouter)
 │   ├── resume.py           Upload, validation, PDF/DOCX text extraction
 │   ├── career.py           Skill analysis, career matching, skill gap, dashboard
 │   ├── roadmap.py          Roadmap generation / regeneration
@@ -167,9 +167,9 @@ See `backend/.env.example` for the full list. Highlights:
 | `ALLOWED_ORIGINS`               | Comma-separated CORS origins. **No `*` when auth is on.**  |
 | `REQUIRE_AUTH`                  | `true` in production; `false` (demo user) for local dev     |
 | `DEMO_UID`                      | Fallback uid used when auth is disabled                     |
-| `AI_PROVIDER`                   | `stub` (default) or `gemini`                                |
-| `GEMINI_API_KEY` / `GEMINI_MODEL` | Required when `AI_PROVIDER=gemini`                       |
-| `OPENAI_API_KEY`                | Reserved for a future provider                              |
+| `AI_PROVIDER`                   | `stub` (default) or `openrouter`                            |
+| `OPENROUTER_API_KEY`            | Required when `AI_PROVIDER=openrouter`                      |
+| `OPENROUTER_MODEL` / `OPENROUTER_BASE_URL` | OpenRouter model + base URL (configurable from env)     |
 
 > The backend **validates its configuration at startup** (`config.validate_env`)
 > and fails fast with a helpful message if anything is misconfigured — e.g. a
