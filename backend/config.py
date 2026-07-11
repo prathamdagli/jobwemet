@@ -59,11 +59,15 @@ AI_PROVIDER: str = os.getenv("AI_PROVIDER", "stub")
 
 # OpenRouter credentials/endpoint. The key is required whenever
 # AI_PROVIDER=openrouter. OPENROUTER_MODEL defaults to the free
-# `google/gemma-4-31b-it:free` model and is configurable from .env (never
+# `tencent/hy3:free` model and is configurable from .env (never
 # hard-coded elsewhere). OPENROUTER_BASE_URL is also configurable so a
-# gateway/proxy can be swapped in without code changes.
+# gateway/proxy can be swapped in without code changes. OPENROUTER_REASONING
+# (low|medium|high|...) optionally tunes reasoning effort for models that
+# support it; it is sent only when set to a valid effort level and is
+# gracefully omitted otherwise.
 OPENROUTER_API_KEY: str = os.getenv("OPENROUTER_API_KEY", "")
-OPENROUTER_MODEL: str = os.getenv("OPENROUTER_MODEL", "google/gemma-4-31b-it:free")
+OPENROUTER_MODEL: str = os.getenv("OPENROUTER_MODEL", "tencent/hy3:free")
+OPENROUTER_REASONING: str = os.getenv("OPENROUTER_REASONING", "low")
 OPENROUTER_BASE_URL: str = os.getenv(
     "OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1"
 )

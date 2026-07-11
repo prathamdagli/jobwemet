@@ -80,9 +80,14 @@ class OpenRouterProvider(AIProvider):
 
     name = "openrouter"
 
-    def __init__(self, api_key: str, base_url: str, model: str) -> None:
+    # Valid OpenRouter reasoning-effort levels. Unknown/empty values are
+    # skipped so non-reasoning models and typos degrade gracefully.
+    _REASONING_EFFORTS = {"max", "xhigh", "high", "medium", "low", "minimal", "none"}
+
+    def __init__(self, api_key: str, base_url: str, model: str, reasoning: str = "low") -> None:
         self._api_key = api_key
         self._model = model
+        self._reasoning = reasoning
         self._url = f"{base_url.rstrip('/')}/chat/completions"
 
     def complete(self, prompt: str, *, system: Optional[str] = None) -> str:
@@ -96,6 +101,12 @@ class OpenRouterProvider(AIProvider):
             "messages": messages,
             "temperature": 0.2,
         }
+        # Optional reasoning effort for models that support it. Sent only for
+        # a recognised effort level; otherwise omitted so the request still
+        # works (graceful default) on models that don't use it.
+        effort = (self._reasoning or "").strip().lower()
+        if effort in self._REASONING_EFFORTS:
+            payload["reasoning"] = {"effort": effort}
         headers = {
             "Authorization": f"Bearer {self._api_key}",
             "Content-Type": "application/json",
@@ -209,7 +220,10 @@ def get_provider() -> AIProvider:
     """Return the configured provider (factory)."""
     if config.AI_PROVIDER == "openrouter" and config.OPENROUTER_API_KEY:
         return OpenRouterProvider(
-            config.OPENROUTER_API_KEY, config.OPENROUTER_BASE_URL, config.OPENROUTER_MODEL
+            config.OPENROUTER_API_KEY,
+            config.OPENROUTER_BASE_URL,
+            config.OPENROUTER_MODEL,
+            config.OPENROUTER_REASONING,
         )
     return StubProvider()
 

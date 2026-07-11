@@ -62,7 +62,7 @@ Key values:
 - `REQUIRE_AUTH` / `DEMO_UID` — when auth is off, requests fall back to a demo
   user so Swagger and quick tests work without a token. Set `REQUIRE_AUTH=true`
   in production.
-- `AI_PROVIDER`, `OPENROUTER_API_KEY`, `OPENROUTER_MODEL`, `OPENROUTER_BASE_URL`
+- `AI_PROVIDER`, `OPENROUTER_API_KEY`, `OPENROUTER_MODEL`, `OPENROUTER_REASONING`, `OPENROUTER_BASE_URL`
 
 ### Switching the AI provider
 
@@ -84,8 +84,9 @@ otherwise every call returns HTTP 429 (`ai_quota`). On a bad key the API
 returns `401 ai_auth`; on a network/timeout failure `502/504`. These all map
 to the standard `{ success:false, error:{code,message} }` envelope via the
 `AIError` handler in `main.py`, so the backend never 500s on an AI failure.
-The default model is `google/gemma-4-31b-it:free`; set `OPENROUTER_MODEL`
-if you need a different one.
+The default model is `tencent/hy3:free`; set `OPENROUTER_MODEL` if you need
+a different one. `OPENROUTER_REASONING` (e.g. `low`, `medium`, `high`) tunes
+reasoning effort for models that support it and is ignored otherwise.
 
 ## Layout
 

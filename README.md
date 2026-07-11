@@ -170,6 +170,7 @@ See `backend/.env.example` for the full list. Highlights:
 | `AI_PROVIDER`                   | `stub` (default) or `openrouter`                            |
 | `OPENROUTER_API_KEY`            | Required when `AI_PROVIDER=openrouter`                      |
 | `OPENROUTER_MODEL` / `OPENROUTER_BASE_URL` | OpenRouter model + base URL (configurable from env)     |
+| `OPENROUTER_REASONING`            | Optional reasoning effort (low/medium/high/...); ignored if the model doesn't support it |
 
 > The backend **validates its configuration at startup** (`config.validate_env`)
 > and fails fast with a helpful message if anything is misconfigured — e.g. a
