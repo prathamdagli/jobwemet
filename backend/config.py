@@ -56,7 +56,7 @@ ALLOWED_ORIGINS: list[str] = [
 AI_PROVIDER: str = os.getenv("AI_PROVIDER", "stub")
 
 GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
-GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
+GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-flash-latest")
 OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
 
 # When True, every request must carry a valid Firebase ID token.

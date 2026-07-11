@@ -78,13 +78,14 @@ Key values:
 ### Replacing / rotating the Gemini key
 
 Edit `backend/.env` and change `GEMINI_API_KEY=...`, then restart the
-server. The key must be a **Google AI Studio / Gemini API key** (starts with
-`AIza…`) whose GCP project has the **Generative Language API enabled with
-billing** — otherwise every call returns HTTP 429 (`ai_quota`). On a bad key
-the API returns `401 ai_auth`; on a network/timeout failure `502/504`. These
-all map to the standard `{ success:false, error:{code,message} }` envelope
-via the `AIError` handler in `main.py`, so the backend never 500s on an AI
-failure.
+server. The key must come from a GCP project that has the **Generative
+Language API enabled with billing** — otherwise every call returns HTTP 429
+(`ai_quota`). On a bad key the API returns `401 ai_auth`; on a
+network/timeout failure `502/504`. These all map to the standard
+`{ success:false, error:{code,message} }` envelope via the `AIError` handler
+in `main.py`, so the backend never 500s on an AI failure. The default model
+is `gemini-flash-latest`; set `GEMINI_MODEL` if you need a different one
+(e.g. a specific Gemini version your project has enabled).
 
 ## Layout
 
