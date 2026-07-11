@@ -36,22 +36,55 @@ This backend is hardened for deployment (no functional changes to the API):
 ```bash
 python -m venv .venv
 .venv\Scripts\python -m pip install -r backend/requirements.txt
-cp .env.example .env            # fill in credentials / keys
+cp backend/.env.example backend/.env   # fill in credentials / keys
 .venv\Scripts\python -m uvicorn backend.main:app --reload
+# or simply double-click start.bat (launches backend + frontend)
 ```
 
 Then open <http://127.0.0.1:8000/docs> for the Swagger UI.
 
 ## Configuration
 
-All settings come from environment variables (loaded via `python-dotenv`).
-See `.env.example`. Key values:
+All settings come from a **`backend/.env`** file (see `backend/.env.example`).
+`config.py` loads this file explicitly — by path, not by walking up from the
+current directory — so configuration works whether you launch from the
+project root (e.g. `start.bat`) or from inside `backend/`. Shell environment
+variables (deployment platforms, the Firebase CLI) still override `.env`
+values. **`backend/.env` is git-ignored — never commit it.**
 
-- `GOOGLE_APPLICATION_CREDENTIALS` — service-account JSON (or use ADC / emulator).
+Key values:
+
+- `GOOGLE_APPLICATION_CREDENTIALS` — path to the service-account JSON
+  (defaults to `backend/service-account.json`, which is also git-ignored).
 - `FIREBASE_PROJECT_ID`, `FIREBASE_STORAGE_BUCKET`
-- `ALLOWED_ORIGINS` — CORS allow-list.
-- `REQUIRE_AUTH` / `DEMO_UID` — when auth is off, requests fall back to a demo user.
+- `ALLOWED_ORIGINS` — CORS allow-list, comma-separated (e.g.
+  `http://localhost:5173`). Use `*` only for local dev.
+- `REQUIRE_AUTH` / `DEMO_UID` — when auth is off, requests fall back to a demo
+  user so Swagger and quick tests work without a token. Set `REQUIRE_AUTH=true`
+  in production.
 - `AI_PROVIDER`, `GEMINI_API_KEY`, `GEMINI_MODEL`, `OPENAI_API_KEY`
+
+### Switching the AI provider
+
+- **Stub (default, no key, no billing):** `AI_PROVIDER=stub`. The four
+  generative stages return deterministic placeholder data so the whole
+  pipeline runs end-to-end for development and demos.
+- **Real Gemini:** `AI_PROVIDER=gemini` **and** `GEMINI_API_KEY=<your key>`.
+  The stub is then only used as an internal fallback if config is missing.
+  There is **no separate `build_course_list`** anymore — course
+  recommendations are catalog-driven (see `courses.py`) and the dashboard
+  summary is deterministic aggregation, by design.
+
+### Replacing / rotating the Gemini key
+
+Edit `backend/.env` and change `GEMINI_API_KEY=...`, then restart the
+server. The key must be a **Google AI Studio / Gemini API key** (starts with
+`AIza…`) whose GCP project has the **Generative Language API enabled with
+billing** — otherwise every call returns HTTP 429 (`ai_quota`). On a bad key
+the API returns `401 ai_auth`; on a network/timeout failure `502/504`. These
+all map to the standard `{ success:false, error:{code,message} }` envelope
+via the `AIError` handler in `main.py`, so the backend never 500s on an AI
+failure.
 
 ## Layout
 
@@ -116,3 +149,37 @@ No endpoint calls a model directly. Every request goes through `ai.py`,
 which exposes a provider interface (`AIProvider`) with a `stub` and a
 `gemini` implementation selected by `AI_PROVIDER`. Adding OpenAI or Claude
 later means adding another provider class — nothing else changes.
+
+When `AI_PROVIDER=gemini`, the **four generative stages** of the resume
+pipeline call the real Gemini REST API and parse the JSON it returns:
+`analyze_resume_text` (skill/experience/education extraction),
+`build_career_matches`, `build_skill_gap`, and `build_roadmap`. Outputs are
+normalized so a slightly-off model response can never crash a Pydantic model
+(enum values are coerced to the allowed set; types are sanitized). Any
+provider failure raises `AIError` (with an HTTP status + stable `code`) that
+the global handler in `main.py` turns into a clean error envelope.
+
+Course recommendations (`courses.py`) and the dashboard summary are **not**
+AI-generated — they are catalog-driven and deterministic aggregations
+respectively, by design.
+
+## Firestore composite indexes
+
+Only **one** composite index is required: `resumes` where `userId ==` and
+ordered by `uploadedAt` descending (`list_resumes`). It is declared in
+`firestore.indexes.json`. All other queries are single-field and
+auto-indexed.
+
+> ⚠️ **Deploy to the real project.** `.firebaserc` sets the default project to
+> `demo-jobwemet-bedd8` (for the emulators). A plain
+> `firebase deploy --only firestore:indexes` would therefore apply the index
+> to the **demo** project, not the live `jobwemet-bedd8` the backend
+> connects to — the API would then get `FailedPrecondition: query requires an
+> index`. Deploy explicitly to the real project:
+>
+> ```bash
+> firebase deploy --only firestore:indexes --project jobwemet-bedd8
+> ```
+>
+> Index build takes a minute or two; the `GET /resumes` and `GET /dashboard`
+> endpoints fail until it is active.

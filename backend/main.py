@@ -26,6 +26,7 @@ from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from . import config, utils
+from .ai import AIError
 from .api import api_router
 from .firebase import initialize_firebase
 
@@ -226,6 +227,23 @@ async def validation_exception_handler(
         "validation_error",
         "Request validation failed.",
         details,
+        request_id=getattr(request.state, "request_id", "-"),
+    )
+
+
+@app.exception_handler(AIError)
+async def ai_error_handler(request: Request, exc: AIError) -> JSONResponse:
+    logger.warning(
+        "AI provider error [req=%s] %s %s: %s",
+        getattr(request.state, "request_id", "-"),
+        request.method,
+        request.url.path,
+        exc.code,
+    )
+    return _error_response(
+        exc.status_code,
+        exc.code,
+        str(exc),
         request_id=getattr(request.state, "request_id", "-"),
     )
 

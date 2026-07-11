@@ -1,6 +1,12 @@
 """Application configuration loaded from environment variables.
 
-All values are read from a local `.env` file (see `.env.example`).
+Values are read from the backend-local `backend/.env` file (see
+`.env.example`). Because the app may be launched from the project root
+(`start.bat`) or from inside `backend/`, the backend `.env` is loaded by
+explicit path so configuration is reliable regardless of the working
+directory. Shell environment variables (e.g. deployment platforms, the
+Firebase CLI) still take precedence over `.env` values.
+
 Secrets are never committed — `.env` is git-ignored.
 """
 from __future__ import annotations
@@ -9,8 +15,14 @@ import os
 
 from dotenv import load_dotenv
 
-# Load .env from the project root (or current working directory).
-load_dotenv()
+# Load the backend-local .env first (explicit path => works from any cwd),
+# then also pick up an outer project-root .env if one exists. load_dotenv
+# defaults to override=False, so real environment variables win over .env
+# (correct for deployed environments that inject secrets via the shell).
+_BACKEND_ENV = os.path.join(os.path.dirname(__file__), ".env")
+if os.path.exists(_BACKEND_ENV):
+    load_dotenv(_BACKEND_ENV, override=False)
+load_dotenv(override=False)
 
 # --- Firebase -------------------------------------------------------------
 # The Firebase project id. Mirrors the frontend's VITE_FIREBASE_PROJECT_ID.
