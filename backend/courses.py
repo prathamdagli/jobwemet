@@ -6,7 +6,7 @@ recommendation pipeline.
 """
 from __future__ import annotations
 
-from . import ai, database, models
+from . import database, models
 from .models import GapDifficulty
 
 
@@ -61,9 +61,6 @@ def recommend_courses(
     gaps = skill_gap.missingSkills if skill_gap else []
     for item in gaps:
         courses.extend(provider.fetch(item.skill, item.difficulty))
-
-    # Keep the AI wrapper in the loop for later real recommendations.
-    ai.build_course_list([g.skill for g in gaps], target_career)
 
     recs = models.CourseRecommendations(courses=courses)
     database.save_courses(resume_id, recs)

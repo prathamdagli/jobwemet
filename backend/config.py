@@ -51,3 +51,41 @@ DEMO_UID: str = os.getenv("DEMO_UID", "demo-user")
 # Resume bytes live at: users/{uid}/resumes/{resumeId}.{ext}
 RESUME_STORAGE_PREFIX = "users"
 RESUME_STORAGE_FOLDER = "resumes"
+
+# --- Startup validation ---------------------------------------------------
+# Providers that may be configured today. OpenAI/Claude can be added later
+# without touching the rest of the app (everything routes through ai.py).
+ALLOWED_AI_PROVIDERS = {"stub", "gemini", "openai"}
+
+
+def validate_env() -> None:
+    """Fail fast at startup with helpful messages on misconfiguration.
+
+    Called once, before serving traffic, so bad config surfaces immediately
+    in the launch logs instead of as a confusing runtime error later.
+    """
+    errors: list[str] = []
+
+    if AI_PROVIDER not in ALLOWED_AI_PROVIDERS:
+        errors.append(
+            f"AI_PROVIDER must be one of {sorted(ALLOWED_AI_PROVIDERS)}, "
+            f"got {AI_PROVIDER!r}."
+        )
+
+    if AI_PROVIDER == "gemini" and not GEMINI_API_KEY:
+        errors.append(
+            "AI_PROVIDER=gemini requires GEMINI_API_KEY to be set "
+            "(otherwise no real generation can happen)."
+        )
+
+    if REQUIRE_AUTH and "*" in ALLOWED_ORIGINS:
+        errors.append(
+            "ALLOWED_ORIGINS cannot be '*' when REQUIRE_AUTH=true: a wildcard "
+            "origin combined with credentials is rejected by browsers. Set "
+            "ALLOWED_ORIGINS to your frontend's exact origin(s)."
+        )
+
+    if errors:
+        raise RuntimeError(
+            "Invalid backend configuration:\n  - " + "\n  - ".join(errors)
+        )

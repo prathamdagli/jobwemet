@@ -10,11 +10,18 @@ from . import database, models
 
 
 def build_dashboard_detail(
-    uid: str, resume_id: str | None
+    uid: str,
+    resume_id: str | None,
+    user: models.User | None = None,
+    resumes: list[models.Resume] | None = None,
 ) -> models.DashboardDetail:
-    """Build the full dashboard for a user from their Firestore data."""
-    user = database.get_user(uid)
-    resumes = database.list_resumes(uid)
+    """Build the full dashboard for a user from their Firestore data.
+
+    ``user`` and ``resumes`` may be passed in to reuse values already read
+    by the caller (e.g. ``get_dashboard``) and avoid duplicate reads.
+    """
+    user = user if user is not None else database.get_user(uid)
+    resumes = resumes if resumes is not None else database.list_resumes(uid)
     analysis = database.get_skill_analysis(resume_id) if resume_id else None
     gap = database.get_skill_gap(resume_id) if resume_id else None
     matches = database.get_career_matches(resume_id) if resume_id else None

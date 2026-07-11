@@ -21,6 +21,13 @@ service cloud.firestore {
       }
     }
 
+    // Per-user app settings (stored at settings/{uid}). Owner-only: the
+    // backend is the only writer, but a client SDK (or emulator) must never
+    // be able to read or edit another user's settings.
+    match /settings/{uid} {
+      allow read, write: if isOwner(uid);
+    }
+
     // Global, admin-managed course catalog. Users may read it; writes go
     // through the Admin SDK / console, never the client.
     match /courses/{courseId} {
@@ -57,36 +64,30 @@ service cloud.firestore {
       );
     }
 
-    // AI analysis outputs: written exclusively by the Admin SDK analysis
-    // pipeline (which bypasses these rules). Clients may read only their own
-    // results; all client writes are denied.
+    // AI / learning pipeline outputs (skillAnalysis, careerMatches, skillGap,
+    // roadmaps, courseRecommendations, dashboardSummary) are written and read
+    // exclusively by the backend through the Admin SDK, which bypasses these
+    // rules. The frontend never touches these collections directly (it goes
+    // through the REST API), so the client SDK is denied all access. This is
+    // defence-in-depth: even a leaked client token cannot read or mutate
+    // another user's derived data here.
     match /skillAnalysis/{resumeId} {
-      allow read: if signedIn() && resource.data.userId == request.auth.uid;
-      allow write: if false;
+      allow read, write: if false;
     }
     match /careerMatches/{resumeId} {
-      allow read: if signedIn() && resource.data.userId == request.auth.uid;
-      allow write: if false;
+      allow read, write: if false;
     }
     match /skillGap/{resumeId} {
-      allow read: if signedIn() && resource.data.userId == request.auth.uid;
-      allow write: if false;
+      allow read, write: if false;
     }
-
-    // Learning pipeline outputs: written exclusively by the Admin SDK learning
-    // pipeline (which bypasses these rules). Clients may read only their own
-    // results; all client writes are denied.
     match /roadmaps/{resumeId} {
-      allow read: if signedIn() && resource.data.userId == request.auth.uid;
-      allow write: if false;
+      allow read, write: if false;
     }
     match /courseRecommendations/{resumeId} {
-      allow read: if signedIn() && resource.data.userId == request.auth.uid;
-      allow write: if false;
+      allow read, write: if false;
     }
     match /dashboardSummary/{resumeId} {
-      allow read: if signedIn() && resource.data.userId == request.auth.uid;
-      allow write: if false;
+      allow read, write: if false;
     }
   }
 }

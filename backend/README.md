@@ -10,6 +10,27 @@ Node.js Cloud Functions backend and talks **directly** to Firebase:
 
 No Cloud Functions, no Node.js, no TypeScript backend.
 
+## Production readiness
+
+This backend is hardened for deployment (no functional changes to the API):
+
+- **Standardized responses.** Successful responses are wrapped by
+  `EnvelopeJSONResponse` (the default response class) as
+  `{ success: true, data: <body> }`. The `GET /` health check is left plain.
+- **Consistent errors.** Central exception handlers return
+  `{ success: false, error: { code, message, details } }` for
+  `RequestValidationError`, `HTTPException`, Firebase errors, and unhandled
+  exceptions (including DB / storage failures and timeouts).
+- **Central logging.** Every request is logged (method, path, status,
+  elapsed ms, caller uid, request id) via `logging` — no `print()`.
+- **Request IDs.** Each request gets an id (`X-Request-ID` header, also echoed
+  in logs) for correlation.
+- **Startup validation.** `config.validate_env()` fails fast with a helpful
+  message on misconfiguration (bad AI provider, gemini without a key, wildcard
+  CORS with auth enabled).
+- **Input validation.** Resume upload, profile/settings updates, and
+  roadmap/analysis regeneration are validated via Pydantic models.
+
 ## Run it
 
 ```bash

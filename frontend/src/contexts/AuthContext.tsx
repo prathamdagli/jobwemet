@@ -41,9 +41,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   // Feed the API client the latest Firebase ID token so every backend request
-  // is authenticated and the token is refreshed automatically when expired.
+  // is authenticated. The second provider forces a token refresh — the API
+  // client uses it to retry once after a 401 (expired token).
   useEffect(() => {
-    configureApi(() => (user ? user.getIdToken() : Promise.resolve(null)))
+    configureApi(
+      () => (user ? user.getIdToken() : Promise.resolve(null)),
+      () => (user ? user.getIdToken(true) : Promise.resolve(null)),
+    )
   }, [user])
 
   const value: AuthContextValue = {

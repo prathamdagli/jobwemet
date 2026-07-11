@@ -69,6 +69,9 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const userRef = useRef<User | null>(user)
   // Guards against races when the user changes mid-fetch.
   const loadSeq = useRef(0)
+  // Aborts the in-flight parallel load when a newer load starts or the user
+  // logs out, so stale responses are cancelled rather than left hanging.
+  const loadController = useRef<AbortController | null>(null)
 
   const recompute = useCallback(() => {
     setData(buildAppData(slots.current, userRef.current))
@@ -76,6 +79,12 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
 
   const loadAll = useCallback(async () => {
     const seq = ++loadSeq.current
+    // Cancel any in-flight load so a stale response can't land after this one.
+    loadController.current?.abort()
+    const controller = new AbortController()
+    loadController.current = controller
+    const signal = controller.signal
+
     setLoading(true)
     setError(null)
     try {
@@ -90,15 +99,15 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         courses,
         settingsResp,
       ] = await Promise.all([
-        api.getProfile().catch(() => null),
-        api.listResumes().catch(() => []),
-        api.getDashboard().catch(() => null),
-        api.getSkills().catch(() => null),
-        api.getCareers().catch(() => null),
-        api.getSkillGap().catch(() => null),
-        api.getRoadmap().catch(() => null),
-        api.getCourses().catch(() => null),
-        api.getSettings().catch(() => null),
+        api.getProfile(signal).catch(() => null),
+        api.listResumes(signal).catch(() => []),
+        api.getDashboard(signal).catch(() => null),
+        api.getSkills(signal).catch(() => null),
+        api.getCareers(signal).catch(() => null),
+        api.getSkillGap(signal).catch(() => null),
+        api.getRoadmap(signal).catch(() => null),
+        api.getCourses(signal).catch(() => null),
+        api.getSettings(signal).catch(() => null),
       ])
       // A newer load started while we were awaiting — discard stale data.
       if (seq !== loadSeq.current) return
@@ -143,6 +152,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       // The user logged out (or never signed in) — clear all state. These
       // synchronous resets are intentional on the auth-transition effect.
       /* eslint-disable react-hooks/set-state-in-effect */
+      loadController.current?.abort()
       loadSeq.current++
       slots.current = { ...EMPTY_SLOTS }
       setData(buildAppData(EMPTY_SLOTS, null))

@@ -14,7 +14,7 @@ import logging
 import re
 from typing import Optional
 
-from fastapi import APIRouter, Depends, File, Header, HTTPException, Query, UploadFile
+from fastapi import APIRouter, Depends, File, Header, HTTPException, Query, Request, UploadFile
 
 from . import config, database, models, utils
 from .career import analyze_resume as run_analyze
@@ -61,13 +61,17 @@ def _extract_bearer(authorization: str) -> Optional[str]:
     return None
 
 
-def get_current_user(authorization: str = Header(default="")) -> models.FirebaseUser:
+def get_current_user(
+    request: Request, authorization: str = Header(default="")
+) -> models.FirebaseUser:
     """Resolve the calling user from a Firebase ID token.
 
     In production ``REQUIRE_AUTH`` is True and a valid Bearer token is
     mandatory. During local development (emulator / Swagger) auth is
     optional and an artificial demo user is substituted so the API can
-    be exercised without minting tokens.
+    be exercised without minting tokens. The resolved ``uid`` is stashed
+    on ``request.state`` so the request-id/logging middleware can include
+    it in the access log.
     """
     token = _extract_bearer(authorization)
     if token:
@@ -79,11 +83,13 @@ def get_current_user(authorization: str = Header(default="")) -> models.Firebase
                 decoded.get("name"),
                 decoded.get("picture"),
             )
-            return models.FirebaseUser(
+            user = models.FirebaseUser(
                 uid=decoded["uid"],
                 email=decoded.get("email"),
                 name=decoded.get("name"),
             )
+            request.state.uid = user.uid
+            return user
         except Exception:  # noqa: BLE001 - surface a clean 401 on bad tokens
             if config.REQUIRE_AUTH:
                 raise HTTPException(
@@ -93,7 +99,9 @@ def get_current_user(authorization: str = Header(default="")) -> models.Firebase
         raise HTTPException(
             status_code=401, detail="Authorization Bearer token is required."
         )
-    return models.FirebaseUser(uid=config.DEMO_UID, email="dev@example.com", name="Dev User")
+    user = models.FirebaseUser(uid=config.DEMO_UID, email="dev@example.com", name="Dev User")
+    request.state.uid = user.uid
+    return user
 
 
 # --------------------------------------------------------------------------
@@ -606,10 +614,21 @@ def get_dashboard(
     resumeId: Optional[str] = Query(default=None),
     user: models.FirebaseUser = Depends(get_current_user),
 ) -> models.DashboardDetail:
-    rid = resumeId or _latest_resume_id(user)
+    # Fetch the user doc + resume list once and reuse them for both resume-id
+    # resolution and the dashboard build (avoids duplicate Firestore reads).
+    user_doc = database.get_user(user.uid)
+    resumes = database.list_resumes(user.uid)
+    if resumeId:
+        rid: Optional[str] = resumeId
+    elif user_doc and user_doc.currentResumeId:
+        rid = user_doc.currentResumeId
+    elif resumes:
+        rid = resumes[0].id
+    else:
+        rid = None
     if not rid:
         raise HTTPException(status_code=404, detail="No resume found for the user.")
-    detail = build_dashboard_detail(user.uid, rid)
+    detail = build_dashboard_detail(user.uid, rid, user=user_doc, resumes=resumes)
     logger.info("Dashboard loaded: uid=%s resumeId=%s", user.uid, rid)
     return detail
 

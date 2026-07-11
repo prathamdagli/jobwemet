@@ -10,7 +10,6 @@ branch in :func:`get_provider`; nothing else in the app changes.
 """
 from __future__ import annotations
 
-import json
 import os
 from abc import ABC, abstractmethod
 from typing import Optional
@@ -107,39 +106,19 @@ def chat(prompt: str, *, system: Optional[str] = None) -> str:
     return get_provider().complete(prompt, system=system)
 
 
-def _try_parse_json(text: str) -> Optional[dict]:
-    """Best-effort extraction of a JSON object from a model response."""
-    text = text.strip()
-    if text.startswith("```"):
-        # Strip a ```json ... ``` fence if the model added one.
-        text = text.split("```", 2)[1]
-        if text.startswith("json"):
-            text = text[len("json"):]
-        text = text.strip().rstrip("`").strip()
-    try:
-        return json.loads(text)
-    except json.JSONDecodeError:
-        return None
-
-
 # --------------------------------------------------------------------------
-# Domain helpers — build prompts, call :func:`chat`, return structured data.
+# Domain helpers — build structured data for the pipeline.
+#
 # Each returns a plain dict; the caller wraps it in a Pydantic model.
-# Until real parsing is tuned, a deterministic placeholder is returned so
-# the rest of the application keeps working.
+# Real generation plugs in here: build a prompt and call :func:`chat` once
+# the provider output is tuned for parsing. Today a deterministic
+# placeholder is returned so the rest of the application keeps working
+# end-to-end (and no billable AI call is made in the default "stub" mode).
 # --------------------------------------------------------------------------
 
 
 def analyze_resume_text(resume_text: str, target_career: str) -> dict:
     """Extract skills, experience and education from resume text."""
-    prompt = (
-        f"Analyze the following resume for a candidate targeting "
-        f"'{target_career}'. Extract technical skills grouped by category, "
-        "soft skills, years of experience, current role, and highest "
-        "education. Return JSON."
-    )
-    chat(prompt, system="You are an expert technical recruiter.")
-    # Placeholder structure — replaced by real parsing once tuned.
     return {
         "status": "completed",
         "technicalSkills": [
@@ -158,11 +137,6 @@ def analyze_resume_text(resume_text: str, target_career: str) -> dict:
 
 
 def build_career_matches(skills: list[str], target_career: str) -> dict:
-    prompt = (
-        f"Given these skills: {skills}, and a target career "
-        f"'{target_career}', list the best-matching careers with confidence."
-    )
-    chat(prompt)
     return {
         "careers": [
             {
@@ -176,11 +150,6 @@ def build_career_matches(skills: list[str], target_career: str) -> dict:
 
 
 def build_skill_gap(skills: list[str], target_career: str) -> dict:
-    prompt = (
-        f"Given skills {skills} and target '{target_career}', list the "
-        "missing skills needed, with priority and difficulty."
-    )
-    chat(prompt)
     return {
         "missingSkills": [
             {
@@ -194,11 +163,6 @@ def build_skill_gap(skills: list[str], target_career: str) -> dict:
 
 
 def build_roadmap(skills: list[str], target_career: str) -> dict:
-    prompt = (
-        f"Build a learning roadmap from skills {skills} to '{target_career}' "
-        "as ordered phases."
-    )
-    chat(prompt)
     return {
         "status": "generated",
         "phases": [
@@ -217,11 +181,6 @@ def build_roadmap(skills: list[str], target_career: str) -> dict:
 
 
 def build_course_list(skill_gap: list[str], target_career: str) -> dict:
-    prompt = (
-        f"Recommend courses to close these gaps {skill_gap} for a "
-        f"'{target_career}' career."
-    )
-    chat(prompt)
     return {
         "courses": [
             {

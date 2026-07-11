@@ -16,9 +16,12 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any, Literal, Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 # --- Literals (match the Firestore enum strings) ------------------------
+# Allowed values for app settings (mirrored by the frontend's <select> options).
+VALID_THEMES = {"system", "light", "dark"}
+VALID_LANGUAGES = {"en", "es", "de", "fr"}
 Provider = Literal["password", "google"]
 ResumeStatus = Literal["uploaded", "deleted"]
 AnalysisStatus = Literal["processing", "completed", "failed"]
@@ -244,6 +247,18 @@ class Settings(BaseModel):
     careerPreferences: CareerPreferences = Field(default_factory=CareerPreferences)
     defaultResume: Optional[str] = None
 
+    # Lenient on read: an unknown stored value falls back to the default so a
+    # corrupt document never crashes the GET /settings response.
+    @field_validator("theme")
+    @classmethod
+    def _coerce_theme(cls, v: str) -> str:
+        return v if v in VALID_THEMES else "system"
+
+    @field_validator("language")
+    @classmethod
+    def _coerce_language(cls, v: str) -> str:
+        return v if v in VALID_LANGUAGES else "en"
+
 
 # ======================================================================
 # Request models
@@ -335,6 +350,22 @@ class SettingsUpdateRequest(BaseModel):
     careerPreferences: Optional[CareerPreferences] = None
     defaultResume: Optional[str] = None
     # Profile (mirrors UpdateProfileRequest)
+
+    # Strict on write: a caller-supplied invalid theme/language is rejected
+    # with a 422 rather than silently coerced.
+    @field_validator("theme")
+    @classmethod
+    def _check_theme(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None and v not in VALID_THEMES:
+            raise ValueError("theme must be one of 'system', 'light', 'dark'.")
+        return v
+
+    @field_validator("language")
+    @classmethod
+    def _check_language(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None and v not in VALID_LANGUAGES:
+            raise ValueError("language must be one of 'en', 'es', 'de', 'fr'.")
+        return v
     displayName: Optional[str] = None
     targetCareer: Optional[str] = None
     location: Optional[str] = None
