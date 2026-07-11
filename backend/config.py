@@ -17,9 +17,15 @@ load_dotenv()
 PROJECT_ID: str = os.getenv("FIREBASE_PROJECT_ID", "jobwemet-bedd8")
 
 # Path to a Firebase Admin service-account JSON file.
-# When unset, the Admin SDK falls back to Application Default Credentials
-# (or the Firestore emulator when FIRESTORE_EMULATOR_HOST is set).
-CREDENTIALS_PATH: str | None = os.getenv("GOOGLE_APPLICATION_CREDENTIALS") or None
+# Resolution order:
+#   1. GOOGLE_APPLICATION_CREDENTIALS (explicit path you control).
+#   2. backend/service-account.json (the file committed to .gitignore).
+# The Admin SDK is initialised from this single file; there is no ADC /
+# emulator fallback so a missing credential fails fast at startup.
+_DEFAULT_SA_PATH = os.path.join(os.path.dirname(__file__), "service-account.json")
+CREDENTIALS_PATH: str | None = (
+    os.getenv("GOOGLE_APPLICATION_CREDENTIALS") or _DEFAULT_SA_PATH or None
+)
 
 # Cloud Storage bucket, e.g. "jobwemet-bedd8.firebasestorage.app".
 STORAGE_BUCKET: str = os.getenv(

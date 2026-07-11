@@ -12,6 +12,12 @@ Desktop.ini
 .env.*
 !.env.example
 
+# Firebase Admin service-account JSON (contains a private key — never commit).
+backend/service-account.json
+service-account.json
+*-service-account.json
+firebase-credentials.json
+
 # =========================
 # Python
 # =========================
