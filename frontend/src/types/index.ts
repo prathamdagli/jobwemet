@@ -22,6 +22,7 @@ export interface UserProfile {
   email: string
   targetCareer: string
   location: string
+  phone: string
   memberSince: string
   profileCompletion: number
   lastUpdated: string
@@ -69,6 +70,8 @@ export interface ResumeEntryData {
   id: string
   name: string
   uploaded: string
+  status?: 'Parsed' | 'Processing' | 'Failed'
+  preview?: string
 }
 
 export interface ResumeState {

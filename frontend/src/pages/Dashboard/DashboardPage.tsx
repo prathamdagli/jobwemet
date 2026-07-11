@@ -8,6 +8,14 @@ import { PageHeader } from '@/components/dashboard/PageHeader'
 import { useCountUp } from '@/motion'
 import { Stagger } from '@/motion'
 import { useAuth } from '@/hooks/useAuth'
+import { useAppState } from '@/hooks/useAppState'
+import { useCareerMatches } from '@/hooks/useCareerMatches'
+import { useDashboard } from '@/hooks/useDashboard'
+import { useProfile } from '@/hooks/useProfile'
+import { useResume } from '@/hooks/useResume'
+import { useSkillGap } from '@/hooks/useSkillGap'
+import { ErrorState } from '@/components/common/ErrorState'
+import { LoadingState } from '@/components/common/LoadingState'
 import {
   LearningProgressWidget,
   MissingSkillsWidget,
@@ -32,7 +40,27 @@ function Greeting() {
 }
 
 export default function DashboardPage() {
-  const readiness = Math.round(useCountUp(68))
+  const { loading, error, refresh } = useAppState()
+  const dashboard = useDashboard()
+  const { profile } = useProfile()
+  const { careers } = useCareerMatches()
+  const resume = useResume()
+  const { priority: skillGaps } = useSkillGap()
+
+  const readiness = Math.round(useCountUp(dashboard.readiness))
+  const topMatch = careers[0]?.match ?? dashboard.topMatch
+  const topMatchTitle = careers[0]?.title ?? dashboard.topMatchTitle
+  const goal = profile.targetCareer || 'your goal'
+
+  if (loading) return <LoadingState label="Loading your workspace…" />
+  if (error)
+    return (
+      <ErrorState
+        title="Couldn't load your dashboard"
+        description={error}
+        onRetry={refresh}
+      />
+    )
 
   return (
     <div className="mx-auto max-w-7xl space-y-5 md:space-y-6">
@@ -71,8 +99,7 @@ export default function DashboardPage() {
         context={
           <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/40 px-2.5 py-1 text-xs text-muted-foreground">
             <Target className="size-3.5" aria-hidden="true" />
-            Goal:{' '}
-            <span className="font-medium text-foreground">AI Engineer</span>
+            Goal: <span className="font-medium text-foreground">{goal}</span>
           </span>
         }
       />
@@ -93,8 +120,8 @@ export default function DashboardPage() {
               You&apos;re {readiness}% ready
             </h2>
             <p className="mt-2 max-w-md text-sm leading-relaxed text-muted-foreground">
-              Solid momentum toward your AI Engineer goal. Close a few skill
-              gaps to reach the top career match and keep your roadmap on track.
+              Solid momentum toward your {goal} goal. Close a few skill gaps to
+              reach the top career match and keep your roadmap on track.
             </p>
             <div className="mt-5 flex flex-wrap gap-2">
               <Button
@@ -117,7 +144,7 @@ export default function DashboardPage() {
           </div>
           <div className="flex items-center justify-center">
             <CircularProgress
-              value={68}
+              value={dashboard.readiness}
               size={208}
               strokeWidth={16}
               label="Career readiness"
@@ -138,30 +165,29 @@ export default function DashboardPage() {
         <MetricCard
           variant="sm"
           label="Top Match"
-          value="92%"
-          sub="AI Engineer"
+          value={`${topMatch}%`}
+          sub={topMatchTitle || 'No match yet'}
           icon={Target}
-          trend={{ value: '+3%', positive: true }}
         />
         <MetricCard
           variant="sm"
           label="Skill Gaps"
-          value="4"
+          value={`${skillGaps.length}`}
           sub="to close"
           icon={Sparkles}
         />
         <MetricCard
           variant="sm"
           label="Roadmap"
-          value="68%"
-          sub="12 of 18 lessons"
+          value={`${dashboard.roadmapComplete}%`}
+          sub={`${dashboard.lessonsFinished} of ${dashboard.lessonsTotal} lessons`}
           icon={Target}
         />
         <MetricCard
           variant="sm"
           label="Resume"
-          value="v2"
-          sub="Parsed 2 days ago"
+          value={resume.fileName}
+          sub={resume.recent.length ? `Parsed ${resume.uploaded}` : 'No resume'}
           icon={Upload}
         />
       </Stagger>

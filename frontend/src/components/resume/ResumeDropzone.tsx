@@ -1,6 +1,5 @@
 import {
   forwardRef,
-  useEffect,
   useImperativeHandle,
   useRef,
   useState,
@@ -20,6 +19,8 @@ import { Button } from '@/components/ui/button'
 import { ProgressBar } from '@/components/dashboard/ProgressBar'
 import { widgetHover } from '@/motion'
 import { cn } from '@/lib/utils'
+import { useAuth } from '@/hooks/useAuth'
+import { uploadResumeFile } from '@/services/firebase'
 
 const MAX_SIZE = 10 * 1024 * 1024
 const ACCEPT_ATTR =
@@ -132,42 +133,37 @@ export const ResumeDropzone = forwardRef<
   ResumeDropzoneHandle,
   ResumeDropzoneProps
 >(function ResumeDropzone({ onUploaded }, ref) {
+  const { user } = useAuth()
   const inputRef = useRef<HTMLInputElement>(null)
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const [dragActive, setDragActive] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [selected, setSelected] = useState<SelectedFile | null>(null)
 
   useImperativeHandle(ref, () => ({ open: () => inputRef.current?.click() }))
 
-  useEffect(() => {
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current)
-    }
-  }, [])
-
-  function clearTimer() {
-    if (timerRef.current) {
-      clearInterval(timerRef.current)
-      timerRef.current = null
-    }
-  }
-
-  function startUpload(file: File) {
-    clearTimer()
+  async function startUpload(file: File) {
     setError(null)
+    const uid = user?.uid
+    if (!uid) {
+      setError('Sign in to upload a resume.')
+      return
+    }
     setSelected({ file, progress: 0, status: 'uploading' })
-    let p = 0
-    timerRef.current = setInterval(() => {
-      p += Math.random() * 16 + 8
-      if (p >= 100) {
-        clearTimer()
-        setSelected((s) => (s ? { ...s, progress: 100, status: 'success' } : s))
-        onUploaded?.(file.name)
-      } else {
-        setSelected((s) => (s ? { ...s, progress: Math.round(p) } : s))
-      }
-    }, 350)
+    try {
+      await uploadResumeFile(
+        uid,
+        file,
+        (pct) => setSelected((s) => (s ? { ...s, progress: pct } : s)),
+        crypto.randomUUID(),
+      )
+      setSelected((s) => (s ? { ...s, progress: 100, status: 'success' } : s))
+      onUploaded?.(file.name)
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : 'Upload failed. Please try again.',
+      )
+      setSelected(null)
+    }
   }
 
   function handleFiles(files: FileList | null) {
@@ -188,14 +184,12 @@ export const ResumeDropzone = forwardRef<
   }
 
   function handleRemove() {
-    clearTimer()
     setSelected(null)
     setError(null)
     if (inputRef.current) inputRef.current.value = ''
   }
 
   function handleReplace() {
-    clearTimer()
     setSelected(null)
     inputRef.current?.click()
   }

@@ -1,13 +1,9 @@
 import { useAppState } from '@/hooks/useAppState'
 import type { ResumeState } from '@/types'
 
-export interface UseResumeResult {
-  resume: ResumeState
-  uploadResume: (fileName: string) => void
-}
-
-/** Shared resume state plus the action to record a new upload. */
-export function useResume(): UseResumeResult {
-  const { data, uploadResume } = useAppState()
-  return { resume: data.resume, uploadResume }
+/** Shared resume state. The source of truth is the `resumes` collection, which
+ *  the Storage onFinalize trigger keeps in sync — so the value here updates in
+ *  real time with no optimistic local writes. */
+export function useResume(): ResumeState {
+  return useAppState().data.resume
 }

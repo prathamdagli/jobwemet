@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useRef } from 'react'
 import {
   AlertTriangle,
   CheckCircle2,
@@ -14,61 +14,23 @@ import { MetricCard } from '@/components/dashboard/MetricCard'
 import { PageHeader } from '@/components/dashboard/PageHeader'
 import { WidgetCard } from '@/components/dashboard/WidgetCard'
 import { Stagger } from '@/motion'
-import {
-  RecentResumes,
-  type ResumeEntry,
-} from '@/components/resume/RecentResumes'
+import { useResume } from '@/hooks/useResume'
+import { RecentResumes } from '@/components/resume/RecentResumes'
 import {
   ResumeDropzone,
   type ResumeDropzoneHandle,
 } from '@/components/resume/ResumeDropzone'
 
-const PLACEHOLDER_RESUMES: ResumeEntry[] = [
-  {
-    id: 'r1',
-    name: 'Resume_v1.pdf',
-    uploaded: 'Today',
-    status: 'Processing',
-    preview: 'Extracting skills, experience & education…',
-  },
-  {
-    id: 'r2',
-    name: 'Resume_AI.pdf',
-    uploaded: '2 days ago',
-    status: 'Parsed',
-    preview: 'AI Engineer · Python, PyTorch, ML Ops, System Design',
-  },
-  {
-    id: 'r3',
-    name: 'Frontend_Resume.pdf',
-    uploaded: 'Last week',
-    status: 'Failed',
-    preview: "Couldn't extract text — this looks like a scanned image.",
-  },
-]
-
 export default function ResumePage() {
   const dropRef = useRef<ResumeDropzoneHandle>(null)
-  const [recent, setRecent] = useState<ResumeEntry[]>(PLACEHOLDER_RESUMES)
+  const resume = useResume()
+  const recent = resume.recent
 
   const parsedCount = recent.filter(
     (r) => (r.status ?? 'Parsed') === 'Parsed',
   ).length
   const processingCount = recent.filter((r) => r.status === 'Processing').length
   const failedCount = recent.filter((r) => r.status === 'Failed').length
-
-  function handleUploaded(name: string) {
-    setRecent((prev) => [
-      {
-        id: `u-${Date.now()}`,
-        name,
-        uploaded: 'Just now',
-        status: 'Parsed',
-        preview: 'AI-extracted · skills, experience & education detected.',
-      },
-      ...prev,
-    ])
-  }
 
   return (
     <div className="mx-auto max-w-7xl space-y-5 md:space-y-6">
@@ -97,7 +59,7 @@ export default function ResumePage() {
       {/* Dominant upload zone + supporting insight panel */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
         <div className="lg:col-span-8">
-          <ResumeDropzone ref={dropRef} onUploaded={handleUploaded} />
+          <ResumeDropzone ref={dropRef} />
         </div>
         <div className="lg:col-span-4">
           <WidgetCard

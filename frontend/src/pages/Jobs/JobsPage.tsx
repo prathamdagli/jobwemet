@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import {
   Award,
   Banknote,
+  Briefcase,
   Clock,
   Loader2,
   RefreshCw,
@@ -9,12 +11,16 @@ import {
   Sparkles,
   TrendingUp,
   Trophy,
+  UploadCloud,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { MetricCard } from '@/components/dashboard/MetricCard'
 import { WidgetCard } from '@/components/dashboard/WidgetCard'
 import { PageHeader } from '@/components/dashboard/PageHeader'
+import { ErrorState } from '@/components/common/ErrorState'
+import { EmptyState } from '@/components/common/EmptyState'
+import { LoadingState } from '@/components/common/LoadingState'
 import {
   CareerCard,
   FilterSelect,
@@ -22,10 +28,12 @@ import {
   TopMatchBanner,
 } from '@/components/careers/careers'
 import { useCareerMatches } from '@/hooks/useCareerMatches'
+import { useAppState } from '@/hooks/useAppState'
 import { Reveal, Stagger } from '@/motion'
 
 export default function JobsPage() {
   const { careers, insights, insightNote } = useCareerMatches()
+  const { loading, error, refresh } = useAppState()
   const [refreshing, setRefreshing] = useState(false)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -37,15 +45,12 @@ export default function JobsPage() {
 
   function handleRefresh() {
     if (refreshing) return
+    refresh()
     setRefreshing(true)
     timerRef.current = setTimeout(() => setRefreshing(false), 1600)
   }
 
-  const topMatch = careers[0]
-  const highest = Math.max(...careers.map((c) => c.match))
-  const average = Math.round(
-    careers.reduce((sum, c) => sum + c.match, 0) / careers.length,
-  )
+  const isEmpty = careers.length === 0
 
   return (
     <div className="mx-auto max-w-7xl space-y-5 md:space-y-6">
@@ -71,11 +76,63 @@ export default function JobsPage() {
         context={
           <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/40 px-2.5 py-1 text-xs text-muted-foreground">
             <Clock className="size-3.5" aria-hidden="true" />
-            Updated Jul 9, 2026
+            Updated {careers[0]?.match ? 'recently' : '—'}
           </span>
         }
       />
 
+      {loading ? (
+        <LoadingState label="Loading career matches…" />
+      ) : error ? (
+        <ErrorState
+          title="Couldn't load career matches"
+          description={error}
+          onRetry={refresh}
+        />
+      ) : isEmpty ? (
+        <EmptyState
+          icon={Briefcase}
+          title="No career matches yet"
+          description="Upload your resume and our AI will analyze your skills and match you to the best-fit careers."
+          action={
+            <Button
+              render={<Link to="/resume" />}
+              size="sm"
+              className="mt-1 gap-1.5"
+            >
+              <UploadCloud className="size-4" aria-hidden="true" />
+              Upload Resume
+            </Button>
+          }
+        />
+      ) : (
+        <CareerMatchesBody
+          careers={careers}
+          insights={insights}
+          insightNote={insightNote}
+        />
+      )}
+    </div>
+  )
+}
+
+function CareerMatchesBody({
+  careers,
+  insights,
+  insightNote,
+}: {
+  careers: ReturnType<typeof useCareerMatches>['careers']
+  insights: ReturnType<typeof useCareerMatches>['insights']
+  insightNote: string
+}) {
+  const topMatch = careers[0]
+  const highest = Math.max(...careers.map((c) => c.match))
+  const average = Math.round(
+    careers.reduce((sum, c) => sum + c.match, 0) / careers.length,
+  )
+
+  return (
+    <>
       {/* KPI row */}
       <Stagger className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <MetricCard
@@ -193,6 +250,6 @@ export default function JobsPage() {
           ))}
         </Stagger>
       </section>
-    </div>
+    </>
   )
 }

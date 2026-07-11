@@ -1,9 +1,12 @@
+import { useEffect, useState } from 'react'
 import {
   AlertTriangle,
   Camera,
+  CheckCircle2,
   Clock,
   Fingerprint,
   KeyRound,
+  Loader2,
   Lock,
   LogOut,
   Megaphone,
@@ -24,28 +27,78 @@ import { PageHeader } from '@/components/dashboard/PageHeader'
 import { WidgetCard } from '@/components/dashboard/WidgetCard'
 import { MetricCard } from '@/components/dashboard/MetricCard'
 import { SettingRow } from '@/components/settings/settings'
-
-const FULL_NAME = 'Alex Morgan'
-const INITIALS = FULL_NAME.split(' ')
-  .map((part) => part[0])
-  .join('')
-  .slice(0, 2)
-  .toUpperCase()
-const EMAIL = 'alex.morgan@example.com'
-const LAST_UPDATED = 'Jul 9, 2026'
+import { useAuth } from '@/hooks/useAuth'
+import { useProfile } from '@/hooks/useProfile'
+import { updateProfile } from '@/services/firebase'
 
 export default function SettingsPage() {
+  const { user } = useAuth()
+  const { profile } = useProfile()
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [saved, setSaved] = useState(false)
+  const [form, setForm] = useState({
+    fullName: profile.fullName,
+    phone: profile.phone ?? '',
+    targetCareer: profile.targetCareer,
+    location: profile.location,
+  })
+
+  // Re-sync from the profile only when the underlying values actually change
+  // (e.g. after a save round-trips through the realtime listener), so typing
+  // in the inputs is never clobbered by unrelated data updates.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setForm({
+      fullName: profile.fullName,
+      phone: profile.phone ?? '',
+      targetCareer: profile.targetCareer,
+      location: profile.location,
+    })
+  }, [profile.fullName, profile.phone, profile.targetCareer, profile.location])
+
+  async function handleSave() {
+    if (!user) return
+    setSaving(true)
+    setError(null)
+    setSaved(false)
+    try {
+      await updateProfile(user.uid, {
+        displayName: form.fullName,
+        targetCareer: form.targetCareer,
+        location: form.location,
+        phone: form.phone,
+      })
+      setSaved(true)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not save changes.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const remaining = Math.max(0, 100 - profile.profileCompletion)
+
   return (
     <div className="mx-auto max-w-7xl space-y-5 md:space-y-6">
       <PageHeader
         eyebrow="Settings"
         title="Your account & preferences"
         description="Manage your profile, security, and how JobWeMet works for you — all in one place."
-        lastUpdated={LAST_UPDATED}
+        lastUpdated={profile.lastUpdated}
         action={
-          <Button size="sm" className="gap-1.5">
-            <Pencil className="size-4" aria-hidden="true" />
-            Save Changes
+          <Button
+            size="sm"
+            className="gap-1.5"
+            onClick={handleSave}
+            disabled={saving}
+          >
+            {saving ? (
+              <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+            ) : (
+              <Pencil className="size-4" aria-hidden="true" />
+            )}
+            {saving ? 'Saving…' : 'Save Changes'}
           </Button>
         }
         context={
@@ -63,30 +116,35 @@ export default function SettingsPage() {
             <div className="flex items-center gap-4">
               <div
                 className="flex size-20 shrink-0 items-center justify-center rounded-full bg-foreground/10 text-2xl font-semibold tracking-tight text-foreground ring-1 ring-foreground/10"
-                aria-label={`Avatar for ${FULL_NAME}`}
+                aria-label={`Avatar for ${profile.fullName}`}
               >
-                {INITIALS}
+                {profile.initials}
               </div>
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <p className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
-                    {FULL_NAME}
+                    {profile.fullName}
                   </p>
                   <Badge variant="soft" size="xs">
                     Pro member
                   </Badge>
                 </div>
                 <p className="mt-0.5 truncate text-sm text-muted-foreground">
-                  {EMAIL}
+                  {profile.email}
                 </p>
                 <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
                   <Clock className="size-3.5" aria-hidden="true" />
-                  Last active {LAST_UPDATED}
+                  Last active {profile.lastUpdated}
                 </p>
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Button size="sm" className="gap-1.5">
+              <Button
+                size="sm"
+                className="gap-1.5"
+                onClick={handleSave}
+                disabled={saving}
+              >
                 <Pencil className="size-4" aria-hidden="true" />
                 Edit Profile
               </Button>
@@ -101,8 +159,8 @@ export default function SettingsPage() {
         <MetricCard
           variant="lg"
           label="Profile completeness"
-          value="80%"
-          sub="4 fields left to complete"
+          value={`${profile.profileCompletion}%`}
+          sub={`${remaining}% to completion`}
           icon={UserRound}
           className="lg:col-span-4"
         />
@@ -119,7 +177,10 @@ export default function SettingsPage() {
             >
               <Input
                 id="fullName"
-                defaultValue={FULL_NAME}
+                value={form.fullName}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, fullName: e.target.value }))
+                }
                 className="sm:w-72"
               />
             </SettingRow>
@@ -131,7 +192,8 @@ export default function SettingsPage() {
               <Input
                 id="email"
                 type="email"
-                defaultValue={EMAIL}
+                value={profile.email}
+                readOnly
                 className="sm:w-72"
               />
             </SettingRow>
@@ -143,7 +205,10 @@ export default function SettingsPage() {
               <Input
                 id="phone"
                 type="tel"
-                defaultValue="+1 (555) 012-3456"
+                value={form.phone}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, phone: e.target.value }))
+                }
                 className="sm:w-72"
               />
             </SettingRow>
@@ -154,7 +219,10 @@ export default function SettingsPage() {
             >
               <Select
                 id="targetCareer"
-                defaultValue="AI Engineer"
+                value={form.targetCareer}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, targetCareer: e.target.value }))
+                }
                 className="sm:w-72"
               >
                 <option>AI Engineer</option>
@@ -170,11 +238,32 @@ export default function SettingsPage() {
             >
               <Input
                 id="location"
-                defaultValue="San Francisco, CA"
+                value={form.location}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, location: e.target.value }))
+                }
                 className="sm:w-72"
               />
             </SettingRow>
           </div>
+          {error && (
+            <p
+              role="alert"
+              className="mt-4 flex items-center gap-1.5 text-sm text-destructive"
+            >
+              <AlertTriangle className="size-4 shrink-0" aria-hidden="true" />
+              {error}
+            </p>
+          )}
+          {saved && !error && (
+            <p className="mt-4 flex items-center gap-1.5 text-sm text-foreground">
+              <CheckCircle2
+                className="size-4 shrink-0 text-primary"
+                aria-hidden="true"
+              />
+              Changes saved.
+            </p>
+          )}
         </WidgetCard>
 
         <WidgetCard
@@ -216,7 +305,7 @@ export default function SettingsPage() {
             </SettingRow>
             <SettingRow title="Last Login" description="Most recent session.">
               <span className="text-sm text-muted-foreground">
-                Jul 9, 2026 · 14:32
+                {profile.lastUpdated} · recent
               </span>
             </SettingRow>
             <SettingRow
@@ -344,11 +433,10 @@ export default function SettingsPage() {
             >
               <Select
                 id="resume"
-                defaultValue="Resume-v2.pdf"
+                defaultValue={profile.fullName ? 'Latest resume' : 'No resume'}
                 className="sm:w-56"
               >
-                <option>Resume-v2.pdf</option>
-                <option>Resume-v1.pdf</option>
+                <option>Latest resume</option>
                 <option>No resume</option>
               </Select>
             </SettingRow>
