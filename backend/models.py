@@ -16,7 +16,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any, Literal, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 # --- Literals (match the Firestore enum strings) ------------------------
 Provider = Literal["password", "google"]
@@ -26,6 +26,14 @@ ProcessingStatus = Literal["queued", "processing", "completed", "failed"]
 Priority = Literal["high", "medium", "low"]
 GapDifficulty = Literal["easy", "moderate", "hard"]
 PhaseStatus = Literal["completed", "in_progress", "locked"]
+ActivityType = Literal[
+    "resume_uploaded",
+    "resume_analysed",
+    "roadmap_generated",
+    "courses_generated",
+    "profile_updated",
+    "settings_changed",
+]
 
 # ======================================================================
 # Entities (Firestore documents)
@@ -48,6 +56,14 @@ class User(BaseModel):
     currentResumeId: Optional[str] = None
     location: Optional[str] = None
     phone: Optional[str] = None
+    # Extended profile fields (read/written by the backend; the frozen
+    # frontend ignores any it does not render).
+    bio: Optional[str] = None
+    education: Optional[str] = None
+    linkedin: Optional[str] = None
+    github: Optional[str] = None
+    portfolio: Optional[str] = None
+    profileImage: Optional[str] = None
 
 
 class Resume(BaseModel):
@@ -160,7 +176,7 @@ class CourseRecommendations(BaseModel):
 
 
 class DashboardSummary(BaseModel):
-    """``dashboardSummary/{resumeId}`` document."""
+    """``dashboardSummary/{resumeId}`` document (consumed by the frontend)."""
 
     overallReadiness: float = 0
     topCareer: str = ""
@@ -173,11 +189,60 @@ class DashboardSummary(BaseModel):
 
 
 class Processing(BaseModel):
-    """``resumeProcessing/{resumeId}`` document."""
+    """``resumeProcessing/{resumeId}`` document.
+
+    ``userId`` is required so the frontend's ``where('userId','==',uid)``
+    query can surface processing state for the signed-in user.
+    """
 
     resumeId: str
+    userId: Optional[str] = None
     status: ProcessingStatus = "queued"
     progress: Optional[float] = None
+
+
+class ActivityItem(BaseModel):
+    """``users/{uid}/activity/{activityId}`` document."""
+
+    id: Optional[str] = None
+    userId: Optional[str] = None
+    resumeId: Optional[str] = None
+    activityType: ActivityType
+    title: str
+    description: str = ""
+    timestamp: Optional[datetime] = None
+
+
+# --- Settings (stored in ``settings/{uid}``) ----------------------------
+
+
+class NotificationSettings(BaseModel):
+    email: bool = True
+    push: bool = True
+    browser: bool = True
+
+
+class PrivacySettings(BaseModel):
+    profileVisible: bool = True
+    shareAcademicData: bool = False
+
+
+class CareerPreferences(BaseModel):
+    targetRole: Optional[str] = None
+    industry: Optional[str] = None
+    remotePreferred: bool = False
+
+
+class Settings(BaseModel):
+    """``settings/{uid}`` document."""
+
+    theme: str = "system"  # light | dark | system
+    language: str = "en"
+    timezone: Optional[str] = None
+    notifications: NotificationSettings = Field(default_factory=NotificationSettings)
+    privacy: PrivacySettings = Field(default_factory=PrivacySettings)
+    careerPreferences: CareerPreferences = Field(default_factory=CareerPreferences)
+    defaultResume: Optional[str] = None
 
 
 # ======================================================================
@@ -210,12 +275,76 @@ class RegenerateRoadmapRequest(BaseModel):
 
 
 class UpdateProfileRequest(BaseModel):
-    """Editable profile fields (also used by PUT /settings)."""
+    """Editable profile fields (also accepted by PUT /settings)."""
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "displayName": "Jane Doe",
+                "targetCareer": "Backend Engineer",
+                "location": "Berlin, Germany",
+                "phone": "+49 123 456789",
+                "bio": "Full-stack developer pivoting to backend.",
+                "education": "B.Sc. Computer Science",
+                "linkedin": "https://linkedin.com/in/janedoe",
+                "github": "https://github.com/janedoe",
+                "portfolio": "https://janedoe.dev",
+            }
+        }
+    )
 
     displayName: Optional[str] = None
     targetCareer: Optional[str] = None
     location: Optional[str] = None
     phone: Optional[str] = None
+    bio: Optional[str] = None
+    education: Optional[str] = None
+    linkedin: Optional[str] = None
+    github: Optional[str] = None
+    portfolio: Optional[str] = None
+    profileImage: Optional[str] = None
+
+
+class SettingsUpdateRequest(BaseModel):
+    """App settings plus optional profile fields (all optional)."""
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "theme": "dark",
+                "language": "en",
+                "timezone": "Europe/Berlin",
+                "notifications": {"email": True, "push": False, "browser": True},
+                "privacy": {"profileVisible": True, "shareAcademicData": False},
+                "careerPreferences": {
+                    "targetRole": "Backend Engineer",
+                    "industry": "Fintech",
+                    "remotePreferred": True,
+                },
+                "defaultResume": None,
+            }
+        }
+    )
+
+    # Settings
+    theme: Optional[str] = None
+    language: Optional[str] = None
+    timezone: Optional[str] = None
+    notifications: Optional[NotificationSettings] = None
+    privacy: Optional[PrivacySettings] = None
+    careerPreferences: Optional[CareerPreferences] = None
+    defaultResume: Optional[str] = None
+    # Profile (mirrors UpdateProfileRequest)
+    displayName: Optional[str] = None
+    targetCareer: Optional[str] = None
+    location: Optional[str] = None
+    phone: Optional[str] = None
+    bio: Optional[str] = None
+    education: Optional[str] = None
+    linkedin: Optional[str] = None
+    github: Optional[str] = None
+    portfolio: Optional[str] = None
+    profileImage: Optional[str] = None
 
 
 class FirebaseUser(BaseModel):
@@ -227,7 +356,7 @@ class FirebaseUser(BaseModel):
 
 
 # ======================================================================
-# Response models (envelopes)
+# Response models (envelopes / aggregates)
 # ======================================================================
 
 
@@ -250,3 +379,97 @@ class ActionResponse(BaseModel):
     message: str = ""
     resumeId: Optional[str] = None
     data: Optional[Any] = None
+
+
+class SettingsResponse(BaseModel):
+    """GET /settings payload: the user profile plus app settings."""
+
+    profile: User
+    settings: Settings
+
+
+# --- Dashboard aggregate (GET /dashboard) --------------------------------
+
+
+class ProfileSummary(BaseModel):
+    uid: str = ""
+    displayName: str = ""
+    email: str = ""
+    targetCareer: str = ""
+    location: Optional[str] = None
+    profileCompletion: int = 0
+
+
+class ResumeSummary(BaseModel):
+    totalResumes: int = 0
+    latestResumeId: Optional[str] = None
+    latestResumeName: Optional[str] = None
+    latestUploadedAt: Optional[datetime] = None
+
+
+class LastAnalysis(BaseModel):
+    status: Optional[str] = None
+    skillsCount: int = 0
+    softSkillsCount: int = 0
+    analyzedAt: Optional[datetime] = None
+
+
+class DashboardDetail(BaseModel):
+    """Complete dashboard assembled from Firestore on each request."""
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "overallReadiness": 64,
+                "topCareer": "Backend Engineer",
+                "topCareerConfidence": 82,
+                "skillsCount": 14,
+                "missingSkillsCount": 6,
+                "completedRoadmapPct": 25,
+                "currentPhase": "Build a REST API",
+                "recommendedCourse": "Python for Everybody",
+                "topMissingSkills": ["Kubernetes", "gRPC", "GraphQL"],
+                "profileSummary": {
+                    "uid": "abc123",
+                    "displayName": "Jane Doe",
+                    "email": "jane@example.com",
+                    "targetCareer": "Backend Engineer",
+                    "location": "Berlin",
+                    "profileCompletion": 70,
+                },
+                "resumeSummary": {
+                    "totalResumes": 2,
+                    "latestResumeId": "res_001",
+                    "latestResumeName": "jane_resume.pdf",
+                },
+                "recentActivity": [
+                    {
+                        "activityType": "resume_uploaded",
+                        "title": "Resume Uploaded",
+                        "description": "jane_resume.pdf",
+                    }
+                ],
+                "lastAnalysis": {
+                    "status": "completed",
+                    "skillsCount": 14,
+                    "softSkillsCount": 4,
+                },
+            }
+        }
+    )
+
+    # Base fields — mirror the stored dashboardSummary document.
+    overallReadiness: float = 0
+    topCareer: str = ""
+    topCareerConfidence: float = 0
+    skillsCount: int = 0
+    missingSkillsCount: int = 0
+    completedRoadmapPct: int = 0
+    currentPhase: str = ""  # Current Roadmap Phase
+    recommendedCourse: str = ""  # Recommended Course
+    # Rich aggregates.
+    topMissingSkills: list[str] = Field(default_factory=list)
+    profileSummary: ProfileSummary = Field(default_factory=ProfileSummary)
+    resumeSummary: ResumeSummary = Field(default_factory=ResumeSummary)
+    recentActivity: list[ActivityItem] = Field(default_factory=list)
+    lastAnalysis: Optional[LastAnalysis] = None

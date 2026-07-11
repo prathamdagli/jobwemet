@@ -19,7 +19,7 @@ import datetime as _dt
 
 from google.cloud import firestore
 
-from . import models
+from . import models, utils
 from .firebase import get_db
 
 # Collection names (kept identical to the existing data contract).
@@ -32,6 +32,8 @@ COL_GAP = "skillGap"
 COL_ROADMAP = "roadmaps"
 COL_COURSES = "courseRecommendations"
 COL_DASHBOARD = "dashboardSummary"
+COL_SETTINGS = "settings"
+COL_ACTIVITY = "activity"
 
 
 def _ts(value) -> str | None:
@@ -70,7 +72,9 @@ def list_resumes(uid: str) -> list[models.Resume]:
     )
     out: list[models.Resume] = []
     for snap in query.stream():
-        out.append(models.Resume(id=snap.id, **snap.to_dict()))
+        doc = snap.to_dict()
+        doc.pop("id", None)
+        out.append(models.Resume(id=snap.id, **doc))
     return out
 
 
@@ -81,6 +85,7 @@ def get_resume(uid: str, resume_id: str) -> models.Resume | None:
     doc = snap.to_dict()
     if doc.get("userId") != uid:
         return None
+    doc.pop("id", None)
     return models.Resume(id=snap.id, **doc)
 
 
@@ -91,13 +96,57 @@ def save_resume(resume: models.Resume) -> models.Resume:
     return resume
 
 
-def delete_resume(uid: str, resume_id: str) -> None:
+def delete_resume_tree(uid: str, resume_id: str) -> dict:
+    """Hard-delete a resume and every Firestore document tied to it.
+
+    Deletes the resume metadata, its processing/analysis/matches/gap/roadmap/
+    courses/dashboard documents, and any activity records linked to the
+    resume. Storage blob deletion is handled by the caller (resume.py) to
+    avoid an import cycle. Uses a single batched write.
+
+    Returns a count of deleted activity records.
+    """
     existing = get_resume(uid, resume_id)
     if existing is None:
         raise FileNotFoundError("Resume not found.")
-    get_db().collection(COL_RESUMES).document(resume_id).update(
-        {"status": "deleted", "updatedAt": firestore.SERVER_TIMESTAMP}
+
+    db = get_db()
+    batch = db.batch()
+    for col in (
+        COL_RESUMES,
+        COL_PROCESSING,
+        COL_ANALYSIS,
+        COL_CAREERS,
+        COL_GAP,
+        COL_ROADMAP,
+        COL_COURSES,
+        COL_DASHBOARD,
+    ):
+        batch.delete(db.collection(col).document(resume_id))
+
+    # Activity linked to this resume (subcollection under the user).
+    activity_deleted = 0
+    acts = (
+        db.collection(COL_USERS)
+        .document(uid)
+        .collection(COL_ACTIVITY)
+        .where("resumeId", "==", resume_id)
+        .stream()
     )
+    for snap in acts:
+        batch.delete(snap.reference)
+        activity_deleted += 1
+
+    # Detach a dangling pointer if this was the user's current resume.
+    user_snap = db.collection(COL_USERS).document(uid).get()
+    if user_snap.exists and user_snap.to_dict().get("currentResumeId") == resume_id:
+        batch.update(
+            user_snap.reference,
+            {"currentResumeId": None, "updatedAt": firestore.SERVER_TIMESTAMP},
+        )
+
+    batch.commit()
+    return {"deletedResume": resume_id, "deletedActivity": activity_deleted}
 
 
 def update_profile(
@@ -106,6 +155,12 @@ def update_profile(
     target_career: str | None = None,
     location: str | None = None,
     phone: str | None = None,
+    bio: str | None = None,
+    education: str | None = None,
+    linkedin: str | None = None,
+    github: str | None = None,
+    portfolio: str | None = None,
+    profile_image: str | None = None,
 ) -> models.User:
     existing = get_user(uid)
     if existing is None:
@@ -116,9 +171,17 @@ def update_profile(
         ("targetCareer", target_career),
         ("location", location),
         ("phone", phone),
+        ("bio", bio),
+        ("education", education),
+        ("linkedin", linkedin),
+        ("github", github),
+        ("portfolio", portfolio),
+        ("profileImage", profile_image),
     ):
         if val is not None:
             changed[key] = val
+    if not changed:
+        return existing
     changed["updatedAt"] = firestore.SERVER_TIMESTAMP
     get_db().collection(COL_USERS).document(uid).update(changed)
     return get_user(uid)  # type: ignore[return-value]
@@ -197,3 +260,53 @@ def get_dashboard(resume_id: str) -> models.DashboardSummary | None:
 
 def save_dashboard(resume_id: str, dashboard: models.DashboardSummary) -> None:
     _save_one(COL_DASHBOARD, resume_id, dashboard.model_dump(exclude_none=True))
+
+
+# --- Settings -------------------------------------------------------------
+
+
+def get_settings(uid: str) -> models.Settings:
+    snap = get_db().collection(COL_SETTINGS).document(uid).get()
+    return models.Settings(**snap.to_dict()) if snap.exists else models.Settings()
+
+
+def save_settings(uid: str, settings: models.Settings) -> models.Settings:
+    get_db().collection(COL_SETTINGS).document(uid).set(
+        settings.model_dump(exclude_none=True), merge=True
+    )
+    return settings
+
+
+# --- Activity -------------------------------------------------------------
+
+
+def add_activity(
+    uid: str, item: models.ActivityItem
+) -> models.ActivityItem:
+    """Persist one activity record under ``users/{uid}/activity``."""
+    item.id = item.id or utils.generate_id("act_")
+    item.userId = uid
+    item.timestamp = item.timestamp or utils.now()
+    ref = (
+        get_db()
+        .collection(COL_USERS)
+        .document(uid)
+        .collection(COL_ACTIVITY)
+        .document(item.id)
+    )
+    ref.set(item.model_dump(exclude_none=True))
+    return item
+
+
+def list_activity(uid: str, limit: int = 10) -> list[models.ActivityItem]:
+    """Most-recent activity records for a user (newest first)."""
+    snaps = (
+        get_db()
+        .collection(COL_USERS)
+        .document(uid)
+        .collection(COL_ACTIVITY)
+        .order_by("timestamp", direction=firestore.Query.DESCENDING)
+        .limit(limit)
+        .stream()
+    )
+    return [models.ActivityItem(**s.to_dict()) for s in snaps]

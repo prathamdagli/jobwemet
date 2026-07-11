@@ -70,7 +70,9 @@ def upload_bytes(uid: str, resume_id: str, data: bytes, ext: str) -> str:
     """Upload resume bytes and return the Storage path."""
     storage_path = f"users/{uid}/resumes/{resume_id}.{ext}"
     bucket = get_bucket()
-    bucket.blob(storage_path).upload_from_string(data, content_type=f"application/{ext}")
+    bucket.blob(storage_path).upload_from_string(
+        data, content_type=f"application/{ext}"
+    )
     return storage_path
 
 
@@ -98,11 +100,34 @@ def create_resume_record(
 
 
 def mark_processing(
-    resume_id: str, status: str = "queued", progress: Optional[float] = None
+    uid: str,
+    resume_id: str,
+    status: str = "queued",
+    progress: Optional[float] = None,
 ) -> models.Processing:
-    """Persist a ``resumeProcessing`` document for a resume."""
-    proc = models.Processing(resumeId=resume_id, status=status, progress=progress)
+    """Persist a ``resumeProcessing`` document for a resume.
+
+    ``userId`` is stored so the frontend's ``where('userId','==',uid)``
+    query can surface the processing state for the signed-in user.
+    """
+    proc = models.Processing(
+        resumeId=resume_id, userId=uid, status=status, progress=progress
+    )
     return database.save_processing(proc)
+
+
+def delete_storage_object(storage_path: str) -> bool:
+    """Delete a Storage blob. Returns False when it does not exist.
+
+    Best-effort: callers should log rather than fail the whole operation
+    when a blob is already gone (e.g. after a partial prior delete).
+    """
+    bucket = get_bucket()
+    blob = bucket.blob(storage_path)
+    if not blob.exists():
+        return False
+    blob.delete()
+    return True
 
 
 def read_resume_text(uid: str, resume_id: str) -> str:
