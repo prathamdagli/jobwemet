@@ -84,7 +84,7 @@ otherwise every call returns HTTP 429 (`ai_quota`). On a bad key the API
 returns `401 ai_auth`; on a network/timeout failure `502/504`. These all map
 to the standard `{ success:false, error:{code,message} }` envelope via the
 `AIError` handler in `main.py`, so the backend never 500s on an AI failure.
-The default model is `openai/gpt-oss-120b:free`; set `OPENROUTER_MODEL`
+The default model is `google/gemma-4-31b-it:free`; set `OPENROUTER_MODEL`
 if you need a different one.
 
 ## Layout

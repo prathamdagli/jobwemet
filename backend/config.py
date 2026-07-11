@@ -59,11 +59,11 @@ AI_PROVIDER: str = os.getenv("AI_PROVIDER", "stub")
 
 # OpenRouter credentials/endpoint. The key is required whenever
 # AI_PROVIDER=openrouter. OPENROUTER_MODEL defaults to the free
-# `openai/gpt-oss-120b:free` model and is configurable from .env (never
+# `google/gemma-4-31b-it:free` model and is configurable from .env (never
 # hard-coded elsewhere). OPENROUTER_BASE_URL is also configurable so a
 # gateway/proxy can be swapped in without code changes.
 OPENROUTER_API_KEY: str = os.getenv("OPENROUTER_API_KEY", "")
-OPENROUTER_MODEL: str = os.getenv("OPENROUTER_MODEL", "openai/gpt-oss-120b:free")
+OPENROUTER_MODEL: str = os.getenv("OPENROUTER_MODEL", "google/gemma-4-31b-it:free")
 OPENROUTER_BASE_URL: str = os.getenv(
     "OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1"
 )

@@ -95,7 +95,6 @@ class OpenRouterProvider(AIProvider):
             "model": self._model,
             "messages": messages,
             "temperature": 0.2,
-            "response_format": {"type": "json_object"},
         }
         headers = {
             "Authorization": f"Bearer {self._api_key}",
