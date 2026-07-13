@@ -26,9 +26,15 @@ import type {
  * Uploads use XMLHttpRequest so we can report real progress — the Fetch API
  * cannot.
  */
-const BASE_URL: string =
-  (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
-  'http://127.0.0.1:8000'
+const configuredUrl = import.meta.env.VITE_API_BASE_URL as string | undefined
+
+if (import.meta.env.PROD && !configuredUrl) {
+  throw new Error(
+    'VITE_API_BASE_URL is not defined in the production environment',
+  )
+}
+
+const BASE_URL: string = configuredUrl ?? 'http://127.0.0.1:8000'
 
 // ---- Token provider (wired by AuthProvider) -------------------------------
 

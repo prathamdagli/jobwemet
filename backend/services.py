@@ -46,7 +46,7 @@ logger = logging.getLogger("jobwemet.services")
 # in :func:`get_provider`; nothing else in the app changes.
 
 # How long to wait on a provider before giving up.
-_TIMEOUT_SECONDS = 30
+_TIMEOUT_SECONDS = config.AI_TIMEOUT_SECONDS
 
 # Errors worth retrying once (transient / bad output). Auth and quota
 # failures are not retried — retrying them cannot help.

@@ -394,15 +394,20 @@ def add_activity(
     return item
 
 
-def list_activity(uid: str, limit: int = 10) -> list[models.ActivityItem]:
+def list_activity(uid: str, limit: int = 10, start_after_id: str | None = None) -> list[models.ActivityItem]:
     """Most-recent activity records for a user (newest first)."""
-    snaps = (
-        get_db()
+    db = get_db()
+    query = (
+        db
         .collection(COL_USERS)
         .document(uid)
         .collection(COL_ACTIVITY)
         .order_by("timestamp", direction=firestore.Query.DESCENDING)
-        .limit(limit)
-        .stream()
     )
+    if start_after_id:
+        doc = db.collection(COL_USERS).document(uid).collection(COL_ACTIVITY).document(start_after_id).get()
+        if doc.exists:
+            query = query.start_after(doc)
+            
+    snaps = query.limit(limit).stream()
     return [models.ActivityItem(**s.to_dict()) for s in snaps]

@@ -196,11 +196,11 @@ def _validate_profile(body: models.UpdateProfileRequest) -> None:
     },
     tags=["Resume"],
 )
-async def upload_resume(
+def upload_resume(
     file: UploadFile = File(..., description="PDF or DOCX resume file."),
     user: models.FirebaseUser = Depends(get_current_user),
 ) -> models.ResumeUploadResponse:
-    data = await file.read()
+    data = file.file.read()
     try:
         ext = validate_resume_file(file.filename or "resume", file.content_type, len(data))
     except ValueError as exc:
@@ -659,6 +659,21 @@ def get_profile(
     user: models.FirebaseUser = Depends(get_current_user),
 ) -> models.User:
     return _require_user(user.uid)
+
+
+@api_router.get(
+    "/activity",
+    response_model=list[models.ActivityItem],
+    summary="Get paginated user activity",
+    description="Returns the user's activity history, newest first. Provide a cursor to get the next page.",
+    tags=["Read"],
+)
+def get_activity(
+    limit: int = Query(default=10, le=50),
+    cursor: Optional[str] = Query(default=None, description="Activity ID to start after"),
+    user: models.FirebaseUser = Depends(get_current_user),
+) -> list[models.ActivityItem]:
+    return database.list_activity(user.uid, limit=limit, start_after_id=cursor)
 
 
 @api_router.get(

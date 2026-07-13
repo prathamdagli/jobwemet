@@ -72,6 +72,10 @@ OPENROUTER_BASE_URL: str = os.getenv(
     "OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1"
 )
 
+# Time in seconds before an AI provider request times out
+AI_TIMEOUT_SECONDS: int = int(os.getenv("AI_TIMEOUT_SECONDS", "30"))
+
+
 # When True, every request must carry a valid Firebase ID token.
 # When False (local dev / emulator), requests without a token fall back
 # to DEMO_UID so Swagger and quick tests work without authenticating.
