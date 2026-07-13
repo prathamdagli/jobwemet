@@ -1,0 +1,507 @@
+@import 'tailwindcss';
+@import './styles/theme.css';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
+@import '@fontsource-variable/geist';
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-heading: var(--font-sans);
+  --font-sans: 'Geist Variable', sans-serif;
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+:root {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --radius: 0.625rem;
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}
+
+/* ================================================================== */
+/*  Hero — cinematic layered background (monochrome, GPU-friendly)     */
+/*  Built from plain CSS layers + a JS-driven cursor spotlight. No new */
+/*  animation primitives are introduced; everything degrades under     */
+/*  prefers-reduced-motion.                                            */
+/* ================================================================== */
+.hero-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* subtle grid that fades toward the edges */
+.hero-grid {
+  background-image:
+    linear-gradient(
+      to right,
+      color-mix(in oklch, var(--foreground) 5%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      to bottom,
+      color-mix(in oklch, var(--foreground) 5%, transparent) 1px,
+      transparent 1px
+    );
+  background-size: 56px 56px;
+  -webkit-mask-image: radial-gradient(
+    ellipse 78% 72% at 50% 38%,
+    #000 28%,
+    transparent 76%
+  );
+  mask-image: radial-gradient(
+    ellipse 78% 72% at 50% 38%,
+    #000 28%,
+    transparent 76%
+  );
+}
+
+/* soft mesh lighting — neutral depth blobs */
+.hero-mesh {
+  background:
+    radial-gradient(
+      42% 38% at 16% 20%,
+      color-mix(in oklch, var(--foreground) 3.5%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      38% 32% at 84% 26%,
+      color-mix(in oklch, var(--foreground) 3%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      48% 42% at 50% 96%,
+      color-mix(in oklch, var(--foreground) 2.5%, transparent),
+      transparent 72%
+    );
+  filter: blur(6px);
+}
+
+/* static radial spotlight drawing focus to the centre */
+.hero-spotlight {
+  background: radial-gradient(
+    52% 46% at 50% 30%,
+    color-mix(in oklch, var(--foreground) 4%, transparent),
+    transparent 70%
+  );
+}
+
+/* animated vignette — gentle breathing depth at the edges */
+.hero-vignette {
+  background: radial-gradient(
+    125% 125% at 50% 45%,
+    transparent 52%,
+    color-mix(in oklch, var(--foreground) 9%, transparent) 100%
+  );
+  animation: hero-vignette-breathe 9s ease-in-out infinite;
+  transform-origin: 50% 45%;
+}
+
+/* cursor-following spotlight (position fed via CSS vars from JS) */
+.hero-cursor {
+  background: radial-gradient(
+    360px circle at var(--mx, 50%) var(--my, 32%),
+    color-mix(in oklch, var(--foreground) 7%, transparent),
+    transparent 60%
+  );
+}
+
+/* grain / noise texture (grayscale, very low opacity) */
+.hero-noise {
+  opacity: 0.04;
+}
+
+/* subtle loading shimmer on a thin bar inside the dashboard */
+.hero-shimmer {
+  background-image: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in oklch, var(--foreground) 10%, transparent),
+    transparent
+  );
+  background-size: 220% 100%;
+  animation: hero-shimmer 2.6s linear infinite;
+}
+
+/* tiny sparkline "graph movement" — restrained pulse on the tip */
+.hero-graph-tip {
+  animation: hero-tip-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes hero-vignette-breathe {
+  0%,
+  100% {
+    opacity: 0.65;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+}
+
+@keyframes hero-shimmer {
+  0% {
+    background-position: 220% 0;
+  }
+  100% {
+    background-position: -220% 0;
+  }
+}
+
+@keyframes hero-tip-pulse {
+  0%,
+  100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.35);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-vignette,
+  .hero-shimmer,
+  .hero-graph-tip {
+    animation: none;
+  }
+  .hero-vignette {
+    opacity: 0.8;
+  }
+}
+
+/* ================================================================== */
+/*  Auth showcase — dark monochrome layered background                */
+/*  A premium "enter the workspace" backdrop for the auth panel.      */
+/*  Mirrors the hero's layer system but tuned for a dark surface with */
+/*  explicit white/black alphas so it reads consistently regardless   */
+/*  of the active theme (the hero layers key off --foreground, which  */
+/*  is dark in light mode and would vanish on a near-black panel).    */
+/* ================================================================== */
+.auth-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* faint grid that fades toward the edges */
+.auth-grid {
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 54px 54px;
+  -webkit-mask-image: radial-gradient(
+    ellipse 80% 70% at 50% 40%,
+    #000 25%,
+    transparent 78%
+  );
+  mask-image: radial-gradient(
+    ellipse 80% 70% at 50% 40%,
+    #000 25%,
+    transparent 78%
+  );
+}
+
+/* static radial spotlight drawing focus to the centre */
+.auth-spotlight {
+  background: radial-gradient(
+    58% 50% at 50% 32%,
+    rgba(255, 255, 255, 0.07),
+    transparent 70%
+  );
+  animation: auth-spotlight-breathe 8s ease-in-out infinite;
+}
+
+/* soft mesh lighting — neutral depth blobs */
+.auth-mesh {
+  background:
+    radial-gradient(
+      42% 38% at 16% 22%,
+      rgba(255, 255, 255, 0.06),
+      transparent 70%
+    ),
+    radial-gradient(
+      38% 32% at 84% 28%,
+      rgba(255, 255, 255, 0.05),
+      transparent 70%
+    ),
+    radial-gradient(
+      48% 42% at 50% 96%,
+      rgba(255, 255, 255, 0.04),
+      transparent 72%
+    );
+  filter: blur(8px);
+}
+
+/* animated vignette — gentle breathing depth at the edges */
+.auth-vignette {
+  background: radial-gradient(
+    125% 125% at 50% 50%,
+    transparent 52%,
+    rgba(0, 0, 0, 0.55) 100%
+  );
+  animation: auth-vignette-breathe 10s ease-in-out infinite;
+  transform-origin: 50% 50%;
+}
+
+/* grain / noise texture (grayscale, very low opacity) */
+.auth-noise {
+  opacity: 0.035;
+}
+
+@keyframes auth-spotlight-breathe {
+  0%,
+  100% {
+    opacity: 0.75;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes auth-vignette-breathe {
+  0%,
+  100% {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-spotlight,
+  .auth-vignette {
+    animation: none;
+  }
+  .auth-spotlight {
+    opacity: 0.85;
+  }
+  .auth-vignette {
+    opacity: 0.9;
+  }
+}
+
+/* ================================================================== */
+/*  Landing story — one continuous background system                 */
+/*  A single monochrome layer set shared by every section below the  */
+/*  Hero so the page reads as one flowing surface instead of separate */
+/*  white/gray blocks. Theme-aware via --foreground color-mix (matches */
+/*  the hero's neutral system) so it holds in light and dark modes.   */
+/* ================================================================== */
+.story-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+/* very soft base that gently lifts away from pure white at the edges */
+.story-base {
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklch, var(--background) 70%, var(--foreground) 2%) 0%,
+    var(--background) 22%,
+    var(--background) 78%,
+    color-mix(in oklch, var(--background) 70%, var(--foreground) 2%) 100%
+  );
+}
+
+/* faint grid that fades toward the edges */
+.story-grid {
+  background-image:
+    linear-gradient(
+      to right,
+      color-mix(in oklch, var(--foreground) 4%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      to bottom,
+      color-mix(in oklch, var(--foreground) 4%, transparent) 1px,
+      transparent 1px
+    );
+  background-size: 64px 64px;
+  -webkit-mask-image: radial-gradient(
+    ellipse 85% 80% at 50% 45%,
+    #000 18%,
+    transparent 82%
+  );
+  mask-image: radial-gradient(
+    ellipse 85% 80% at 50% 45%,
+    #000 18%,
+    transparent 82%
+  );
+}
+
+/* soft mesh lighting — neutral depth blobs */
+.story-mesh {
+  background:
+    radial-gradient(
+      40% 36% at 14% 18%,
+      color-mix(in oklch, var(--foreground) 3%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      36% 30% at 86% 30%,
+      color-mix(in oklch, var(--foreground) 2.5%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      46% 40% at 50% 98%,
+      color-mix(in oklch, var(--foreground) 2%, transparent),
+      transparent 72%
+    );
+  filter: blur(8px);
+}
+
+/* slow-drifting spotlight drawing focus down the page */
+.story-spotlight {
+  background: radial-gradient(
+    46% 38% at 50% 30%,
+    color-mix(in oklch, var(--foreground) 3.5%, transparent),
+    transparent 70%
+  );
+  animation: story-spotlight-drift 18s ease-in-out infinite;
+  transform-origin: 50% 30%;
+}
+
+/* grain / noise texture (grayscale, very low opacity) */
+.story-noise {
+  opacity: 0.035;
+}
+
+@keyframes story-spotlight-drift {
+  0%,
+  100% {
+    opacity: 0.7;
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(8%) scale(1.06);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .story-spotlight {
+    animation: none;
+    opacity: 0.85;
+  }
+}
