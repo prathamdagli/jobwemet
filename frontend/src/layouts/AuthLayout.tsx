@@ -1,12 +1,20 @@
-import { Outlet, useLocation } from 'react-router-dom'
+import { Link, Outlet, useLocation } from 'react-router-dom'
 import { AnimatePresence, motion } from 'motion/react'
 import { pageTransition } from '@/motion'
+import { cn } from '@/lib/utils'
 import { Brain } from 'lucide-react'
 import AuthShowcase from '@/components/auth/AuthShowcase'
 
 function BrandLogo({ className }: { className?: string }) {
   return (
-    <div className={className}>
+    <Link
+      to="/"
+      aria-label="JobWeMet — home"
+      className={cn(
+        'cursor-pointer rounded-xl outline-none transition-opacity hover:opacity-80 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-950',
+        className,
+      )}
+    >
       <span className="flex items-center gap-2.5">
         <span className="flex size-9 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/20">
           <Brain className="size-5 text-white" aria-hidden="true" />
@@ -15,7 +23,7 @@ function BrandLogo({ className }: { className?: string }) {
           JobWeMet
         </span>
       </span>
-    </div>
+    </Link>
   )
 }
 

@@ -45,6 +45,8 @@ export type AnalysisStatus = 'processing' | 'completed' | 'failed'
 export interface SkillGroup {
   category: string
   skills: string[]
+  /** Per-category AI confidence (0-100), computed independently per group. */
+  confidence?: number
 }
 
 export interface ExperienceInfo {

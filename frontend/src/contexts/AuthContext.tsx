@@ -45,10 +45,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // client uses it to retry once after a 401 (expired token).
   useEffect(() => {
     configureApi(
-      () => (user ? user.getIdToken() : Promise.resolve(null)),
-      () => (user ? user.getIdToken(true) : Promise.resolve(null)),
+      () => {
+        const u = auth.currentUser
+        return u ? u.getIdToken() : Promise.resolve(null)
+      },
+      () => {
+        const u = auth.currentUser
+        return u ? u.getIdToken(true) : Promise.resolve(null)
+      },
     )
-  }, [user])
+  }, [])
 
   const value: AuthContextValue = {
     user,

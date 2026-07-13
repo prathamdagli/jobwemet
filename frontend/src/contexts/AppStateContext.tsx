@@ -45,6 +45,8 @@ export interface AppStateContextValue {
   regenerateRoadmap: (resumeId: string) => Promise<void>
   /** Recommend courses for the skill gap, then refresh. */
   recommendCourses: (resumeId: string) => Promise<void>
+  /** Select a target career and re-derive the pipeline, then refresh. */
+  selectCareer: (career: string) => Promise<void>
   /** Persist profile fields, then refresh. */
   updateProfile: (body: UpdateProfileBody) => Promise<void>
   /** Persist settings (+ optional profile fields), then refresh. */
@@ -128,7 +130,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       next.processing = {}
       for (const r of resumes) {
         next.processing[r.id] = {
-          status: analysis && r.id === activeId ? 'completed' : 'queued',
+          status: r.id === activeId && !analysis ? 'queued' : 'completed',
         }
       }
 
@@ -175,14 +177,30 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const uploadResume = useCallback(
     async (file: File, onProgress?: (percent: number) => void) => {
       const { resumeId } = await api.uploadResume(file, onProgress)
-      // Run the full pipeline so every derived page populates automatically.
-      await Promise.allSettled([
-        api.processResume(resumeId),
-        api.analyzeResume(resumeId),
-        api.generateRoadmap(resumeId),
-        api.recommendCourses(resumeId),
-      ])
+
+      // Load all immediately so UI reflects the uploaded resume (in 'Processing' state)
       await loadAll()
+
+      // Run the full pipeline in the background so the upload zone isn't blocked.
+      const runPipeline = async () => {
+        try {
+          await api.processResume(resumeId)
+          await loadAll()
+
+          await api.analyzeResume(resumeId)
+          await loadAll()
+
+          await Promise.allSettled([
+            api.generateRoadmap(resumeId),
+            api.recommendCourses(resumeId),
+          ])
+        } catch (err) {
+          console.error('Pipeline failed during processing:', err)
+        }
+        await loadAll()
+      }
+
+      void runPipeline()
     },
     [loadAll],
   )
@@ -214,6 +232,14 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const recommendCourses = useCallback(
     async (resumeId: string) => {
       await api.recommendCourses(resumeId)
+      await loadAll()
+    },
+    [loadAll],
+  )
+
+  const selectCareer = useCallback(
+    async (career: string) => {
+      await api.selectCareer(career)
       await loadAll()
     },
     [loadAll],
@@ -255,6 +281,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       recommendCourses,
       updateProfile,
       putSettings,
+      selectCareer,
     }),
     [
       data,
@@ -270,6 +297,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       recommendCourses,
       updateProfile,
       putSettings,
+      selectCareer,
     ],
   )
 

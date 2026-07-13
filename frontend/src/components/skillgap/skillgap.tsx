@@ -1,7 +1,6 @@
 import { motion } from 'motion/react'
-import { CheckCircle2, Clock, Plus, Sparkles } from 'lucide-react'
+import { CheckCircle2, Plus, Sparkles } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
-import { ProgressBar } from '@/components/dashboard/ProgressBar'
 import { listReveal, staggerChildren } from '@/motion'
 
 export function SkillCategoryGroup({
@@ -51,27 +50,17 @@ function difficultyBadgeVariant(difficulty: string) {
   return 'secondary'
 }
 
-/** Decorative readiness cue derived from learning difficulty — purely visual. */
-function gapReadiness(difficulty: string): number {
-  if (difficulty === 'Easy') return 45
-  if (difficulty === 'Hard') return 12
-  return 25
-}
-
 export function PriorityItem({
   rank,
   skill,
   priority,
-  time,
   difficulty,
 }: {
   rank: number
   skill: string
   priority: 'High' | 'Medium'
-  time: string
   difficulty: string
 }) {
-  const readiness = gapReadiness(difficulty)
   return (
     <motion.li
       variants={listReveal}
@@ -104,14 +93,8 @@ export function PriorityItem({
           </div>
           <div className="mt-2 flex items-center gap-3 text-xs text-muted-foreground">
             <span className="flex shrink-0 items-center gap-1">
-              <Clock className="size-3.5" aria-hidden="true" />
-              {time}
+              {priority} priority
             </span>
-            <ProgressBar
-              value={readiness}
-              size="sm"
-              className="max-w-[140px] flex-1"
-            />
           </div>
         </div>
       </div>

@@ -120,12 +120,27 @@ async function doFetch(
   if (token) headers.set('Authorization', `Bearer ${token}`)
   const isJson = opts.body != null
   if (isJson) headers.set('Content-Type', 'application/json')
-  return fetch(`${BASE_URL}${path}`, {
-    method: opts.method ?? 'GET',
-    headers,
-    body: isJson ? JSON.stringify(opts.body) : undefined,
-    signal: opts.signal,
-  })
+
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 120000)
+
+  // Combine custom signal with timeout signal
+  const signal = opts.signal
+  if (signal?.aborted) {
+    clearTimeout(timeoutId)
+    return fetch(`${BASE_URL}${path}`, { signal })
+  }
+
+  try {
+    return await fetch(`${BASE_URL}${path}`, {
+      method: opts.method ?? 'GET',
+      headers,
+      body: isJson ? JSON.stringify(opts.body) : undefined,
+      signal: signal ?? controller.signal,
+    })
+  } finally {
+    clearTimeout(timeoutId)
+  }
 }
 
 async function parseError(res: Response): Promise<ApiError> {
@@ -230,6 +245,7 @@ export interface Settings {
   privacy: PrivacySettings
   careerPreferences: CareerPreferences
   defaultResume: string | null
+  savedCourses?: string[]
 }
 
 export interface SettingsResponse {
@@ -245,6 +261,7 @@ export interface PutSettingsBody extends UpdateProfileBody {
   privacy?: PrivacySettings
   careerPreferences?: CareerPreferences
   defaultResume?: string | null
+  savedCourses?: string[]
 }
 
 export interface DashboardDetail extends DashboardDoc {
@@ -326,6 +343,10 @@ interface ResumeIdBody {
   resumeId: string
 }
 
+export interface SelectCareerBody {
+  career: string
+}
+
 export function processResume(
   resumeId: string,
   signal?: AbortSignal,
@@ -388,6 +409,17 @@ export function recommendCourses(
   return request<CourseDoc>('/recommend-courses', {
     method: 'POST',
     body: { resumeId } as ResumeIdBody,
+    signal,
+  })
+}
+
+export function selectCareer(
+  career: string,
+  signal?: AbortSignal,
+): Promise<unknown> {
+  return request('/select-career', {
+    method: 'POST',
+    body: { career } as SelectCareerBody,
     signal,
   })
 }
@@ -475,5 +507,6 @@ export const api = {
   generateRoadmap,
   regenerateRoadmap,
   recommendCourses,
+  selectCareer,
   uploadResume,
 }

@@ -87,6 +87,10 @@ class Resume(BaseModel):
 class SkillGroup(BaseModel):
     category: str
     skills: list[str] = Field(default_factory=list)
+    # Per-category AI confidence (0-100), computed independently for each
+    # skill group. The aggregate ConfidenceInfo.overall/skills values are
+    # DERIVED from these per-category scores (never hardcoded separately).
+    confidence: float = 0.0
 
 
 class ExperienceInfo(BaseModel):
@@ -246,6 +250,7 @@ class Settings(BaseModel):
     privacy: PrivacySettings = Field(default_factory=PrivacySettings)
     careerPreferences: CareerPreferences = Field(default_factory=CareerPreferences)
     defaultResume: Optional[str] = None
+    savedCourses: list[str] = Field(default_factory=list)
 
     # Lenient on read: an unknown stored value falls back to the default so a
     # corrupt document never crashes the GET /settings response.
@@ -287,6 +292,12 @@ class RegenerateAnalysisRequest(BaseModel):
 
 class RegenerateRoadmapRequest(BaseModel):
     resumeId: str
+
+
+class SelectCareerRequest(BaseModel):
+    """Set the active target career and re-derive the pipeline for it."""
+
+    career: str = Field(..., min_length=1, max_length=100)
 
 
 class UpdateProfileRequest(BaseModel):
@@ -349,6 +360,7 @@ class SettingsUpdateRequest(BaseModel):
     privacy: Optional[PrivacySettings] = None
     careerPreferences: Optional[CareerPreferences] = None
     defaultResume: Optional[str] = None
+    savedCourses: Optional[list[str]] = None
     # Profile (mirrors UpdateProfileRequest)
 
     # Strict on write: a caller-supplied invalid theme/language is rejected

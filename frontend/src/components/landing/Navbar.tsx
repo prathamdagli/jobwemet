@@ -83,9 +83,13 @@ export default function Navbar() {
         aria-label="Primary"
         className="mx-auto flex h-[72px] max-w-[1280px] items-center justify-between px-6"
       >
-        <a href="#home" className="rounded-md focus-visible:outline-none">
+        <Link
+          to="/"
+          aria-label="JobWeMet — home"
+          className="cursor-pointer rounded-md outline-none transition-opacity hover:opacity-80 focus-visible:ring-2 focus-visible:ring-ring/50"
+        >
           <BrandLogo />
-        </a>
+        </Link>
 
         <ul className="hidden items-center gap-8 md:flex">
           {NAV_LINKS.map((link) => (
@@ -149,9 +153,13 @@ export default function Navbar() {
           }`}
         >
           <div className="mb-4 flex items-center justify-between">
-            <span className="rounded-md focus-visible:outline-none">
+            <Link
+              to="/"
+              aria-label="JobWeMet — home"
+              className="cursor-pointer rounded-md outline-none transition-opacity hover:opacity-80 focus-visible:ring-2 focus-visible:ring-ring/50"
+            >
               <BrandLogo />
-            </span>
+            </Link>
             <Button
               variant="ghost"
               size="icon"

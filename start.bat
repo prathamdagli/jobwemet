@@ -18,7 +18,7 @@ start "JobWeMet Backend" cmd /k "cd /d %~dp0 && call backend\.venv\Scripts\activ
 
 REM --- Frontend ------------------------------------------------------------
 REM Install node_modules on first run, then launch the Vite dev server.
-start "JobWeMet Frontend" cmd /k "cd /d %~dp0frontend && if not exist node_modules npm install && npm run dev"
+start "JobWeMet Frontend" cmd /k "cd /d %~dp0frontend && (if not exist node_modules call npm install) && npm run dev"
 
 echo ============================================================
 echo  Backend  : http://127.0.0.1:8000   (API docs: /docs)

@@ -76,7 +76,7 @@ OPENROUTER_BASE_URL: str = os.getenv(
 # When False (local dev / emulator), requests without a token fall back
 # to DEMO_UID so Swagger and quick tests work without authenticating.
 REQUIRE_AUTH: bool = os.getenv("REQUIRE_AUTH", "false").lower() in ("1", "true", "yes")
-DEMO_UID: str = os.getenv("DEMO_UID", "demo-user")
+DEMO_UID: str = os.getenv("DEMO_UID", "pElCtZIui4a6R9vGx5cUmUd6LFu1")
 
 # --- Storage layout -------------------------------------------------------
 # Resume bytes live at: users/{uid}/resumes/{resumeId}.{ext}

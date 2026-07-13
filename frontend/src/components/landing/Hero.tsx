@@ -41,7 +41,7 @@ export default function Hero() {
     <section
       ref={sectionRef}
       id="home"
-      className="relative overflow-hidden bg-[#FCFCFC] px-6 pb-28 pt-20 lg:pt-24"
+      className="relative overflow-hidden bg-[#FCFCFC] dark:bg-background px-6 pb-28 pt-20 lg:pt-24"
     >
       <HeroBackground />
 

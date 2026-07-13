@@ -186,7 +186,7 @@ export default function DashboardPage() {
         <MetricCard
           variant="sm"
           label="Resume"
-          value={resume.fileName}
+          value={`\u{1F4C4} ${resume.fileName}`}
           sub={resume.recent.length ? `Parsed ${resume.uploaded}` : 'No resume'}
           icon={Upload}
         />

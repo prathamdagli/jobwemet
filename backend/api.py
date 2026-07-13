@@ -17,21 +17,24 @@ from typing import Optional
 from fastapi import APIRouter, Depends, File, Header, HTTPException, Query, Request, UploadFile
 
 from . import config, database, models, utils
-from .career import analyze_resume as run_analyze
-from .career import build_dashboard, compute_skill_gap, match_careers
-from .courses import recommend_courses
-from .dashboard import build_dashboard_detail
-from .firebase import get_auth
-from .resume import (
+from .database import get_auth
+from .services import (
+    _flatten_skills,
+    analyze_resume as run_analyze,
+    build_dashboard,
+    build_dashboard_detail,
+    compute_skill_gap,
     create_resume_record,
     delete_storage_object,
-    extract_text_from_bytes,
+    generate_roadmap,
     mark_processing,
+    match_careers,
     read_resume_text,
+    recommend_courses,
+    update_dashboard_progress,
     upload_bytes,
     validate_resume_file,
 )
-from .roadmap import generate_roadmap
 
 logger = logging.getLogger("jobwemet.api")
 
@@ -291,8 +294,12 @@ def analyze_resume(
     analysis = run_analyze(resume_id, text, target)
     skills = [s for grp in (analysis.technicalSkills or []) for s in grp.skills]
     matches = match_careers(resume_id, skills, target)
-    gap = compute_skill_gap(resume_id, skills, target)
     top = matches.careers[0] if matches.careers else None
+
+    # If the user hasn't set a target, fall back to the top AI-recommended career
+    effective_target = target if target else (top.careerName if top else "")
+
+    gap = compute_skill_gap(resume_id, skills, effective_target)
     build_dashboard(
         resume_id,
         skills_count=len(skills),
@@ -335,6 +342,24 @@ def regenerate_analysis(
     except FileNotFoundError:
         raise HTTPException(status_code=404, detail="Resume not found.")
     analysis = run_analyze(resume_id, text, target)
+    skills = [s for grp in (analysis.technicalSkills or []) for s in grp.skills]
+    matches = match_careers(resume_id, skills, target)
+    top = matches.careers[0] if matches.careers else None
+
+    # If the user hasn't set a target, fall back to the top AI-recommended career
+    effective_target = target if target else (top.careerName if top else "")
+
+    gap = compute_skill_gap(resume_id, skills, effective_target)
+    build_dashboard(
+        resume_id,
+        skills_count=len(skills),
+        missing_count=len(gap.missingSkills),
+        top_career=top.careerName if top else "",
+        top_confidence=top.confidence if top else 0.0,
+        roadmap_pct=0,
+        current_phase="",
+        recommended_course="",
+    )
     _record_activity(user.uid, resume_id, "resume_analysed")
     return analysis
 
@@ -362,11 +387,12 @@ def generate_roadmap_endpoint(
     user: models.FirebaseUser = Depends(get_current_user),
 ) -> models.Roadmap:
     resume_id = _require_resume(user, body.resumeId).id
-    target = _target_career_for(user)
+    target = _target_career_for(user, resume_id)
     analysis = database.get_skill_analysis(resume_id)
     if analysis is None:
         raise HTTPException(status_code=404, detail="Run /analyze-resume first.")
     roadmap = generate_roadmap(resume_id, analysis, target)
+    update_dashboard_progress(resume_id)
     _record_activity(user.uid, resume_id, "roadmap_generated")
     logger.info("Roadmap generated: uid=%s resumeId=%s", user.uid, resume_id)
     return roadmap
@@ -391,7 +417,7 @@ def regenerate_roadmap_endpoint(
     user: models.FirebaseUser = Depends(get_current_user),
 ) -> models.Roadmap:
     resume_id = _require_resume(user, body.resumeId).id
-    target = _target_career_for(user)
+    target = _target_career_for(user, resume_id)
     analysis = database.get_skill_analysis(resume_id)
     if analysis is None:
         raise HTTPException(status_code=404, detail="Run /analyze-resume first.")
@@ -423,14 +449,58 @@ def recommend_courses_endpoint(
     user: models.FirebaseUser = Depends(get_current_user),
 ) -> models.CourseRecommendations:
     resume_id = _require_resume(user, body.resumeId).id
-    target = _target_career_for(user)
+    target = _target_career_for(user, resume_id)
     gap = database.get_skill_gap(resume_id)
     if gap is None:
         raise HTTPException(status_code=404, detail="Run /analyze-resume first.")
     recs = recommend_courses(resume_id, gap, target)
+    update_dashboard_progress(resume_id)
     _record_activity(user.uid, resume_id, "courses_generated")
     logger.info("Courses recommended: uid=%s resumeId=%s", user.uid, resume_id)
     return recs
+
+
+# --------------------------------------------------------------------------
+# Career selection
+# --------------------------------------------------------------------------
+@api_router.post(
+    "/select-career",
+    response_model=models.ActionResponse,
+    summary="Select a target career and re-derive the pipeline",
+    description=(
+        "Sets the user's target career (persisted on the profile) and, when a "
+        "resume exists, re-runs the full pipeline — analysis, career matches, "
+        "skill gap, roadmap and courses — so every derived document stays keyed "
+        "to the SAME career. This is what keeps the roadmap and the courses from "
+        "drifting to different goals."
+    ),
+    responses={
+        401: {"description": "Missing or invalid Firebase ID token."},
+        404: {"description": "No resume found for the user."},
+    },
+    tags=["Career"],
+)
+def select_career(
+    body: models.SelectCareerRequest,
+    user: models.FirebaseUser = Depends(get_current_user),
+) -> models.ActionResponse:
+    _require_user(user.uid)
+    database.update_profile(user.uid, target_career=body.career)
+    resume_id = _latest_resume_id(user)
+    if not resume_id:
+        _record_activity(user.uid, None, "profile_updated")
+        return models.ActionResponse(
+            status="ok",
+            message="Target career saved. Upload a resume to generate a roadmap.",
+            resumeId=None,
+        )
+    _run_full_pipeline(user, resume_id, body.career)
+    logger.info("Career selected: uid=%s career=%s", user.uid, body.career)
+    return models.ActionResponse(
+        status="ok",
+        message=f"Pipeline re-derived for {body.career}.",
+        resumeId=resume_id,
+    )
 
 
 # --------------------------------------------------------------------------
@@ -472,6 +542,9 @@ def update_profile(
         portfolio=body.portfolio,
         profile_image=body.profileImage,
     )
+    # Changing the target career must re-derive the roadmap + courses so the
+    # whole pipeline stays keyed to the same goal.
+    _cascade_if_target_changed(user, body.targetCareer)
     _record_activity(user.uid, None, "profile_updated")
     logger.info("Profile updated: uid=%s", user.uid)
     return updated
@@ -533,6 +606,7 @@ def update_settings(
         "privacy",
         "careerPreferences",
         "defaultResume",
+        "savedCourses",
     ):
         val = getattr(body, field)
         if val is not None:
@@ -568,6 +642,9 @@ def update_settings(
             portfolio=body.portfolio,
             profile_image=body.profileImage,
         )
+        # Changing the target career must re-derive the roadmap + courses so
+        # the whole pipeline stays keyed to the same goal.
+        _cascade_if_target_changed(user, body.targetCareer)
 
     _record_activity(user.uid, None, "settings_changed")
     logger.info("Settings changed: uid=%s", user.uid)
@@ -827,6 +904,74 @@ def _resolve_resume_id(user: models.FirebaseUser, resume_id: Optional[str]) -> s
     )
 
 
-def _target_career_for(user: models.FirebaseUser) -> str:
+def _target_career_for(user: models.FirebaseUser, resume_id: Optional[str] = None) -> str:
     user_doc = database.get_user(user.uid)
-    return (user_doc.targetCareer if user_doc else None) or ""
+    target = (user_doc.targetCareer if user_doc else None) or ""
+    if not target and resume_id:
+        matches = database.get_career_matches(resume_id)
+        if matches and matches.careers:
+            return matches.careers[0].careerName
+    return target
+
+
+def _run_full_pipeline(
+    user: models.FirebaseUser, resume_id: str, target: str
+) -> None:
+    """Re-run the entire resume-derived pipeline for a (possibly new) target.
+
+    Used when the user selects or changes their target career so the
+    analysis, career matches, skill gap, roadmap and courses all stay keyed
+    to the SAME career. The skill analysis is regenerated (the gap is
+    career-specific), which cascades into a fresh roadmap and course list.
+    The dashboard progress fields are refreshed from the newly generated
+    roadmap/courses at the end.
+    """
+    try:
+        text = read_resume_text(user.uid, resume_id)
+    except FileNotFoundError:
+        # Storage blob gone — nothing to recompute against.
+        return
+
+    analysis = run_analyze(resume_id, text, target)
+    skills = _flatten_skills(analysis)
+    matches = match_careers(resume_id, skills, target)
+    top = matches.careers[0] if matches.careers else None
+    effective_target = target if target else (top.careerName if top else "")
+
+    gap = compute_skill_gap(resume_id, skills, effective_target)
+    build_dashboard(
+        resume_id,
+        skills_count=len(skills),
+        missing_count=len(gap.missingSkills),
+        top_career=top.careerName if top else "",
+        top_confidence=top.confidence if top else 0.0,
+        roadmap_pct=0,
+        current_phase="",
+        recommended_course="",
+    )
+    generate_roadmap(resume_id, analysis, effective_target)
+    recommend_courses(resume_id, gap, effective_target)
+    update_dashboard_progress(resume_id)
+    _record_activity(user.uid, resume_id, "roadmap_generated")
+    _record_activity(user.uid, resume_id, "courses_generated")
+
+
+def _cascade_if_target_changed(
+    user: models.FirebaseUser, new_target: Optional[str]
+) -> None:
+    """If the target career actually changed, re-derive everything for it.
+
+    Looks up the user's current resume and, when one exists, re-runs the
+    full pipeline so the roadmap and courses reflect the new goal. This is
+    the glue that keeps resume -> career -> roadmap -> courses in sync when
+    the user edits their target career from Settings or the Resume page.
+    """
+    if not new_target:
+        return
+    user_doc = database.get_user(user.uid)
+    if user_doc and user_doc.targetCareer == new_target:
+        return
+    resume_id = _latest_resume_id(user)
+    if not resume_id:
+        return
+    _run_full_pipeline(user, resume_id, new_target)

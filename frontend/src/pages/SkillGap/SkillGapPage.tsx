@@ -4,7 +4,6 @@ import {
   AlertTriangle,
   BarChart3,
   CheckCircle2,
-  Clock,
   ListOrdered,
   Loader2,
   PieChart,
@@ -40,6 +39,7 @@ export default function SkillGapPage() {
   const { loading, error, refresh } = useAppState()
   const [refreshing, setRefreshing] = useState(false)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const hasGoal = !!profile.targetCareer
   const goal = profile.targetCareer || 'your goal'
 
   useEffect(() => {
@@ -56,10 +56,6 @@ export default function SkillGapPage() {
   }
 
   const gapsToClose = priority.length
-  const estHours = priority.reduce(
-    (sum, p) => sum + (parseInt(p.time, 10) || 0),
-    0,
-  )
   const highPriority = priority.filter((p) => p.priority === 'High').length
   const avgCoverage = coverage.length
     ? Math.round(
@@ -88,7 +84,7 @@ export default function SkillGapPage() {
             ) : (
               <RefreshCw className="size-4" aria-hidden="true" />
             )}
-            {refreshing ? 'Refreshing…' : 'Refresh'}
+            {refreshing ? 'Refreshing…' : 'Regenerate Gap Analysis'}
           </Button>
         }
         context={
@@ -106,6 +102,21 @@ export default function SkillGapPage() {
           title="Couldn't load skill gap"
           description={error}
           onRetry={refresh}
+        />
+      ) : !hasGoal ? (
+        <EmptyState
+          icon={Target}
+          title="No target career set"
+          description="Select your target career to generate a personalized skill gap analysis."
+          action={
+            <Button
+              render={<Link to="/profile" />}
+              size="sm"
+              className="mt-1 gap-1.5"
+            >
+              Set Target Career
+            </Button>
+          }
         />
       ) : !hasData ? (
         <EmptyState
@@ -133,13 +144,6 @@ export default function SkillGapPage() {
               value={`${gapsToClose}`}
               sub="on your path"
               icon={ListOrdered}
-            />
-            <MetricCard
-              variant="sm"
-              label="Est. hours"
-              value={`${estHours}h`}
-              sub="to close all"
-              icon={Clock}
             />
             <MetricCard
               variant="sm"
@@ -185,10 +189,6 @@ export default function SkillGapPage() {
                       <span className="font-medium text-foreground">
                         {goal}
                       </span>
-                    </span>
-                    <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/40 px-2.5 py-1 text-xs text-muted-foreground">
-                      <Clock className="size-3.5" aria-hidden="true" />
-                      {estHours}h to close
                     </span>
                   </div>
                 </div>
@@ -247,7 +247,6 @@ export default function SkillGapPage() {
                     rank={index + 1}
                     skill={item.skill}
                     priority={item.priority}
-                    time={item.time}
                     difficulty={item.difficulty}
                   />
                 ))}

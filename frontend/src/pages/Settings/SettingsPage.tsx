@@ -1,16 +1,12 @@
 import { useEffect, useState } from 'react'
 import {
   AlertTriangle,
-  Camera,
   CheckCircle2,
   Clock,
-  Fingerprint,
   KeyRound,
   Loader2,
-  Lock,
   LogOut,
   Megaphone,
-  MonitorSmartphone,
   Palette,
   Pencil,
   ShieldCheck,
@@ -29,14 +25,44 @@ import { MetricCard } from '@/components/dashboard/MetricCard'
 import { SettingRow } from '@/components/settings/settings'
 import { useAppState } from '@/hooks/useAppState'
 import { useProfile } from '@/hooks/useProfile'
+import { useCareerMatches } from '@/hooks/useCareerMatches'
+import { useAuth } from '@/hooks/useAuth'
 import type { Settings } from '@/services/api/client'
 
 export default function SettingsPage() {
   const { settings, putSettings } = useAppState()
   const { profile } = useProfile()
+  const { careers } = useCareerMatches()
+  const { logout } = useAuth()
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
+  const [loggingOut, setLoggingOut] = useState(false)
+
+  // Career-goal options: AI matches merged with a small default set, plus the
+  // currently-saved value so a custom goal is never dropped from the list.
+  const careerOptions = Array.from(
+    new Set(
+      [
+        ...careers.map((c) => c.title),
+        'AI Engineer',
+        'Data Scientist',
+        'ML Engineer',
+        'Backend Developer',
+        profile.targetCareer,
+      ].filter((t): t is string => Boolean(t && t.trim())),
+    ),
+  )
+
+  async function handleLogout() {
+    if (loggingOut) return
+    setLoggingOut(true)
+    try {
+      await logout()
+    } catch {
+      setLoggingOut(false)
+    }
+  }
   const [form, setForm] = useState({
     fullName: profile.fullName,
     phone: profile.phone ?? '',
@@ -195,10 +221,6 @@ export default function SettingsPage() {
                 <Pencil className="size-4" aria-hidden="true" />
                 Edit Profile
               </Button>
-              <Button variant="outline" size="sm" className="gap-1.5">
-                <Camera className="size-4" aria-hidden="true" />
-                Change Avatar
-              </Button>
             </div>
           </div>
         </WidgetCard>
@@ -261,7 +283,7 @@ export default function SettingsPage() {
             </SettingRow>
             <SettingRow
               title="Target Career"
-              description="Your primary career goal."
+              description="Your primary goal — saving re-plans your roadmap & courses."
               htmlFor="targetCareer"
             >
               <Select
@@ -272,10 +294,11 @@ export default function SettingsPage() {
                 }
                 className="sm:w-72"
               >
-                <option>AI Engineer</option>
-                <option>Data Scientist</option>
-                <option>ML Engineer</option>
-                <option>Backend Developer</option>
+                {careerOptions.map((title) => (
+                  <option key={title} value={title}>
+                    {title}
+                  </option>
+                ))}
               </Select>
             </SettingRow>
             <SettingRow
@@ -321,26 +344,18 @@ export default function SettingsPage() {
           <div className="divide-y divide-border">
             <SettingRow
               title="Password"
-              description="Change your account password."
+              description="Managed by your Google sign-in provider."
             >
-              <Button variant="outline" size="sm" className="gap-1.5">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5"
+                disabled
+                title="Managed by your sign-in provider"
+              >
                 <KeyRound className="size-4" aria-hidden="true" />
                 Change Password
               </Button>
-            </SettingRow>
-            <SettingRow
-              title="Two Factor Authentication"
-              description="Add a verification step when you sign in."
-            >
-              <div className="flex items-center justify-end gap-2">
-                <Badge variant="muted" size="xs">
-                  Off
-                </Badge>
-                <Button variant="outline" size="sm" className="gap-1.5">
-                  <Fingerprint className="size-4" aria-hidden="true" />
-                  Enable 2FA
-                </Button>
-              </div>
             </SettingRow>
             <SettingRow
               title="Google Account"
@@ -354,15 +369,6 @@ export default function SettingsPage() {
               <span className="text-sm text-muted-foreground">
                 {profile.lastUpdated} · recent
               </span>
-            </SettingRow>
-            <SettingRow
-              title="Devices"
-              description="Review active sessions and devices."
-            >
-              <Button variant="outline" size="sm" className="gap-1.5">
-                <MonitorSmartphone className="size-4" aria-hidden="true" />
-                Manage Devices
-              </Button>
             </SettingRow>
           </div>
         </WidgetCard>
@@ -421,19 +427,11 @@ export default function SettingsPage() {
                 aria-label="Course Recommendations"
               />
             </SettingRow>
-            <SettingRow
-              title="Weekly Progress Report"
-              description="A summary of your learning each week."
-            >
-              <Switch aria-label="Weekly Progress Report" />
-            </SettingRow>
-            <SettingRow
-              title="Product Announcements"
-              description="News about new features and releases."
-            >
-              <Switch aria-label="Product Announcements" />
-            </SettingRow>
           </div>
+          <p className="mt-3 text-xs text-muted-foreground">
+            Notification channels are saved to your account. Email digests land
+            in your inbox; push and in-app alerts surface here as they ship.
+          </p>
         </WidgetCard>
 
         <WidgetCard title="Appearance" icon={Palette} className="lg:col-span-6">
@@ -470,62 +468,6 @@ export default function SettingsPage() {
                 <option>Dark</option>
               </Select>
             </SettingRow>
-            <SettingRow
-              title="Language"
-              description="Preferred language for the app."
-              htmlFor="language"
-            >
-              <Select
-                id="language"
-                value={
-                  settingsForm.language === 'es'
-                    ? 'Spanish'
-                    : settingsForm.language === 'de'
-                      ? 'German'
-                      : settingsForm.language === 'fr'
-                        ? 'French'
-                        : 'English'
-                }
-                onChange={(e) =>
-                  setSettingsForm((f) => ({
-                    ...f,
-                    language:
-                      e.target.value === 'Spanish'
-                        ? 'es'
-                        : e.target.value === 'German'
-                          ? 'de'
-                          : e.target.value === 'French'
-                            ? 'fr'
-                            : 'en',
-                  }))
-                }
-                className="sm:w-56"
-              >
-                <option>English</option>
-                <option>Spanish</option>
-                <option>German</option>
-                <option>French</option>
-              </Select>
-            </SettingRow>
-            <SettingRow
-              title="Timezone"
-              description="Used for reports and reminders."
-              htmlFor="timezone"
-            >
-              <Select
-                id="timezone"
-                value={settingsForm.timezone ?? 'UTC-08:00 Pacific'}
-                onChange={(e) =>
-                  setSettingsForm((f) => ({ ...f, timezone: e.target.value }))
-                }
-                className="sm:w-56"
-              >
-                <option>UTC-08:00 Pacific</option>
-                <option>UTC-05:00 Eastern</option>
-                <option>UTC+00:00 GMT</option>
-                <option>UTC+01:00 Central Europe</option>
-              </Select>
-            </SettingRow>
           </div>
         </WidgetCard>
       </div>
@@ -535,35 +477,9 @@ export default function SettingsPage() {
         <WidgetCard
           title="AI Preferences"
           icon={Sparkles}
-          className="lg:col-span-6"
+          className="lg:col-span-12"
         >
           <div className="divide-y divide-border">
-            <SettingRow
-              title="Default Career Goal"
-              description="Used when generating roadmaps."
-              htmlFor="goal"
-            >
-              <Select
-                id="goal"
-                value={
-                  settingsForm.careerPreferences.targetRole ?? 'AI Engineer'
-                }
-                onChange={(e) =>
-                  setSettingsForm((f) => ({
-                    ...f,
-                    careerPreferences: {
-                      ...f.careerPreferences,
-                      targetRole: e.target.value,
-                    },
-                  }))
-                }
-                className="sm:w-56"
-              >
-                <option>AI Engineer</option>
-                <option>Data Scientist</option>
-                <option>ML Engineer</option>
-              </Select>
-            </SettingRow>
             <SettingRow
               title="Default Resume"
               description="Preselected for skill analysis."
@@ -587,66 +503,11 @@ export default function SettingsPage() {
                 <option>No resume</option>
               </Select>
             </SettingRow>
-            <SettingRow
-              title="Auto-generate Roadmaps"
-              description="Build a roadmap whenever you set a new goal."
-            >
-              <Switch defaultChecked aria-label="Auto-generate Roadmaps" />
-            </SettingRow>
-            <SettingRow
-              title="Smart Skill Analysis"
-              description="Use AI to surface gaps from your resume."
-            >
-              <Switch defaultChecked aria-label="Smart Skill Analysis" />
-            </SettingRow>
           </div>
-        </WidgetCard>
-
-        <WidgetCard title="Privacy" icon={Lock} className="lg:col-span-6">
-          <div className="divide-y divide-border">
-            <SettingRow
-              title="Public Profile"
-              description="Make your profile visible to recruiters."
-            >
-              <Switch
-                checked={settingsForm.privacy.profileVisible}
-                onCheckedChange={(v) =>
-                  setSettingsForm((f) => ({
-                    ...f,
-                    privacy: { ...f.privacy, profileVisible: v },
-                  }))
-                }
-                aria-label="Public Profile"
-              />
-            </SettingRow>
-            <SettingRow
-              title="Share Usage Data"
-              description="Help improve JobWeMet with anonymous data."
-            >
-              <Switch
-                checked={settingsForm.privacy.shareAcademicData}
-                onCheckedChange={(v) =>
-                  setSettingsForm((f) => ({
-                    ...f,
-                    privacy: { ...f.privacy, shareAcademicData: v },
-                  }))
-                }
-                aria-label="Share Usage Data"
-              />
-            </SettingRow>
-            <SettingRow
-              title="Email Discoverability"
-              description="Let teammates find you by email."
-            >
-              <Switch aria-label="Email Discoverability" />
-            </SettingRow>
-            <SettingRow
-              title="Personalized Opportunities"
-              description="Show roles matched to your skills."
-            >
-              <Switch defaultChecked aria-label="Personalized Opportunities" />
-            </SettingRow>
-          </div>
+          <p className="mt-3 text-xs text-muted-foreground">
+            A new goal re-runs the AI pipeline — analysis, gaps, roadmap, and
+            courses are regenerated to match.
+          </p>
         </WidgetCard>
       </div>
 
@@ -662,8 +523,18 @@ export default function SettingsPage() {
             title="Log Out"
             description="End your session on this device."
           >
-            <Button variant="outline" size="sm" className="gap-1.5">
-              <LogOut className="size-4" aria-hidden="true" />
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5"
+              onClick={handleLogout}
+              disabled={loggingOut}
+            >
+              {loggingOut ? (
+                <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+              ) : (
+                <LogOut className="size-4" aria-hidden="true" />
+              )}
               Log Out
             </Button>
           </SettingRow>

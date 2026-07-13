@@ -6,10 +6,8 @@ import {
   BookOpen,
   Briefcase,
   CalendarDays,
-  CheckCircle2,
   Clock,
   FileText,
-  Flame,
   Gauge,
   GraduationCap,
   Mail,
@@ -40,9 +38,6 @@ import type {
   ResumeEntryData,
   ResumeState,
   RoadmapData,
-  RoadmapInsight,
-  RoadmapStat,
-  SidebarStatData,
   SkillGapData,
   SkillGapGroup,
   SkillsData,
@@ -59,22 +54,11 @@ import type {
 } from '@/services/firebase'
 
 // ---------------------------------------------------------------------------
-// Small deterministic helpers. The backend stores aggregate confidence but no
-// per-skill score, so per-skill bars use a stable derivation seeded by name
-// (62–95) rather than flickering or rendering meaningless zeros.
+// Small helpers. The backend returns a confidence per skill GROUP (category),
+// which the AI computes independently for each category. Per-skill displays
+// reuse their own category's score rather than a single shared number, so each
+// category shows its real confidence and the aggregate is derived from them.
 // ---------------------------------------------------------------------------
-
-function hashString(str: string): number {
-  let h = 0
-  for (let i = 0; i < str.length; i++) {
-    h = (h * 31 + str.charCodeAt(i)) >>> 0
-  }
-  return h
-}
-
-function deriveConfidence(name: string): number {
-  return 62 + (hashString(name) % 34)
-}
 
 export function slug(str: string): string {
   return (
@@ -92,35 +76,35 @@ export function initials(name: string): string {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
 }
 
-function formatDate(ts?: Timestamp): string {
-  if (!ts) return '—'
-  return ts
-    .toDate()
-    .toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+function toDateObj(ts?: Timestamp | string | Date): Date | null {
+  if (!ts) return null
+  if (ts instanceof Date) return ts
+  if (typeof ts === 'string') return new Date(ts)
+  // Firebase Timestamp — always exposes toDate().
+  if (typeof ts.toDate === 'function') return ts.toDate()
+  return null
 }
 
-function relativeTime(ts?: Timestamp): string {
-  if (!ts) return 'Recently'
-  const diff = Date.now() - ts.toDate().getTime()
+function formatDate(ts?: Timestamp | string): string {
+  const d = toDateObj(ts)
+  if (!d) return '—'
+  return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+}
+
+function relativeTime(ts?: Timestamp | string): string {
+  const d = toDateObj(ts)
+  if (!d) return 'Recently'
+  const diff = Date.now() - d.getTime()
   const mins = Math.floor(diff / 60000)
   if (mins < 1) return 'Just now'
   if (mins < 60) return `${mins} min ago`
   const hrs = Math.floor(mins / 60)
-  if (hrs < 24) return `${hrs} hr ago`
+  if (hrs < 24) return 'Today'
   const days = Math.floor(hrs / 24)
   if (days < 30) return `${days} day${days > 1 ? 's' : ''} ago`
   const months = Math.floor(days / 30)
   if (months < 12) return `${months} month${months > 1 ? 's' : ''} ago`
   return `${Math.floor(months / 12)} yr ago`
-}
-
-function learningTimeToHours(text: string | undefined): number {
-  if (!text) return 0
-  const m = text.match(/(\d+)/)
-  const n = m ? Number(m[1]) : 0
-  if (/week/i.test(text)) return n * 8
-  if (/month/i.test(text)) return n * 30
-  return n
 }
 
 function mapGapDifficulty(d: SkillGapDifficulty): 'Easy' | 'Medium' | 'Hard' {
@@ -151,15 +135,21 @@ function mapCourseDifficulty(
 // Shared derivations
 // ---------------------------------------------------------------------------
 
-function getTechnical(analysis: SkillAnalysisDoc | null): TechnicalSkill[] {
+function getTechnical(
+  analysis: SkillAnalysisDoc | null,
+  aggregateConfidence?: number,
+): TechnicalSkill[] {
   const groups = analysis?.technicalSkills ?? []
   const out: TechnicalSkill[] = []
   for (const g of groups) {
+    // Per-category confidence from the AI. Fall back to the aggregate only
+    // when a group has no score (e.g. older analysis docs).
+    const catConf = g.confidence ?? aggregateConfidence ?? 0
     for (const s of g.skills) {
       out.push({
         name: s,
         category: g.category,
-        confidence: deriveConfidence(s),
+        confidence: catConf,
       })
     }
   }
@@ -183,9 +173,14 @@ function buildUser(user: User | null, profile: UserDoc | null) {
   }
 }
 
-function buildResume(slots: DataSlots): ResumeState {
+function buildResume(slots: DataSlots, displayName: string): ResumeState {
   const active = slots.resumes.filter((r) => r.status !== 'deleted')
-  const recent: ResumeEntryData[] = active.map((r) => {
+  const count = active.length
+  // Never surface the raw uploaded filename — show a friendly label built
+  // from the user's display name instead.
+  const labelFor = (i: number) =>
+    count > 1 ? `${displayName} Resume ${i + 1}` : `${displayName} Resume`
+  const recent: ResumeEntryData[] = active.map((r, i) => {
     const proc = slots.processing[r.id]
     const status: ResumeEntryData['status'] = !proc
       ? 'Parsed'
@@ -196,7 +191,7 @@ function buildResume(slots: DataSlots): ResumeState {
           : 'Processing'
     return {
       id: r.id,
-      name: r.originalFileName || r.fileName,
+      name: labelFor(i),
       uploaded: relativeTime(r.uploadedAt),
       status,
       preview:
@@ -207,9 +202,7 @@ function buildResume(slots: DataSlots): ResumeState {
   })
   const current = active[0]
   return {
-    fileName: current
-      ? current.originalFileName || current.fileName
-      : 'No resume yet',
+    fileName: current ? labelFor(0) : 'No resume yet',
     uploaded: current ? relativeTime(current.uploadedAt) : '—',
     recent,
   }
@@ -217,11 +210,17 @@ function buildResume(slots: DataSlots): ResumeState {
 
 function buildSkills(slots: DataSlots): SkillsData {
   const analysis = slots.analysis
-  const technical = getTechnical(analysis)
+  // Real aggregate confidence from the AI pipeline (0 when absent).
+  const skillConfidence = Math.round(analysis?.confidence?.skills ?? 0)
+  const overallConfidence = Math.round(analysis?.confidence?.overall ?? 0)
+  const careerMatchConfidence = Math.round(
+    analysis?.confidence?.careerMatch ?? 0,
+  )
+  const technical = getTechnical(analysis, skillConfidence)
   const categories = getCategories(analysis)
   const softSkills = (analysis?.softSkills ?? []).map((name) => ({
     name,
-    confidence: deriveConfidence(name),
+    confidence: skillConfidence,
   }))
 
   const total = technical.length
@@ -240,6 +239,9 @@ function buildSkills(slots: DataSlots): SkillsData {
       categories: [],
       softSkills: [],
       distribution: [],
+      skillConfidence: 0,
+      overallConfidence: 0,
+      careerMatchConfidence: 0,
       insights: ['Upload a resume to generate AI skill insights.'],
       action: {
         strength: '—',
@@ -260,12 +262,15 @@ function buildSkills(slots: DataSlots): SkillsData {
     categories,
     softSkills,
     distribution,
+    skillConfidence,
+    overallConfidence,
+    careerMatchConfidence,
     insights: [
       `You have ${total} technical skills across ${categories.length} ${
         categories.length === 1 ? 'area' : 'areas'
       }.`,
-      `Strongest skill: ${strongest.name} (${strongest.confidence}%).`,
-      `Focus area: ${weakest.name} (${weakest.confidence}%) could use a boost.`,
+      `Overall AI confidence: ${overallConfidence}%.`,
+      `Career-match confidence: ${careerMatchConfidence}%.`,
       softSkills.length
         ? `Plus ${softSkills.length} soft skill${softSkills.length > 1 ? 's' : ''} identified.`
         : '',
@@ -274,7 +279,7 @@ function buildSkills(slots: DataSlots): SkillsData {
       strength: strongest.name,
       weakness: weakest.name,
       nextSkill,
-      improvement: `+${5 + (hashString(nextSkill) % 10)}%`,
+      improvement: nextSkill,
     },
   }
 }
@@ -288,11 +293,8 @@ function buildCareerMatches(slots: DataSlots): CareerMatchesData {
   const mapped = careers.map((c) => ({
     id: slug(c.careerName),
     title: c.careerName,
-    match: Math.round(c.confidence),
+    match: Math.round(c.confidence * 100),
     description: c.reason,
-    experience: '—',
-    salary: 'Not listed',
-    category: '—',
     topSkills: c.topMatchingSkills,
     missingSkills: [],
     explanation: c.reason,
@@ -307,7 +309,7 @@ function buildCareerMatches(slots: DataSlots): CareerMatchesData {
     {
       icon: Target as LucideIcon,
       label: 'Top Confidence',
-      value: careers[0] ? `${Math.round(careers[0].confidence)}%` : '—',
+      value: careers[0] ? `${Math.round(careers[0].confidence * 100)}%` : '—',
     },
     {
       icon: Briefcase as LucideIcon,
@@ -322,7 +324,7 @@ function buildCareerMatches(slots: DataSlots): CareerMatchesData {
   ]
 
   const insightNote = careers.length
-    ? `Top match: ${careers[0].careerName} at ${Math.round(careers[0].confidence)}%.`
+    ? `Top match: ${careers[0].careerName} at ${Math.round(careers[0].confidence * 100)}%.`
     : 'No career matches yet — upload a resume to get started.'
 
   return { careers: mapped, insights, insightNote }
@@ -330,6 +332,7 @@ function buildCareerMatches(slots: DataSlots): CareerMatchesData {
 
 function buildSkillGap(slots: DataSlots): SkillGapData {
   const analysis = slots.analysis
+  const skillConfidence = Math.round(analysis?.confidence?.skills ?? 0)
   const missing = slots.skillGap?.missingSkills ?? []
 
   const detected: SkillGapGroup[] = (analysis?.technicalSkills ?? []).map(
@@ -351,7 +354,7 @@ function buildSkillGap(slots: DataSlots): SkillGapData {
     { category: 'Low Priority', skills: grouped.low },
   ].filter((g) => g.skills.length)
 
-  const technical = getTechnical(analysis)
+  const technical = getTechnical(analysis, skillConfidence)
   const cmap = new Map<string, { sum: number; n: number }>()
   technical.forEach((s) => {
     const e = cmap.get(s.category) ?? { sum: 0, n: 0 }
@@ -369,8 +372,8 @@ function buildSkillGap(slots: DataSlots): SkillGapData {
   const priority: PrioritySkill[] = missing.map((it: SkillGapItem) => ({
     skill: it.skill,
     priority: (it.priority === 'high' ? 'High' : 'Medium') as PriorityLevel,
-    time: it.estimatedLearningTime,
     difficulty: mapGapDifficulty(it.difficulty),
+    confidence: skillConfidence,
   }))
 
   const recommendations = missing.length
@@ -378,7 +381,7 @@ function buildSkillGap(slots: DataSlots): SkillGapData {
         .slice(0, 4)
         .map(
           (it, i) =>
-            `Priority ${i + 1}: close the “${it.skill}” gap (${it.priority} priority) — about ${it.estimatedLearningTime} of learning.`,
+            `Priority ${i + 1}: close the “${it.skill}” gap (${it.priority} priority).`,
         )
     : ['Upload a resume to get prioritized skill-gap recommendations.']
 
@@ -388,6 +391,7 @@ function buildSkillGap(slots: DataSlots): SkillGapData {
     coverage,
     priority,
     recommendations,
+    skillConfidence,
   }
 }
 
@@ -395,133 +399,70 @@ function buildRoadmap(slots: DataSlots): RoadmapData {
   const phases = slots.roadmap?.phases ?? []
   const mapped = phases.map((p) => ({
     title: p.title,
+    // The backend never records a user's completion of a phase, so `locked`
+    // phases are relabelled `upcoming` (not "locked") and `completed` only
+    // appears if the backend genuinely marks it done. No fabricated progress.
     status: (p.completionStatus === 'in_progress'
       ? 'current'
-      : p.completionStatus) as RoadmapData['modules'][number]['status'],
+      : p.completionStatus === 'completed'
+        ? 'completed'
+        : 'upcoming') as RoadmapData['modules'][number]['status'],
     description: p.description,
-    duration: `${p.estimatedHours} hrs`,
     difficulty: mapPriorityToDifficulty(p.priority),
-    progress:
-      p.completionStatus === 'in_progress'
-        ? 30 + (hashString(p.title) % 26)
-        : undefined,
+    estimatedHours: p.estimatedHours,
+    skills: p.requiredSkills ?? [],
+    // No per-phase progress is tracked yet, so `progress` stays undefined and
+    // the UI shows status-only (no fabricated percentage).
+    progress: undefined,
   }))
 
-  if (!mapped.length) {
-    return { modules: [], insights: [], stats: [] }
-  }
-
-  const completed = mapped.filter((m) => m.status === 'completed')
-  const inProgress = mapped.find((m) => m.status === 'current')
-  const totalHours = phases.reduce((sum, p) => sum + p.estimatedHours, 0)
-  const doneHours = phases
-    .filter((p) => p.completionStatus === 'completed')
-    .reduce((sum, p) => sum + p.estimatedHours, 0)
-  const remainingHours = totalHours - doneHours
-  const pct = totalHours ? Math.round((doneHours / totalHours) * 100) : 0
-  const hardest = [...phases].sort(
-    (a, b) => b.estimatedHours - a.estimatedHours,
-  )[0]
-
-  const insights: RoadmapInsight[] = [
-    {
-      icon: Sparkles as LucideIcon,
-      label: 'Next Milestone',
-      value:
-        inProgress?.title ??
-        completed[completed.length - 1]?.title ??
-        phases[0].title,
-    },
-    {
-      icon: Clock as LucideIcon,
-      label: 'Time Remaining',
-      value: `${remainingHours} hrs`,
-    },
-    {
-      icon: Target as LucideIcon,
-      label: 'Most Demanding',
-      value: `${hardest.title} · ${hardest.estimatedHours} hrs`,
-    },
-  ]
-
-  const stats: RoadmapStat[] = [
-    {
-      icon: Clock as LucideIcon,
-      label: 'Hours Studied',
-      value: `${doneHours}h`,
-    },
-    {
-      icon: CheckCircle2 as LucideIcon,
-      label: 'Modules Finished',
-      value: `${completed.length}/${mapped.length}`,
-    },
-    { icon: Gauge as LucideIcon, label: 'Completion Rate', value: `${pct}%` },
-    {
-      icon: Sparkles as LucideIcon,
-      label: 'Status',
-      value: inProgress ? 'In progress' : 'On track',
-    },
-  ]
-
-  return { modules: mapped, insights, stats }
+  return { modules: mapped }
 }
 
 function buildCourses(slots: DataSlots): CoursesData {
   const courseDoc = slots.courses
   const list = courseDoc?.courses ?? []
-  const courses = list.map((c, i) => ({
-    id: slug(c.title) || `course-${i}`,
-    title: c.title,
-    platform: c.provider,
-    instructor: c.provider,
-    difficulty: mapCourseDifficulty(c.difficulty),
-    duration: c.estimatedDuration,
-    rating: c.rating,
-    skills: [c.skill],
-    description: `Recommended to close your ${c.skill} gap — ${c.estimatedDuration} course on ${c.provider}.`,
-  }))
-
-  const skillCounts = new Map<string, number>()
-  list.forEach((c) =>
-    skillCounts.set(c.skill, (skillCounts.get(c.skill) ?? 0) + 1),
+  const gapSkills = new Set(
+    (slots.skillGap?.missingSkills ?? []).map((s) => s.skill),
   )
-  const mostRecommended =
-    [...skillCounts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? '—'
+  const targetCareer = slots.profile?.targetCareer ?? null
 
-  const roadmapPct = slots.roadmap?.phases?.length
-    ? Math.round(
-        (slots.roadmap.phases.filter((p) => p.completionStatus === 'completed')
-          .length /
-          slots.roadmap.phases.length) *
-          100,
-      )
-    : 0
+  const courses = list.map((c, i) => {
+    const coversMissing = gapSkills.has(c.skill)
+    const reason = coversMissing
+      ? `Recommended because your resume lacks ${c.skill}, a gap for ${targetCareer ?? 'your target role'}.`
+      : `Builds ${c.skill}, which supports your path to ${targetCareer ?? 'your target role'}.`
+    return {
+      id: slug(c.title) || `course-${i}`,
+      title: c.title,
+      platform: c.provider,
+      difficulty: mapCourseDifficulty(c.difficulty),
+      duration: c.estimatedDuration,
+      skills: [c.skill],
+      reason,
+      url: c.url || '',
+    }
+  })
 
-  const aiInsights = courses.length
-    ? [
-        `${courses.length} courses recommended to close your skill gaps.`,
-        `Focus on ${mostRecommended} first for the biggest match lift.`,
-      ]
-    : ['Upload a resume to get personalized course recommendations.']
+  // Real, derived summary stats — no fabricated metrics.
+  const platforms = [...new Set(courses.map((c) => c.platform))].sort()
+  const missingCovered = courses.filter((c) =>
+    gapSkills.has(c.skills[0]),
+  ).length
+  const free = courses.filter((c) =>
+    /^https?:\/\/(www\.)?(youtube\.com|youtu\.be)/i.test(c.url),
+  ).length
 
-  const sidebarStats: SidebarStatData[] = [
-    {
-      icon: Award as LucideIcon,
-      label: 'Most Recommended',
-      value: mostRecommended,
-    },
-    {
-      icon: GraduationCap as LucideIcon,
-      label: 'Learning Progress',
-      value: `${roadmapPct}%`,
-      progress: roadmapPct,
-    },
-    { icon: Clock as LucideIcon, label: 'Weekly Goal', value: '—' },
-    { icon: CalendarDays as LucideIcon, label: 'Est. Completion', value: '—' },
-    { icon: Flame as LucideIcon, label: 'Learning Streak', value: '—' },
-  ]
+  const summary = {
+    total: courses.length,
+    free,
+    paid: courses.length - free,
+    platforms,
+    missingSkillsCovered: missingCovered,
+    targetCareer,
+  }
 
-  return { courses, aiInsights, sidebarStats }
+  return { courses, summary }
 }
 
 function buildDashboard(slots: DataSlots): DashboardSummary {
@@ -532,9 +473,6 @@ function buildDashboard(slots: DataSlots): DashboardSummary {
     (p) => p.completionStatus === 'completed',
   ).length
   const recommendedNext = dash?.recommendedCourse || missing[0]?.skill || '—'
-  const recommendedNextHours = learningTimeToHours(
-    missing[0]?.estimatedLearningTime,
-  )
 
   return {
     readiness: Math.round(dash?.overallReadiness ?? 0),
@@ -546,7 +484,6 @@ function buildDashboard(slots: DataSlots): DashboardSummary {
     lessonsFinished: completed,
     lessonsTotal: phases.length,
     recommendedNext,
-    recommendedNextHours,
   }
 }
 
@@ -598,6 +535,23 @@ function buildProfile(
   const roadmapGenerated = (slots.roadmap?.phases?.length ?? 0) > 0
   const readiness = slots.dashboard?.overallReadiness ?? 0
 
+  // Dynamic profile completion — one equal share per present, real field.
+  // (A bio field exists in the update payload but is not returned by the
+  // profile read endpoint, so it is intentionally excluded from the count.)
+  const COMPLETION_FIELDS = 7
+  let completionFilled = 0
+  if (fullName && fullName !== 'New User') completionFilled++
+  if (authUser.photoURL) completionFilled++
+  if (profile?.phone && profile.phone.trim()) completionFilled++
+  if (profile?.location && profile.location !== 'Not set') completionFilled++
+  if (resumeCount > 0) completionFilled++
+  if (profile?.targetCareer && profile.targetCareer !== 'Not set')
+    completionFilled++
+  if (technicalCount > 0) completionFilled++
+  const profileCompletion = Math.round(
+    (completionFilled / COMPLETION_FIELDS) * 100,
+  )
+
   const userProfile: UserProfile = {
     fullName,
     initials: initials(fullName),
@@ -606,7 +560,7 @@ function buildProfile(
     location: profile?.location || 'Not set',
     phone: profile?.phone || '',
     memberSince: formatDate(profile?.createdAt),
-    profileCompletion: profile?.profileCompletion ?? 0,
+    profileCompletion,
     lastUpdated: formatDate(profile?.updatedAt),
   }
 
@@ -622,7 +576,7 @@ function buildProfile(
       label: 'Top Career Match',
       value: slots.careerMatches?.careers?.[0]?.careerName || '—',
       sub: slots.careerMatches?.careers?.[0]
-        ? `${Math.round(slots.careerMatches.careers[0].confidence)}% match`
+        ? `${Math.round(slots.careerMatches.careers[0].confidence * 100)}% match`
         : 'Awaiting analysis',
     },
     {
@@ -723,12 +677,6 @@ function buildProfile(
       unlocked: roadmapGenerated,
     },
     {
-      icon: Clock as LucideIcon,
-      title: '100 Learning Hours',
-      description: 'Log 100 hours of learning to unlock.',
-      unlocked: false,
-    },
-    {
       icon: Award as LucideIcon,
       title: 'Career Ready 80%',
       description: 'Reach 80% career readiness to unlock.',
@@ -768,7 +716,7 @@ export function buildAppData(slots: DataSlots, user: User | null): AppData {
   return {
     user: authUser,
     profile: buildProfile(slots, authUser),
-    resume: buildResume(slots),
+    resume: buildResume(slots, authUser.displayName),
     skills: buildSkills(slots),
     careerMatches: buildCareerMatches(slots),
     skillGap: buildSkillGap(slots),

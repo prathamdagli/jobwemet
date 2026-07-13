@@ -4,7 +4,6 @@ import {
   AlertTriangle,
   ArrowRight,
   CheckCircle2,
-  Clock,
   FileText,
   GraduationCap,
   Sparkles,
@@ -84,11 +83,11 @@ export function ResumeWidget() {
     <WidgetCard title="Resume" icon={FileText}>
       <div className="flex flex-1 items-center gap-3">
         <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
-          <FileText className="size-5" aria-hidden="true" />
+          {'\u{1F4C4}'}
         </span>
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-medium text-foreground">
-            {resume.fileName}
+            {'\u{1F4C4}'} {resume.fileName}
           </p>
           <p className="text-xs text-muted-foreground">
             {has ? `Uploaded · ${resume.uploaded}` : 'No resume uploaded yet'}
@@ -199,13 +198,6 @@ export function RecommendedNextStepWidget() {
             <h3 className="mt-0.5 text-lg font-semibold tracking-tight text-foreground">
               {dashboard.recommendedNext}
             </h3>
-            <p className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
-              <Clock className="size-4" aria-hidden="true" />
-              Estimated time:{' '}
-              <span className="font-medium text-foreground">
-                {dashboard.recommendedNextHours} hours
-              </span>
-            </p>
           </div>
         </div>
         <Button

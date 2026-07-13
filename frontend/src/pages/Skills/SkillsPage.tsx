@@ -15,7 +15,9 @@ import {
   TrendingUp,
   UploadCloud,
   Users,
+  ChevronDown,
 } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { WidgetCard } from '@/components/dashboard/WidgetCard'
@@ -30,11 +32,12 @@ import { InsightRow } from '@/components/careers/careers'
 import {
   CategoryHeader,
   SkillRow,
-  SoftSkillChip,
+  SoftSkillCard,
   type TechnicalSkill,
 } from '@/components/skills/skills'
 import { useSkills } from '@/hooks/useSkills'
 import { useProfile } from '@/hooks/useProfile'
+import { useSkillGap } from '@/hooks/useSkillGap'
 import { useAppState } from '@/hooks/useAppState'
 import { Stagger, useCountUp } from '@/motion'
 
@@ -47,10 +50,46 @@ function averageOf(skills: TechnicalSkill[]): number {
 // Monochrome opacity steps so the composition bar reads as one system.
 const SEGMENT_OPACITY = [0.9, 0.7, 0.52, 0.36, 0.24]
 
-/** Count a percentage up once on mount — isolated so the hook is never called
- *  behind a conditional in the page body. */
 function CountUpPercent({ value }: { value: number }) {
   return <>{Math.round(useCountUp(value))}%</>
+}
+
+function CategoryAccordion({
+  category,
+  count,
+  average,
+  children,
+}: {
+  category: string
+  count: number
+  average: number
+  children: React.ReactNode
+}) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="flex flex-col rounded-xl border border-border bg-card p-4 transition-colors hover:border-foreground/15">
+      <button
+        type="button"
+        className="flex w-full items-center justify-between outline-none"
+        onClick={() => setOpen(!open)}
+      >
+        <div className="flex-1 text-left">
+          <CategoryHeader category={category} count={count} average={average} />
+        </div>
+        <ChevronDown
+          className={cn(
+            'ml-4 size-4 shrink-0 text-muted-foreground transition-transform duration-200',
+            open && 'rotate-180',
+          )}
+        />
+      </button>
+      {open && (
+        <div className="mt-4 space-y-1 border-t border-border pt-4">
+          {children}
+        </div>
+      )}
+    </div>
+  )
 }
 
 export default function SkillsPage() {
@@ -58,11 +97,15 @@ export default function SkillsPage() {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const { loading, error, refresh, activeResumeId, runAnalysis } = useAppState()
   const { profile } = useProfile()
+  const { priority: missingSkills } = useSkillGap()
   const {
     technicalSkills,
     categories,
     softSkills,
     distribution,
+    skillConfidence,
+    overallConfidence,
+    careerMatchConfidence,
     insights,
     action,
   } = useSkills()
@@ -87,8 +130,7 @@ export default function SkillsPage() {
     }
   }
 
-  const avgConfidence = averageOf(technicalSkills)
-  const skillGaps = technicalSkills.filter((s) => s.confidence < 70).length
+  const avgConfidence = skillConfidence
   const topStrengths = [...technicalSkills]
     .sort((a, b) => b.confidence - a.confidence)
     .slice(0, 5)
@@ -112,7 +154,7 @@ export default function SkillsPage() {
             ) : (
               <RefreshCw className="size-4" aria-hidden="true" />
             )}
-            {analyzing ? 'Analyzing…' : 'Re-analyze'}
+            {analyzing ? 'Analyzing…' : 'Regenerate Analysis'}
           </Button>
         }
         context={
@@ -160,9 +202,9 @@ export default function SkillsPage() {
             />
             <MetricCard
               variant="sm"
-              label="Avg Confidence"
+              label="Skill Confidence"
               value={`${avgConfidence}%`}
-              sub="AI-calculated"
+              sub="AI aggregate"
               icon={Gauge}
             />
             <MetricCard
@@ -175,8 +217,8 @@ export default function SkillsPage() {
             <MetricCard
               variant="sm"
               label="Skill Gaps"
-              value={String(skillGaps)}
-              sub="below 70% confidence"
+              value={String(missingSkills.length)}
+              sub="to close for your goal"
               icon={AlertTriangle}
             />
           </Stagger>
@@ -201,19 +243,20 @@ export default function SkillsPage() {
                     value={avgConfidence}
                     size={200}
                     strokeWidth={16}
-                    label="Overall confidence"
+                    label="Skill confidence"
                   >
                     <span className="text-5xl font-semibold tracking-tight text-foreground">
                       <CountUpPercent value={avgConfidence} />
                     </span>
                     <span className="mt-1 text-xs text-muted-foreground">
-                      Avg Confidence
+                      AI Skill Confidence
                     </span>
                   </CircularProgress>
                   <p className="mt-4 max-w-xs text-xs leading-relaxed text-muted-foreground">
-                    Confidence is the AI&apos;s weighted estimate of proficiency
-                    derived from your resume — higher means the skill shows up
-                    consistently and at depth.
+                    Confidence is the AI&apos;s overall estimate of proficiency
+                    derived from your resume ({overallConfidence}% overall,{' '}
+                    {careerMatchConfidence}% career match). It applies across
+                    all detected skills rather than per individual skill.
                   </p>
                 </div>
                 <div>
@@ -282,19 +325,19 @@ export default function SkillsPage() {
                   )
                   const average = averageOf(skills)
                   return (
-                    <section key={category}>
-                      <CategoryHeader
-                        category={category}
-                        count={skills.length}
-                        average={average}
-                      />
-                      <ProgressBar value={average} className="mt-2" />
-                      <div className="mt-1 divide-y divide-border">
+                    <CategoryAccordion
+                      key={category}
+                      category={category}
+                      count={skills.length}
+                      average={average}
+                    >
+                      <ProgressBar value={average} className="mb-4" />
+                      <div className="divide-y divide-border">
                         {skills.map((skill) => (
                           <SkillRow key={skill.name} skill={skill} />
                         ))}
                       </div>
-                    </section>
+                    </CategoryAccordion>
                   )
                 })}
               </Stagger>
@@ -309,10 +352,10 @@ export default function SkillsPage() {
             >
               <Stagger className="grid grid-cols-1 gap-2">
                 {softSkills.map((skill) => (
-                  <SoftSkillChip
+                  <SoftSkillCard
                     key={skill.name}
                     name={skill.name}
-                    confidence={skill.confidence}
+                    evidence={skill.evidence}
                   />
                 ))}
               </Stagger>
@@ -402,16 +445,19 @@ export default function SkillsPage() {
                   icon={TrendingUp}
                   label="Top Strength"
                   value={action.strength}
+                  evidence={action.strengthEvidence}
                 />
                 <InsightRow
                   icon={AlertTriangle}
                   label="Top Weakness"
                   value={action.weakness}
+                  evidence={action.weaknessEvidence}
                 />
                 <InsightRow
                   icon={Target}
                   label="Recommended Next Skill"
                   value={action.nextSkill}
+                  evidence={action.nextSkillEvidence}
                 />
                 <InsightRow
                   icon={ArrowUp}
