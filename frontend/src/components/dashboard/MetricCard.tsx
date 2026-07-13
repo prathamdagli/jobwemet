@@ -104,16 +104,24 @@ export function MetricCard({
           </span>
         )}
       </div>
-      <div className={cn(isWide && 'text-right')}>
+      <div className={cn('min-w-0', isWide && 'text-right')}>
         <p
           className={cn(
-            'font-semibold tracking-tight text-foreground',
+            'truncate font-semibold tracking-tight text-foreground',
             valueSize,
           )}
+          title={value}
         >
           <CountValue value={value} />
         </p>
-        {sub && <p className="mt-0.5 text-xs text-muted-foreground">{sub}</p>}
+        {sub && (
+          <p
+            className="mt-0.5 truncate text-xs text-muted-foreground"
+            title={sub}
+          >
+            {sub}
+          </p>
+        )}
       </div>
       {children}
     </motion.div>

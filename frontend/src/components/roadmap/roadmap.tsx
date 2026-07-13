@@ -1,28 +1,23 @@
 import { motion } from 'motion/react'
-import { Check, Clock, Flag, Lock, Signal } from 'lucide-react'
+import { Check, ExternalLink, Flag, Signal } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
-import { ProgressBar } from '@/components/dashboard/ProgressBar'
 import { cn } from '@/lib/utils'
 import { GESTURE_LIMITS, springSnappy, timelineReveal } from '@/motion'
 
-export type ModuleStatus = 'completed' | 'current' | 'upcoming' | 'locked'
+export type ModuleStatus = 'completed' | 'current' | 'upcoming'
 
 const STATUS_LABEL: Record<ModuleStatus, string> = {
   completed: 'Completed',
   current: 'Current',
   upcoming: 'Upcoming',
-  locked: 'Locked',
 }
 
-const STATUS_BADGE: Record<
-  ModuleStatus,
-  'default' | 'secondary' | 'outline' | 'muted'
-> = {
-  completed: 'secondary',
-  current: 'default',
-  upcoming: 'outline',
-  locked: 'muted',
-}
+const STATUS_BADGE: Record<ModuleStatus, 'default' | 'secondary' | 'outline'> =
+  {
+    completed: 'secondary',
+    current: 'default',
+    upcoming: 'outline',
+  }
 
 function nodeClass(status: ModuleStatus) {
   switch (status) {
@@ -30,10 +25,8 @@ function nodeClass(status: ModuleStatus) {
       return 'bg-foreground text-background'
     case 'current':
       return 'border-2 border-foreground bg-background'
-    case 'upcoming':
+    default:
       return 'border-2 border-border bg-background'
-    case 'locked':
-      return 'border-2 border-border bg-muted'
   }
 }
 
@@ -41,38 +34,43 @@ function cardClass(status: ModuleStatus) {
   switch (status) {
     case 'current':
       return 'border-foreground/30 bg-foreground/[0.02] ring-1 ring-foreground/10'
-    case 'locked':
-      return 'opacity-70'
     default:
       return 'border-border'
   }
 }
 
+export interface RoadmapCourseRef {
+  title: string
+  url: string
+}
+
 /**
- * A single node on the roadmap timeline. Prop signature is stable — only the
- * visuals changed. Renders a status node on a connecting spine plus a card with
- * the module's title, description, meta and (for the active module) progress.
+ * A single node on the roadmap timeline. Renders a status node on a connecting
+ * spine plus a card with the module's title, description, meta and (for the
+ * active module) recommended courses. `completed` only appears when the backend
+ * genuinely marks a phase done — the app never fabricates completion.
  */
 export function RoadmapModule({
   title,
   status,
   description,
-  duration,
   difficulty,
-  progress,
+  estimatedHours,
+  skills,
+  recommendedCourses = [],
   isLast = false,
 }: {
   title: string
   status: ModuleStatus
   description: string
-  duration: string
   difficulty: string
-  progress?: number
+  estimatedHours?: number
+  skills?: string[]
+  recommendedCourses?: RoadmapCourseRef[]
   isLast?: boolean
 }) {
   const isCurrent = status === 'current'
   const isCompleted = status === 'completed'
-  const isLocked = status === 'locked'
 
   return (
     <motion.li variants={timelineReveal} className="flex gap-4">
@@ -87,11 +85,6 @@ export function RoadmapModule({
         >
           {isCompleted ? (
             <Check className="size-4" aria-hidden="true" />
-          ) : isLocked ? (
-            <Lock
-              className="size-3.5 text-muted-foreground"
-              aria-hidden="true"
-            />
           ) : isCurrent ? (
             <span className="size-2.5 rounded-full bg-foreground" />
           ) : (
@@ -123,12 +116,7 @@ export function RoadmapModule({
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <h3
-                className={cn(
-                  'text-base font-semibold tracking-tight',
-                  isLocked ? 'text-muted-foreground' : 'text-foreground',
-                )}
-              >
+              <h3 className="text-base font-semibold tracking-tight text-foreground">
                 {title}
               </h3>
               {isCurrent && (
@@ -151,18 +139,50 @@ export function RoadmapModule({
 
         <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
           <span className="flex items-center gap-1">
-            <Clock className="size-3.5" aria-hidden="true" />
-            {duration}
-          </span>
-          <span className="flex items-center gap-1">
             <Signal className="size-3.5" aria-hidden="true" />
             {difficulty}
           </span>
+          {typeof estimatedHours === 'number' && (
+            <span className="flex items-center gap-1">
+              <Signal className="size-3.5" aria-hidden="true" />~
+              {estimatedHours}h
+            </span>
+          )}
         </div>
 
-        {isCurrent && typeof progress === 'number' && (
-          <div className="mt-3">
-            <ProgressBar value={progress} label="Progress" showValue />
+        {skills && skills.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {skills.map((skill) => (
+              <Badge key={skill} variant="muted" size="xs">
+                {skill}
+              </Badge>
+            ))}
+          </div>
+        )}
+
+        {recommendedCourses.length > 0 && (
+          <div className="mt-3 rounded-xl border border-border bg-muted/40 p-3">
+            <p className="text-xs font-medium text-foreground">
+              Recommended courses
+            </p>
+            <ul className="mt-2 space-y-1.5">
+              {recommendedCourses.map((c) => (
+                <li key={c.title}>
+                  <a
+                    href={c.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+                  >
+                    <ExternalLink
+                      className="size-3.5 shrink-0"
+                      aria-hidden="true"
+                    />
+                    {c.title}
+                  </a>
+                </li>
+              ))}
+            </ul>
           </div>
         )}
       </motion.div>

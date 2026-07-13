@@ -1,91 +1,30 @@
 import { motion } from 'motion/react'
-import { Brain, Compass, GraduationCap, Target } from 'lucide-react'
+import { Compass, FileText, GraduationCap, Target } from 'lucide-react'
 import Section from './Section'
-import {
-  staggerChildren,
-  staggerContainer,
-  useCountUp,
-  useInViewReveal,
-} from '@/motion'
+import { staggerChildren, staggerContainer, useInViewReveal } from '@/motion'
 
-const STATS = [
+const CAPABILITIES = [
   {
-    value: '100+',
-    title: 'Career Paths',
-    label: 'Available',
+    title: 'Resume Analysis',
+    description: 'Extract your skills and experience from an uploaded resume.',
+    icon: FileText,
+  },
+  {
+    title: 'Career Matching',
+    description: 'Discover the roles that best fit your strengths.',
     icon: Compass,
   },
   {
-    value: '250+',
-    title: 'Skills',
-    label: 'Recognized',
-    icon: Brain,
-  },
-  {
-    value: '1000+',
-    title: 'Courses',
-    label: 'Recommended',
-    icon: GraduationCap,
-  },
-  {
-    value: '92%',
-    title: 'AI Accuracy',
-    label: 'Confidence',
+    title: 'Skill Gap Detection',
+    description: 'See exactly which skills stand between you and your goal.',
     icon: Target,
   },
+  {
+    title: 'Learning Roadmap',
+    description: 'Get a sequenced path from where you are to job-ready.',
+    icon: GraduationCap,
+  },
 ] as const
-
-/** Counts the leading integer up once mounted; keeps any prefix/suffix. */
-function CountingNumber({ value }: { value: string }) {
-  const match = value.match(/^(\D*)(\d+)(.*)$/)
-  const target = match ? Number(match[2]) : 0
-  const counted = useCountUp(target, { duration: 1.4, delay: 0.15 })
-  if (!match) return <>{value}</>
-  const [, prefix, , suffix] = match
-  return (
-    <>
-      {prefix}
-      {Math.round(counted)}
-      {suffix}
-    </>
-  )
-}
-
-function StatCard({
-  value,
-  title,
-  label,
-  icon: Icon,
-  active,
-}: (typeof STATS)[number] & { active: boolean }) {
-  return (
-    <motion.div
-      variants={staggerChildren}
-      className="group relative flex flex-col gap-3 rounded-2xl border border-border bg-card p-7 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
-    >
-      <span className="inline-flex size-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
-        <Icon className="size-5" aria-hidden="true" />
-      </span>
-      <div>
-        <p className="text-5xl font-semibold tracking-tight text-foreground sm:text-6xl">
-          {active ? <CountingNumber value={value} /> : value}
-        </p>
-        <div className="mt-3">
-          <h3 className="text-sm font-medium text-foreground">{title}</h3>
-          <p className="mt-0.5 text-[11px] uppercase tracking-wide text-muted-foreground">
-            {label}
-          </p>
-          <motion.span
-            className="mt-3 block h-px w-8 origin-left rounded-full bg-foreground/30"
-            initial={{ scaleX: 0 }}
-            animate={active ? { scaleX: 1 } : { scaleX: 0 }}
-            transition={{ duration: 0.6, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
-          />
-        </div>
-      </div>
-    </motion.div>
-  )
-}
 
 /** Faint area graph sitting behind the stat cards — pure decoration. */
 function StatsGraph() {
@@ -107,6 +46,38 @@ function StatsGraph() {
         strokeWidth="2"
       />
     </svg>
+  )
+}
+
+function CapabilityCard({
+  title,
+  description,
+  icon: Icon,
+  active,
+}: (typeof CAPABILITIES)[number] & { active: boolean }) {
+  return (
+    <motion.div
+      variants={staggerChildren}
+      className="group relative flex flex-col gap-3 rounded-2xl border border-border bg-card p-7 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
+    >
+      <span className="inline-flex size-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
+        <Icon className="size-5" aria-hidden="true" />
+      </span>
+      <div>
+        <h3 className="text-base font-semibold tracking-tight text-foreground">
+          {title}
+        </h3>
+        <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+          {description}
+        </p>
+        <motion.span
+          className="mt-3 block h-px w-8 origin-left rounded-full bg-foreground/30"
+          initial={{ scaleX: 0 }}
+          animate={active ? { scaleX: 1 } : { scaleX: 0 }}
+          transition={{ duration: 0.6, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
+        />
+      </div>
+    </motion.div>
   )
 }
 
@@ -139,8 +110,12 @@ export default function StatsSection() {
         viewport={{ once: true, amount: 0.2 }}
         className="relative mt-14 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4"
       >
-        {STATS.map((stat) => (
-          <StatCard key={stat.label} {...stat} active={inView} />
+        {CAPABILITIES.map((capability) => (
+          <CapabilityCard
+            key={capability.title}
+            {...capability}
+            active={inView}
+          />
         ))}
       </motion.div>
     </Section>

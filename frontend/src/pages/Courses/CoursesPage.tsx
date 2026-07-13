@@ -1,166 +1,165 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import type { LucideIcon } from 'lucide-react'
+import { useSearchParams } from 'react-router-dom'
 import {
-  ArrowRight,
-  Clock,
+  BookOpen,
   GraduationCap,
   Loader2,
   RefreshCw,
   Sparkles,
-  Star,
   Target,
-  TrendingUp,
+  UploadCloud,
 } from 'lucide-react'
-import { Link } from 'react-router-dom'
-import { motion } from 'motion/react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { WidgetCard } from '@/components/dashboard/WidgetCard'
 import { MetricCard } from '@/components/dashboard/MetricCard'
 import { PageHeader } from '@/components/dashboard/PageHeader'
-import { CircularProgress } from '@/components/dashboard/CircularProgress'
-import { ProgressBar } from '@/components/dashboard/ProgressBar'
-import { FilterSelect } from '@/components/careers/careers'
+import { WidgetCard } from '@/components/dashboard/WidgetCard'
+import { EmptyState } from '@/components/common/EmptyState'
+import { ErrorState } from '@/components/common/ErrorState'
+import { LoadingState } from '@/components/common/LoadingState'
+import {
+  FilterSelect,
+  type FilterSelectProps,
+} from '@/components/careers/careers'
 import {
   CourseCard,
-  SidebarStat,
   DIFFICULTY_BADGE,
-  courseProgress,
   type Course,
 } from '@/components/courses/courses'
 import { useCourses } from '@/hooks/useCourses'
-import {
-  Reveal,
-  Stagger,
-  cardReveal,
-  GESTURE_LIMITS,
-  springSnappy,
-} from '@/motion'
+import { useProfile } from '@/hooks/useProfile'
+import { useAppState } from '@/hooks/useAppState'
+import { Reveal, Stagger } from '@/motion'
 
-/** Deterministic AI-match score (85–98%) derived from a course id. */
-function courseMatch(id: string): number {
-  let h = 0
-  for (const ch of id) h = (h * 33 + ch.charCodeAt(0)) % 1000
-  return 85 + (h % 14)
-}
-
-function SectionTitle({
-  icon: Icon,
-  title,
-  hint,
+/** Highlighted recommended course — clean card, no fabricated rating metrics. */
+function FeaturedCourse({
+  course,
+  saved,
+  onToggleSave,
+  onViewSkill,
 }: {
-  icon: LucideIcon
-  title: string
-  hint?: string
+  course: Course
+  saved: boolean
+  onToggleSave: (id: string) => void
+  onViewSkill: (skill: string) => void
 }) {
+  const headingId = `featured-${course.id}-title`
   return (
-    <div className="mb-4 flex items-end justify-between gap-3">
-      <div className="flex items-center gap-2">
-        <Icon className="size-4 text-muted-foreground" aria-hidden="true" />
-        <h2 className="text-sm font-semibold text-foreground">{title}</h2>
+    <div
+      aria-labelledby={headingId}
+      className="flex flex-col overflow-hidden rounded-2xl border border-foreground/15 bg-card shadow-sm"
+    >
+      <div className="flex flex-col gap-5 p-5 sm:p-6 md:flex-row md:items-center md:gap-7">
+        <div className="relative flex size-28 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-muted/70 to-muted">
+          <BookOpen className="size-9 text-foreground/25" aria-hidden="true" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant="soft" size="sm" className="gap-1">
+              <Sparkles className="size-3" aria-hidden="true" />
+              AI Recommended
+            </Badge>
+            <Badge variant={DIFFICULTY_BADGE[course.difficulty]} size="sm">
+              {course.difficulty}
+            </Badge>
+            <Badge variant="outline" size="sm">
+              {course.platform}
+            </Badge>
+          </div>
+          <h2
+            id={headingId}
+            className="mt-3 text-2xl font-semibold tracking-tight text-foreground sm:text-3xl"
+          >
+            {course.title}
+          </h2>
+          <p className="mt-2 flex items-center gap-1.5 text-sm leading-relaxed text-muted-foreground">
+            <Sparkles
+              className="size-3.5 shrink-0 text-foreground/50"
+              aria-hidden="true"
+            />
+            {course.reason}
+          </p>
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {course.skills.map((skill) => (
+              <Badge key={skill} variant="muted" size="xs">
+                {skill}
+              </Badge>
+            ))}
+          </div>
+          <div className="mt-5 flex flex-wrap gap-2">
+            {course.url ? (
+              <Button
+                size="sm"
+                className="gap-1.5"
+                render={
+                  <a
+                    href={course.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  />
+                }
+              >
+                Start Course
+              </Button>
+            ) : (
+              <Button size="sm" disabled>
+                Start Course
+              </Button>
+            )}
+            <Button
+              size="sm"
+              variant={saved ? 'secondary' : 'outline'}
+              aria-pressed={saved}
+              onClick={() => onToggleSave(course.id)}
+            >
+              {saved ? 'Saved' : 'Save Course'}
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="gap-1.5"
+              onClick={() => onViewSkill(course.skills[0])}
+            >
+              View Courses
+            </Button>
+          </div>
+        </div>
       </div>
-      {hint && <span className="text-xs text-muted-foreground">{hint}</span>}
     </div>
   )
 }
 
-/** Highlighted "Recommended by AI" card — distinct editorial treatment. */
-function RecommendedCourse({
-  course,
-  match,
-}: {
-  course: Course
-  match: number
-}) {
-  const headingId = `rec-${course.id}-title`
-  return (
-    <motion.article
-      variants={cardReveal}
-      whileHover={{ y: GESTURE_LIMITS.maxTranslateY }}
-      transition={springSnappy}
-      aria-labelledby={headingId}
-      className="flex flex-col overflow-hidden rounded-2xl border border-foreground/15 bg-card shadow-sm transition-[box-shadow,border-color] duration-300 hover:shadow-md"
-    >
-      <div className="flex items-center gap-4 border-b border-border bg-foreground/[0.02] p-5">
-        <CircularProgress
-          value={match}
-          size={64}
-          strokeWidth={7}
-          label="AI match"
-        >
-          <span className="text-sm font-semibold tabular-nums text-foreground">
-            {match}%
-          </span>
-        </CircularProgress>
-        <div className="min-w-0">
-          <Badge variant="soft" size="sm" className="gap-1">
-            <Sparkles className="size-3" aria-hidden="true" />
-            AI Pick
-          </Badge>
-          <h3
-            id={headingId}
-            className="mt-1.5 truncate text-base font-semibold tracking-tight text-foreground"
-          >
-            {course.title}
-          </h3>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            {course.platform} · {course.difficulty}
-          </p>
-        </div>
-      </div>
-      <div className="flex flex-1 flex-col gap-3 p-5">
-        <p className="line-clamp-2 text-sm leading-relaxed text-muted-foreground">
-          {course.description}
-        </p>
-        <div className="flex items-center gap-3 text-xs text-muted-foreground">
-          <span className="flex items-center gap-1">
-            <Clock className="size-3.5" aria-hidden="true" />
-            {course.duration}
-          </span>
-          <span className="flex items-center gap-1">
-            <Star className="size-3.5" aria-hidden="true" />
-            {course.rating.toFixed(1)}
-          </span>
-        </div>
-        <div className="mt-auto flex flex-col gap-2 pt-1 sm:flex-row">
-          <Button size="sm" className="flex-1" render={<Link to="/courses" />}>
-            Start
-          </Button>
-          <Button size="sm" variant="outline" className="flex-1">
-            Save
-          </Button>
-        </div>
-      </div>
-    </motion.article>
-  )
-}
-
-/** Compact item for the "Recently Viewed" horizontal scroll row. */
-function RecentCourseItem({ course }: { course: Course }) {
-  return (
-    <Link
-      to="/courses"
-      className="group flex w-64 shrink-0 snap-start items-center gap-3 rounded-2xl border border-border bg-card p-4 shadow-sm transition-colors hover:border-foreground/15 hover:bg-muted/30 hover:shadow-md focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-    >
-      <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted text-foreground/50 transition-colors group-hover:bg-foreground/10">
-        <Sparkles className="size-5" aria-hidden="true" />
-      </span>
-      <span className="min-w-0 flex-1">
-        <span className="block truncate text-sm font-medium text-foreground">
-          {course.title}
-        </span>
-        <span className="mt-0.5 block truncate text-xs text-muted-foreground">
-          {course.platform} · {course.duration}
-        </span>
-      </span>
-    </Link>
-  )
-}
-
 export default function CoursesPage() {
-  const { courses, aiInsights, sidebarStats } = useCourses()
+  const { courses, summary } = useCourses()
+  const { profile } = useProfile()
+  const {
+    loading,
+    error,
+    refresh,
+    activeResumeId,
+    recommendCourses,
+    settings,
+    putSettings,
+  } = useAppState()
+  const goal = profile.targetCareer || 'your goal'
   const [refreshing, setRefreshing] = useState(false)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const skillParam = searchParams.get('skill')
+  const [filters, setFilters] = useState<Record<string, string>>({
+    Difficulty: 'All levels',
+    Platform: 'All platforms',
+    Sort: 'Best match',
+  })
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // The skill filter is driven directly by the ?skill= deep-link (used by the
+  // roadmap "View Courses" links) so no effect-sync is needed.
+  const skillFilter = skillParam ?? 'All skills'
+
+  function setSkill(skill: string) {
+    if (skill === 'All skills') setSearchParams({})
+    else setSearchParams({ skill })
+  }
 
   useEffect(() => {
     return () => {
@@ -168,308 +167,284 @@ export default function CoursesPage() {
     }
   }, [])
 
-  function handleRefresh() {
+  async function handleRefresh() {
     if (refreshing) return
     setRefreshing(true)
-    timerRef.current = setTimeout(() => setRefreshing(false), 1600)
+    try {
+      if (activeResumeId) {
+        await recommendCourses(activeResumeId)
+      } else {
+        refresh()
+      }
+    } finally {
+      timerRef.current = setTimeout(() => setRefreshing(false), 1600)
+    }
   }
 
-  // Derived KPIs (no data-hook changes — computed from the returned array).
-  const totalHours = useMemo(
-    () => courses.reduce((sum, c) => sum + (parseInt(c.duration, 10) || 0), 0),
-    [courses],
-  )
-  const avgRating = useMemo(
-    () =>
-      courses.length
-        ? (
-            courses.reduce((sum, c) => sum + c.rating, 0) / courses.length
-          ).toFixed(1)
-        : '0.0',
-    [courses],
+  const savedIds = useMemo(
+    () => new Set(settings?.savedCourses ?? []),
+    [settings],
   )
 
-  // Partition the list into editorial sections (featured + grouped rows).
-  const [featured, ...rest] = courses
-  const continueLearning = rest.slice(0, 3)
-  const recommended = rest.slice(3, 5)
-  const recentlyViewed = [rest[1], rest[2], rest[4], rest[0]].filter(
-    Boolean,
-  ) as Course[]
-  const featuredMatch = featured ? courseMatch(featured.id) : 0
-  const featuredProgress = featured ? courseProgress(featured) : 0
+  async function handleToggleSave(id: string) {
+    const current = settings?.savedCourses ?? []
+    const next = current.includes(id)
+      ? current.filter((c) => c !== id)
+      : [...current, id]
+    await putSettings({ savedCourses: next })
+  }
+
+  // Real filter + sort options derived from the data, never hardcoded.
+  const skillOptions = useMemo(
+    () => [
+      'All skills',
+      ...Array.from(new Set(courses.map((c) => c.skills[0]))),
+    ],
+    [courses],
+  )
+  const platformOptions = useMemo(
+    () => ['All platforms', ...summary.platforms],
+    [summary.platforms],
+  )
+
+  const visibleCourses = useMemo(() => {
+    const out = courses.filter((c) => {
+      if (
+        filters.Platform !== 'All platforms' &&
+        c.platform !== filters.Platform
+      )
+        return false
+      if (
+        filters.Difficulty !== 'All levels' &&
+        c.difficulty !== filters.Difficulty
+      )
+        return false
+      if (skillFilter !== 'All skills' && !c.skills.includes(skillFilter))
+        return false
+      return true
+    })
+    const sorted = [...out]
+    switch (filters.Sort) {
+      case 'Duration':
+        sorted.sort(
+          (a, b) => parseInt(a.duration, 10) - parseInt(b.duration, 10),
+        )
+        break
+      case 'Difficulty':
+        sorted.sort((a, b) => a.difficulty.localeCompare(b.difficulty))
+        break
+      default:
+        break
+    }
+    return sorted
+  }, [courses, filters, skillFilter])
+
+  const [featured, ...rest] = visibleCourses
+
+  const filterConfig: FilterSelectProps[] = [
+    {
+      label: 'Skill',
+      options: skillOptions,
+      value: skillFilter,
+      onChange: setSkill,
+    },
+    {
+      label: 'Difficulty',
+      options: ['All levels', 'Beginner', 'Intermediate', 'Advanced'],
+      value: filters.Difficulty,
+      onChange: (v) => setFilters((f) => ({ ...f, Difficulty: v })),
+    },
+    {
+      label: 'Platform',
+      options: platformOptions,
+      value: filters.Platform,
+      onChange: (v) => setFilters((f) => ({ ...f, Platform: v })),
+    },
+    {
+      label: 'Sort',
+      options: ['Best match', 'Duration', 'Difficulty'],
+      value: filters.Sort,
+      onChange: (v) => setFilters((f) => ({ ...f, Sort: v })),
+    },
+  ]
+
+  const skillFiltered = skillFilter !== 'All skills'
 
   return (
     <div className="mx-auto max-w-7xl space-y-5 md:space-y-6">
       <PageHeader
         eyebrow="Courses"
         title="AI Course Recommendations"
-        description="Curated courses picked to close your skill gaps and keep you on track for your AI Engineer goal."
+        description={`Curated courses picked to close your skill gaps and keep you on track for your ${goal} goal.`}
+        lastUpdated={profile.lastUpdated}
         action={
-          <Button
-            onClick={handleRefresh}
-            disabled={refreshing}
-            size="sm"
-            className="gap-1.5"
-          >
-            {refreshing ? (
-              <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-            ) : (
-              <RefreshCw className="size-4" aria-hidden="true" />
-            )}
-            {refreshing ? 'Refreshing…' : 'Refresh'}
-          </Button>
+          courses.length > 0 ? (
+            <Button
+              onClick={handleRefresh}
+              disabled={refreshing}
+              size="sm"
+              className="gap-1.5"
+            >
+              {refreshing ? (
+                <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+              ) : (
+                <RefreshCw className="size-4" aria-hidden="true" />
+              )}
+              {refreshing ? 'Refreshing…' : 'Regenerate Recommendations'}
+            </Button>
+          ) : undefined
         }
         context={
           <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/40 px-2.5 py-1 text-xs text-muted-foreground">
             <Target className="size-3.5" aria-hidden="true" />
             Target Career:{' '}
-            <span className="font-medium text-foreground">AI Engineer</span>
+            <span className="font-medium text-foreground">{goal}</span>
           </span>
         }
       />
 
-      <Reveal>
-        <WidgetCard variant="muted" padding="sm">
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-            <FilterSelect
-              label="Skill"
-              options={[
-                'All skills',
-                'Docker',
-                'AWS',
-                'Kubernetes',
-                'LangChain',
-              ]}
-            />
-            <FilterSelect
-              label="Difficulty"
-              options={['All levels', 'Beginner', 'Intermediate', 'Advanced']}
-            />
-            <FilterSelect
-              label="Platform"
-              options={[
-                'All platforms',
-                'Coursera',
-                'Udemy',
-                'KodeKloud',
-                'YouTube',
-              ]}
-            />
-            <FilterSelect
-              label="Duration"
-              options={['Any', 'Under 5 hrs', '5–10 hrs', '10+ hrs']}
-            />
-            <FilterSelect
-              label="Sort"
-              options={['Best match', 'Rating', 'Duration', 'Difficulty']}
-            />
-          </div>
-        </WidgetCard>
-      </Reveal>
-
-      {/* KPI row */}
-      <Stagger className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <MetricCard
-          variant="sm"
-          label="Recommended"
-          value={String(courses.length)}
-          sub="for your goal"
-          icon={Sparkles}
+      {loading ? (
+        <LoadingState label="Loading your courses…" />
+      ) : error ? (
+        <ErrorState
+          title="Couldn't load courses"
+          description={error}
+          onRetry={refresh}
         />
-        <MetricCard
-          variant="sm"
-          label="Total Hours"
-          value={`${totalHours} hrs`}
-          sub="to complete"
-          icon={Clock}
-        />
-        <MetricCard
-          variant="sm"
-          label="Avg Rating"
-          value={avgRating}
-          sub="across picks"
-          icon={Star}
-        />
-        <MetricCard
-          variant="sm"
-          label="Career Match"
-          value="+18%"
-          sub="since last week"
-          icon={TrendingUp}
-          trend={{ value: '+18%', positive: true }}
-        />
-      </Stagger>
-
-      {/* Dominant featured course + side panel (asymmetric 12-col grid) */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
-        {featured && (
-          <WidgetCard variant="feature" padding="lg" className="lg:col-span-8">
-            <div className="grid gap-6 md:grid-cols-5 md:items-center">
-              {/* Cover / match */}
-              <div className="relative flex flex-col items-center justify-center gap-3 rounded-2xl bg-gradient-to-br from-foreground/[0.04] to-transparent p-6 md:col-span-2">
-                <Badge variant="soft" size="sm" className="gap-1">
-                  <Sparkles className="size-3.5" aria-hidden="true" />
-                  Featured
-                </Badge>
-                <CircularProgress
-                  value={featuredMatch}
-                  size={132}
-                  strokeWidth={12}
-                  label="AI match"
-                >
-                  <span className="text-3xl font-semibold tabular-nums text-foreground">
-                    {featuredMatch}%
-                  </span>
-                  <span className="mt-1 text-xs text-muted-foreground">
-                    AI Match
-                  </span>
-                </CircularProgress>
-                <span className="text-xs text-muted-foreground">
-                  {featured.platform}
-                </span>
-              </div>
-
-              {/* Editorial details */}
-              <div className="md:col-span-3">
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge
-                    variant={DIFFICULTY_BADGE[featured.difficulty]}
-                    size="sm"
-                  >
-                    {featured.difficulty}
-                  </Badge>
-                  <Badge variant="outline" size="sm">
-                    {featured.skills[0]}
-                  </Badge>
-                </div>
-                <h2 className="mt-3 text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
-                  {featured.title}
-                </h2>
-                <p className="mt-1.5 text-sm text-muted-foreground">
-                  {featured.platform} · {featured.instructor}
-                </p>
-                <p className="mt-3 max-w-prose text-sm leading-relaxed text-muted-foreground">
-                  {featured.description}
-                </p>
-                <div className="mt-4 flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1">
-                    <Clock className="size-3.5" aria-hidden="true" />
-                    {featured.duration}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Star className="size-3.5" aria-hidden="true" />
-                    {featured.rating.toFixed(1)}
-                  </span>
-                  <span>{featured.skills.length} skills covered</span>
-                </div>
-                <div className="mt-4 max-w-sm">
-                  <ProgressBar
-                    value={featuredProgress}
-                    label="Your progress"
-                    showValue
-                    size="sm"
-                  />
-                </div>
-                <div className="mt-5 flex flex-wrap gap-2">
-                  <Button
-                    size="sm"
-                    className="gap-1.5"
-                    render={<Link to="/courses" />}
-                  >
-                    Continue Learning
-                    <ArrowRight className="size-4" aria-hidden="true" />
-                  </Button>
-                  <Button size="sm" variant="outline">
-                    Save Course
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </WidgetCard>
-        )}
-
-        <aside className="space-y-4 lg:col-span-4" aria-label="Course insights">
-          <WidgetCard title="Learning Overview" icon={Sparkles} variant="muted">
-            <ul className="space-y-3">
-              {sidebarStats.map((item) => (
-                <SidebarStat
-                  key={item.label}
-                  icon={item.icon}
-                  label={item.label}
-                  value={item.value}
-                  progress={item.progress}
-                />
-              ))}
-            </ul>
-          </WidgetCard>
-
-          <WidgetCard title="AI Insights" icon={Sparkles}>
-            <ul className="space-y-3">
-              {aiInsights.map((text, index) => (
-                <li
-                  key={index}
-                  className="flex gap-2.5 rounded-lg border border-border bg-muted/40 px-3 py-2.5"
-                >
-                  <Sparkles
-                    className="mt-0.5 size-4 shrink-0 text-muted-foreground"
-                    aria-hidden="true"
-                  />
-                  <span className="text-sm leading-relaxed text-foreground">
-                    {text}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </WidgetCard>
-        </aside>
-      </div>
-
-      {/* Continue Learning */}
-      <section aria-label="Continue Learning">
-        <SectionTitle
+      ) : courses.length === 0 ? (
+        <EmptyState
           icon={GraduationCap}
-          title="Continue Learning"
-          hint="Pick up where you left off"
+          title="No course recommendations yet"
+          description={
+            <div className="mt-2 text-left inline-block">
+              No course recommendations yet. To get personalized courses:
+              <ol className="list-decimal pl-5 mt-3 space-y-1 text-sm text-muted-foreground text-left">
+                <li>Upload a resume</li>
+                <li>Choose your career goal</li>
+                <li>AI analyzes your skill gap</li>
+                <li>Personalized courses appear</li>
+              </ol>
+            </div>
+          }
+          action={
+            <Button
+              render={<a href="/resume" />}
+              size="sm"
+              className="mt-1 gap-1.5"
+            >
+              <UploadCloud className="size-4" aria-hidden="true" />
+              Upload Resume
+            </Button>
+          }
         />
-        <Stagger className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {continueLearning.map((course) => (
-            <CourseCard key={course.id} course={course} />
-          ))}
-        </Stagger>
-      </section>
-
-      {/* Recommended by AI */}
-      <section aria-label="Recommended by AI">
-        <SectionTitle
-          icon={Sparkles}
-          title="Recommended by AI"
-          hint="Curated for your goal"
-        />
-        <Stagger className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          {recommended.map((course) => (
-            <RecommendedCourse
-              key={course.id}
-              course={course}
-              match={courseMatch(course.id)}
+      ) : (
+        <>
+          {/* Real summary stats — derived from the data, no fabricated metrics */}
+          <Stagger className="grid grid-cols-2 gap-4 lg:grid-cols-5">
+            <MetricCard
+              variant="sm"
+              label="Recommended Courses"
+              value={String(summary.total)}
+              sub="for your goal"
+              icon={GraduationCap}
             />
-          ))}
-        </Stagger>
-      </section>
+            <MetricCard
+              variant="sm"
+              label="Free vs Paid"
+              value={`${summary.free} free · ${summary.paid} paid`}
+              sub="by access"
+              icon={Sparkles}
+            />
+            <MetricCard
+              variant="sm"
+              label="Platforms available"
+              value={String(summary.platforms.length)}
+              sub={summary.platforms.join(', ')}
+              icon={BookOpen}
+            />
+            <MetricCard
+              variant="sm"
+              label="Missing skills covered"
+              value={String(summary.missingSkillsCovered)}
+              sub="from your gap"
+              icon={Target}
+            />
+            <MetricCard
+              variant="sm"
+              label="Target Career"
+              value={goal}
+              sub="your selected goal"
+              icon={Target}
+            />
+          </Stagger>
 
-      {/* Recently Viewed — contained horizontal scroll-snap row */}
-      <section aria-label="Recently Viewed">
-        <SectionTitle
-          icon={Clock}
-          title="Recently Viewed"
-          hint="Across your devices"
-        />
-        <div className="-mx-1 flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 pb-2">
-          {recentlyViewed.map((course) => (
-            <RecentCourseItem key={course.id} course={course} />
-          ))}
-        </div>
-      </section>
+          <Reveal>
+            <WidgetCard variant="muted" padding="sm">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                {filterConfig.map((cfg) => (
+                  <FilterSelect key={cfg.label} {...cfg} />
+                ))}
+              </div>
+            </WidgetCard>
+          </Reveal>
+
+          {skillFiltered && (
+            <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-muted/40 px-4 py-2.5">
+              <p className="text-sm text-muted-foreground">
+                Courses that build{' '}
+                <span className="font-medium text-foreground">
+                  {skillFilter}
+                </span>{' '}
+                — part of your roadmap to {goal}.
+              </p>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setSkill('All skills')}
+              >
+                Clear filter
+              </Button>
+            </div>
+          )}
+
+          {featured && (
+            <FeaturedCourse
+              course={featured}
+              saved={savedIds.has(featured.id)}
+              onToggleSave={handleToggleSave}
+              onViewSkill={(skill) => {
+                setSkill(skill)
+              }}
+            />
+          )}
+
+          <section aria-label="All course recommendations">
+            {rest.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                No courses match the current filters.
+              </p>
+            ) : (
+              <Stagger className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                {rest.map((course) => (
+                  <CourseCard
+                    key={course.id}
+                    course={course}
+                    saved={savedIds.has(course.id)}
+                    onToggleSave={handleToggleSave}
+                    onOpenSkill={
+                      skillFiltered
+                        ? undefined
+                        : (skill) => {
+                            setSkill(skill)
+                          }
+                    }
+                  />
+                ))}
+              </Stagger>
+            )}
+          </section>
+        </>
+      )}
     </div>
   )
 }

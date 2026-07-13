@@ -15,7 +15,6 @@ import {
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { ProgressBar } from '@/components/dashboard/ProgressBar'
-import { cn } from '@/lib/utils'
 import {
   GESTURE_LIMITS,
   springSnappy,
@@ -81,42 +80,16 @@ export function MetricTile({
   )
 }
 
-function levelFor(value: number) {
-  if (value >= 90) return { label: 'Expert', variant: 'secondary' as const }
-  if (value >= 80) return { label: 'Advanced', variant: 'outline' as const }
-  if (value >= 65) return { label: 'Intermediate', variant: 'muted' as const }
-  return { label: 'Beginner', variant: 'muted' as const }
-}
-
-function microDetail(value: number): string {
-  if (value >= 88) return 'Last used recently'
-  if (value >= 75) return 'Frequently detected'
-  return 'Needs improvement'
-}
-
-function ProficiencyDots({ value }: { value: number }) {
-  const filled = Math.max(0, Math.min(5, Math.round((value / 100) * 5)))
-  return (
-    <span
-      className="flex items-center gap-1"
-      role="img"
-      aria-label={`Proficiency ${value} out of 100`}
-    >
-      {Array.from({ length: 5 }).map((_, i) => (
-        <span
-          key={i}
-          className={cn(
-            'size-1.5 rounded-full',
-            i < filled ? 'bg-foreground' : 'bg-border',
-          )}
-        />
-      ))}
-    </span>
-  )
+function confidenceLevelFor(value: number) {
+  if (value >= 85)
+    return { label: 'Confidence: High', variant: 'secondary' as const }
+  if (value >= 60)
+    return { label: 'Confidence: Medium', variant: 'outline' as const }
+  return { label: 'Confidence: Low', variant: 'muted' as const }
 }
 
 export function SkillRow({ skill }: { skill: TechnicalSkill }) {
-  const level = levelFor(skill.confidence)
+  const level = confidenceLevelFor(skill.confidence ?? 0)
   return (
     <motion.div
       variants={listReveal}
@@ -127,19 +100,15 @@ export function SkillRow({ skill }: { skill: TechnicalSkill }) {
           <span className="truncate text-sm font-medium text-foreground">
             {skill.name}
           </span>
-          <Badge variant={level.variant} size="xs">
-            {level.label}
+          <Badge variant="muted" size="xs">
+            {skill.category}
           </Badge>
         </div>
-        <p className="mt-0.5 text-xs text-muted-foreground">
-          {microDetail(skill.confidence)}
-        </p>
       </div>
       <div className="flex shrink-0 items-center gap-3">
-        <ProficiencyDots value={skill.confidence} />
-        <span className="w-10 text-right text-sm font-medium tabular-nums text-foreground">
-          {skill.confidence}%
-        </span>
+        <Badge variant={level.variant} size="xs">
+          {level.label}
+        </Badge>
       </div>
     </motion.div>
   )
@@ -191,28 +160,33 @@ const SOFT_ICONS: Record<string, LucideIcon> = {
   'Critical Thinking': Brain,
 }
 
-export function SoftSkillChip({
+export function SoftSkillCard({
   name,
-  confidence,
+  evidence,
 }: {
   name: string
-  confidence: number
+  evidence?: string
 }) {
   const Icon = SOFT_ICONS[name] ?? Sparkles
   return (
     <motion.div
       variants={listReveal}
-      className="flex items-center gap-3 rounded-xl border border-border bg-muted/40 px-3 py-2.5 transition-colors hover:bg-muted"
+      className="flex flex-col gap-2 rounded-xl border border-border bg-card p-4 shadow-sm transition-colors hover:border-foreground/15"
     >
-      <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-foreground/10">
-        <Icon className="size-4 text-foreground" aria-hidden="true" />
-      </span>
-      <span className="truncate text-sm font-medium text-foreground">
-        {name}
-      </span>
-      <span className="ml-auto text-xs font-medium tabular-nums text-muted-foreground">
-        {confidence}%
-      </span>
+      <div className="flex items-center gap-3">
+        <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-foreground/10">
+          <Icon className="size-4 text-foreground" aria-hidden="true" />
+        </span>
+        <span className="truncate text-sm font-semibold text-foreground">
+          {name}
+        </span>
+      </div>
+      {evidence && (
+        <div className="mt-1 text-xs text-muted-foreground">
+          <span className="font-medium text-foreground">Found in:</span>{' '}
+          {evidence}
+        </div>
+      )}
     </motion.div>
   )
 }

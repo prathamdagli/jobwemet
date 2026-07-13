@@ -56,10 +56,12 @@ export default function ProfilePage() {
         description={`Pursuing ${profile.targetCareer} · based in ${profile.location}.`}
         lastUpdated={profile.lastUpdated}
         action={
-          <Button size="sm" className="gap-1.5">
-            <Pencil className="size-4" aria-hidden="true" />
-            Edit Profile
-          </Button>
+          <Link to="/settings">
+            <Button size="sm" className="gap-1.5">
+              <Pencil className="size-4" aria-hidden="true" />
+              Edit Profile
+            </Button>
+          </Link>
         }
         context={
           <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/40 px-2.5 py-1 text-xs text-muted-foreground">

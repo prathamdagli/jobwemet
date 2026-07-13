@@ -12,6 +12,12 @@ Desktop.ini
 .env.*
 !.env.example
 
+# Firebase Admin service-account JSON (contains a private key — never commit).
+backend/service-account.json
+service-account.json
+*-service-account.json
+firebase-credentials.json
+
 # =========================
 # Python
 # =========================
@@ -151,3 +157,15 @@ celerybeat.pid
 .streamlit/secrets.toml
 .pypirc
 tempCodeRunnerFile.py
+
+# =========================
+# Firebase (emulator artifacts / runtime config)
+# =========================
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+firebase-emulator.log
+*.debug.log
+.runtimeconfig.json
+firebase-export-*.json

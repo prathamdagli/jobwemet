@@ -2,13 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import type { LucideIcon } from 'lucide-react'
 import { motion } from 'motion/react'
-import {
-  ArrowUpRight,
-  Banknote,
-  Briefcase,
-  ChevronDown,
-  Sparkles,
-} from 'lucide-react'
+import { ArrowUpRight, ChevronDown, Sparkles, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -29,15 +23,22 @@ export interface Career {
   title: string
   match: number
   description: string
-  experience: string
-  salary: string
-  category: string
   topSkills: string[]
   missingSkills: string[]
   explanation: string
 }
 
-export function CareerCard({ career }: { career: Career }) {
+export function CareerCard({
+  career,
+  isGoal,
+  isSelecting,
+  onSelect,
+}: {
+  career: Career
+  isGoal?: boolean
+  isSelecting?: boolean
+  onSelect?: (title: string) => void
+}) {
   const headingId = `career-${career.id}-title`
   const panelId = `career-${career.id}-panel`
   const [open, setOpen] = useState(false)
@@ -59,7 +60,7 @@ export function CareerCard({ career }: { career: Career }) {
             {career.title}
           </h3>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            {career.category} · {career.experience}
+            {career.match}% match
           </p>
         </div>
         <span className="shrink-0 text-lg font-semibold tabular-nums text-foreground">
@@ -112,35 +113,6 @@ export function CareerCard({ career }: { career: Career }) {
               </p>
             </div>
 
-            <dl className="grid grid-cols-2 gap-3 text-sm">
-              <div className="flex items-center gap-2">
-                <Banknote
-                  className="size-4 shrink-0 text-muted-foreground"
-                  aria-hidden="true"
-                />
-                <div>
-                  <dt className="text-xs text-muted-foreground">
-                    Salary range
-                  </dt>
-                  <dd className="font-medium text-foreground">
-                    {career.salary}
-                  </dd>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Briefcase
-                  className="size-4 shrink-0 text-muted-foreground"
-                  aria-hidden="true"
-                />
-                <div>
-                  <dt className="text-xs text-muted-foreground">Experience</dt>
-                  <dd className="font-medium text-foreground">
-                    {career.experience}
-                  </dd>
-                </div>
-              </div>
-            </dl>
-
             <div>
               <p className="mb-1.5 text-xs font-medium text-muted-foreground">
                 Top required skills
@@ -176,24 +148,48 @@ export function CareerCard({ career }: { career: Career }) {
         <Button
           size="default"
           className="flex-1"
-          render={<Link to="/roadmap" />}
+          onClick={onSelect ? () => onSelect(career.title) : undefined}
+          disabled={isGoal || isSelecting}
+          aria-pressed={isGoal}
         >
-          View Roadmap
+          {isSelecting ? (
+            <>
+              <Loader2
+                className="mr-1.5 size-4 animate-spin"
+                aria-hidden="true"
+              />
+              Updating...
+            </>
+          ) : isGoal ? (
+            'Current Goal'
+          ) : (
+            'Set as Goal'
+          )}
         </Button>
         <Button
           size="default"
           variant="outline"
           className="flex-1"
-          render={<Link to="/skills" />}
+          render={<Link to="/roadmap" />}
         >
-          View Details
+          View Roadmap
         </Button>
       </div>
     </motion.article>
   )
 }
 
-export function TopMatchBanner({ career }: { career: Career }) {
+export function TopMatchBanner({
+  career,
+  isGoal,
+  isSelecting,
+  onSelect,
+}: {
+  career: Career
+  isGoal?: boolean
+  isSelecting?: boolean
+  onSelect?: (title: string) => void
+}) {
   const { ref, inView } = useInViewReveal<HTMLElement>()
   const match = Math.round(useCountUp(career.match))
   return (
@@ -213,41 +209,54 @@ export function TopMatchBanner({ career }: { career: Career }) {
           </span>
           <Badge variant="soft" size="xs" className="gap-1">
             <ArrowUpRight className="size-3.5" aria-hidden="true" />
-            Excellent fit
+            {match}% fit
           </Badge>
         </div>
 
         <h2 className="mt-3 text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
           {career.title}
         </h2>
-        <p className="mt-1.5 text-sm text-muted-foreground">
-          {career.category} · {career.experience}
-        </p>
 
         <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground">
           {career.explanation}
         </p>
 
-        <dl className="mt-5 flex flex-wrap gap-x-6 gap-y-3">
-          <div>
-            <dt className="text-xs text-muted-foreground">Salary range</dt>
-            <dd className="text-sm font-semibold text-foreground">
-              {career.salary}
-            </dd>
+        {career.topSkills.length > 0 && (
+          <div className="mt-5">
+            <p className="mb-1.5 text-xs font-medium text-muted-foreground">
+              Top matching skills
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {career.topSkills.slice(0, 6).map((skill) => (
+                <Badge key={skill} variant="soft" size="xs">
+                  {skill}
+                </Badge>
+              ))}
+            </div>
           </div>
-          <div>
-            <dt className="text-xs text-muted-foreground">Field</dt>
-            <dd className="text-sm font-semibold text-foreground">
-              {career.category}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-xs text-muted-foreground">Experience</dt>
-            <dd className="text-sm font-semibold text-foreground">
-              {career.experience}
-            </dd>
-          </div>
-        </dl>
+        )}
+
+        <Button
+          size="sm"
+          className="mt-5 gap-1.5"
+          onClick={onSelect ? () => onSelect(career.title) : undefined}
+          disabled={isGoal || isSelecting}
+          aria-pressed={isGoal}
+        >
+          {isSelecting ? (
+            <>
+              <Loader2
+                className="mr-1.5 size-4 animate-spin"
+                aria-hidden="true"
+              />
+              Updating...
+            </>
+          ) : isGoal ? (
+            'Current Goal'
+          ) : (
+            'Set as Goal'
+          )}
+        </Button>
       </div>
 
       <div className="flex shrink-0 items-center justify-center">
@@ -269,13 +278,21 @@ export function TopMatchBanner({ career }: { career: Career }) {
   )
 }
 
-interface FilterSelectProps {
+export interface FilterSelectProps {
   label: string
   options: string[]
+  value?: string
+  onChange?: (value: string) => void
 }
 
-export function FilterSelect({ label, options }: FilterSelectProps) {
+export function FilterSelect({
+  label,
+  options,
+  value,
+  onChange,
+}: FilterSelectProps) {
   const id = `filter-${label.replace(/\s+/g, '-').toLowerCase()}`
+  const controlled = value !== undefined
   return (
     <div className="flex flex-col gap-1.5">
       <label
@@ -288,7 +305,9 @@ export function FilterSelect({ label, options }: FilterSelectProps) {
         <select
           id={id}
           aria-label={label}
-          defaultValue={options[0]}
+          {...(controlled
+            ? { value, onChange: (e) => onChange?.(e.target.value) }
+            : { defaultValue: options[0] })}
           className="w-full appearance-none rounded-lg border border-border bg-background py-2 pl-3 pr-8 text-sm text-foreground outline-none transition-colors hover:bg-muted focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
         >
           {options.map((option) => (
@@ -310,23 +329,30 @@ export function InsightRow({
   icon: Icon,
   label,
   value,
+  evidence,
 }: {
   icon: LucideIcon
   label: string
   value: string
+  evidence?: string
 }) {
   return (
     <motion.li
       variants={listReveal}
-      className="flex items-center justify-between gap-3 rounded-lg border border-border bg-muted/40 px-3 py-2.5"
+      className="flex flex-col gap-1.5 rounded-lg border border-border bg-muted/40 px-3 py-2.5"
     >
-      <span className="flex items-center gap-2 text-sm text-muted-foreground">
-        <Icon className="size-4 shrink-0" aria-hidden="true" />
-        {label}
-      </span>
-      <span className="text-right text-sm font-semibold text-foreground">
-        {value}
-      </span>
+      <div className="flex items-center justify-between gap-3">
+        <span className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Icon className="size-4 shrink-0" aria-hidden="true" />
+          {label}
+        </span>
+        <span className="text-right text-sm font-semibold text-foreground">
+          {value}
+        </span>
+      </div>
+      {evidence && (
+        <span className="text-xs text-muted-foreground mt-1">{evidence}</span>
+      )}
     </motion.li>
   )
 }

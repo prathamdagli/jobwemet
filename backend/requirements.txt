@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+pydantic
+firebase-admin
+python-dotenv
+PyMuPDF
+python-docx
+requests
+python-multipart

@@ -22,6 +22,7 @@ export interface UserProfile {
   email: string
   targetCareer: string
   location: string
+  phone: string
   memberSince: string
   profileCompletion: number
   lastUpdated: string
@@ -63,12 +64,15 @@ export interface QuickAction {
 export interface SoftSkill {
   name: string
   confidence: number
+  evidence?: string
 }
 
 export interface ResumeEntryData {
   id: string
   name: string
   uploaded: string
+  status?: 'Parsed' | 'Processing' | 'Failed'
+  preview?: string
 }
 
 export interface ResumeState {
@@ -88,8 +92,8 @@ export type GapDifficulty = 'Easy' | 'Medium' | 'Hard'
 export interface PrioritySkill {
   skill: string
   priority: PriorityLevel
-  time: string
   difficulty: GapDifficulty
+  confidence?: number
 }
 
 export interface CoverageItem {
@@ -101,19 +105,19 @@ export interface RoadmapModuleData {
   title: string
   status: ModuleStatus
   description: string
-  duration: string
   difficulty: string
+  estimatedHours: number
+  skills: string[]
   progress?: number
 }
 
-export type RoadmapInsight = InsightTile
-export type RoadmapStat = InsightTile
-
-export interface SidebarStatData {
-  icon: LucideIcon
-  label: string
-  value: string
-  progress?: number
+export interface CourseSummaryData {
+  total: number
+  free: number
+  paid: number
+  platforms: string[]
+  missingSkillsCovered: number
+  targetCareer: string | null
 }
 
 export interface DashboardSummary {
@@ -126,7 +130,6 @@ export interface DashboardSummary {
   lessonsFinished: number
   lessonsTotal: number
   recommendedNext: string
-  recommendedNextHours: number
 }
 
 export interface SkillGapData {
@@ -135,18 +138,16 @@ export interface SkillGapData {
   coverage: CoverageItem[]
   priority: PrioritySkill[]
   recommendations: string[]
+  skillConfidence: number
 }
 
 export interface RoadmapData {
   modules: RoadmapModuleData[]
-  insights: RoadmapInsight[]
-  stats: RoadmapStat[]
 }
 
 export interface CoursesData {
   courses: Course[]
-  aiInsights: string[]
-  sidebarStats: SidebarStatData[]
+  summary: CourseSummaryData
 }
 
 export interface CareerMatchesData {
@@ -160,11 +161,17 @@ export interface SkillsData {
   categories: string[]
   softSkills: SoftSkill[]
   distribution: DistributionItem[]
+  skillConfidence: number
+  overallConfidence: number
+  careerMatchConfidence: number
   insights: string[]
   action: {
     strength: string
+    strengthEvidence?: string
     weakness: string
+    weaknessEvidence?: string
     nextSkill: string
+    nextSkillEvidence?: string
     improvement: string
   }
 }

@@ -1,0 +1,93 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    // Per-user data: the profile doc and every subcollection beneath it are
+    // readable and writable only by the owning authenticated user.
+    match /users/{uid} {
+      allow read, write: if isOwner(uid);
+
+      match /{document=**} {
+        allow read, write: if isOwner(uid);
+      }
+    }
+
+    // Per-user app settings (stored at settings/{uid}). Owner-only: the
+    // backend is the only writer, but a client SDK (or emulator) must never
+    // be able to read or edit another user's settings.
+    match /settings/{uid} {
+      allow read, write: if isOwner(uid);
+    }
+
+    // Global, admin-managed course catalog. Users may read it; writes go
+    // through the Admin SDK / console, never the client.
+    match /courses/{courseId} {
+      allow read: if signedIn();
+      allow write: if false;
+    }
+
+    // Resume metadata: a top-level collection keyed by userId. A user may only
+    // touch their own resumes. Records are created by the Admin SDK (Storage
+    // onFinalize trigger) which bypasses rules; these rules gate client reads
+    // and any client-side writes.
+    match /resumes/{resumeId} {
+      allow read: if signedIn() && resource.data.userId == request.auth.uid;
+      allow write: if signedIn() && (
+        request.method == 'create'
+          ? request.resource.data.userId == request.auth.uid
+          : request.method == 'delete'
+            ? resource.data.userId == request.auth.uid
+            : request.resource.data.userId == request.auth.uid
+      );
+    }
+
+    // Resume processing pipeline: a top-level collection keyed by userId, one
+    // doc per resume. Same owner-only access as resumes; records are written
+    // by the Admin SDK processing pipeline.
+    match /resumeProcessing/{resumeId} {
+      allow read: if signedIn() && resource.data.userId == request.auth.uid;
+      allow write: if signedIn() && (
+        request.method == 'create'
+          ? request.resource.data.userId == request.auth.uid
+          : request.method == 'delete'
+            ? resource.data.userId == request.auth.uid
+            : request.resource.data.userId == request.auth.uid
+      );
+    }
+
+    // AI / learning pipeline outputs (skillAnalysis, careerMatches, skillGap,
+    // roadmaps, courseRecommendations, dashboardSummary) are written and read
+    // exclusively by the backend through the Admin SDK, which bypasses these
+    // rules. The frontend never touches these collections directly (it goes
+    // through the REST API), so the client SDK is denied all access. This is
+    // defence-in-depth: even a leaked client token cannot read or mutate
+    // another user's derived data here.
+    match /skillAnalysis/{resumeId} {
+      allow read, write: if false;
+    }
+    match /careerMatches/{resumeId} {
+      allow read, write: if false;
+    }
+    match /skillGap/{resumeId} {
+      allow read, write: if false;
+    }
+    match /roadmaps/{resumeId} {
+      allow read, write: if false;
+    }
+    match /courseRecommendations/{resumeId} {
+      allow read, write: if false;
+    }
+    match /dashboardSummary/{resumeId} {
+      allow read, write: if false;
+    }
+  }
+}

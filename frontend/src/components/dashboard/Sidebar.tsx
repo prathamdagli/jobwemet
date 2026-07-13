@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { NavLink, useNavigate } from 'react-router-dom'
+import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { motion } from 'motion/react'
 import { cn } from '@/lib/utils'
 import {
@@ -12,7 +12,11 @@ import { useAuth } from '@/hooks/useAuth'
 
 function BrandMark({ collapsed }: { collapsed: boolean }) {
   return (
-    <div className="flex h-16 items-center gap-2 px-4">
+    <Link
+      to="/"
+      aria-label="JobWeMet — home"
+      className="flex h-16 cursor-pointer items-center gap-2 px-4 outline-none transition-opacity hover:opacity-80 focus-visible:ring-2 focus-visible:ring-ring/50"
+    >
       <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
         <svg viewBox="0 0 32 32" className="size-5" aria-hidden="true">
           <path
@@ -30,7 +34,7 @@ function BrandMark({ collapsed }: { collapsed: boolean }) {
           Job<span className="text-primary">WeMet</span>
         </span>
       )}
-    </div>
+    </Link>
   )
 }
 

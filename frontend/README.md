@@ -1,32 +1,42 @@
-# React + TypeScript + Vite
+# JobWeMet Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+React 19 + Vite + TypeScript single-page app for JobWeMet. Talks to the FastAPI
+backend over a single typed API client (see `src/services/api/client.ts`).
 
-Currently, two official plugins are available:
+## Scripts
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm install
+npm run dev        # Vite dev server (http://localhost:5173)
+npm run build      # type-check (tsc -b) + production bundle into dist/
+npm run preview    # preview the production build
+npm run lint       # eslint
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+## Configuration
+
+Copy `.env.example` to `.env` and set the Firebase web-app config
+(`VITE_FIREBASE_*`) plus `VITE_API_BASE_URL` (the backend URL). See the
+root `README.md` for the full list.
+
+## How the API client works
+
+`src/services/api/client.ts` is the only place that touches the network:
+
+- Attaches the current Firebase ID token as a `Bearer` header.
+- Unwraps the backend's `{ success, data }` envelope and surfaces
+  `{ success: false, error }` as a typed `ApiError`.
+- Retries transient network failures **once**, and on a `401` forces a token
+  refresh and retries once.
+- Supports an `AbortSignal` on every call so stale requests can be cancelled
+  (used by the app-state provider when the user changes).
+- Uploads use `XMLHttpRequest` to report real upload progress.
+
+## Deploy
+
+Build with `npm run build` (output `dist/`). Host statically:
+
+- **Vercel:** import this folder; `vercel.json` rewrites all paths to
+  `index.html` for client-side routing.
+- **Firebase Hosting:** set `dist` as the public directory and
+  `firebase deploy --only hosting`.

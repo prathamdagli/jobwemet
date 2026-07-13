@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { motion } from 'motion/react'
 import type { LucideIcon } from 'lucide-react'
 import {
@@ -33,20 +34,37 @@ const STATUS_META: Record<
   Failed: { variant: 'outline', icon: AlertTriangle, label: 'Failed' },
 }
 
+import { useAppState } from '@/hooks/useAppState'
+import { Trash2 } from 'lucide-react'
+
 function ResumeCard({ item }: { item: ResumeEntry }) {
   const status = item.status ?? 'Parsed'
   const meta = STATUS_META[status]
   const Icon = meta.icon
   const isProcessing = status === 'Processing'
+  const { deleteResume } = useAppState()
+  const [fakeProgress, setFakeProgress] = useState(0)
+
+  useEffect(() => {
+    if (!isProcessing) return
+    const duration = 12000
+    const start = Date.now()
+    const timer = setInterval(() => {
+      const elapsed = Date.now() - start
+      const pct = Math.min(95, Math.floor((elapsed / duration) * 100))
+      setFakeProgress(pct)
+    }, 500)
+    return () => clearInterval(timer)
+  }, [isProcessing])
 
   return (
-    <div className="group flex flex-col gap-3 rounded-2xl border border-border bg-card p-5 transition-colors hover:border-foreground/15 hover:shadow-md sm:flex-row sm:items-center">
+    <div className="group relative flex flex-col gap-3 rounded-2xl border border-border bg-card p-5 transition-colors hover:border-foreground/15 hover:shadow-md sm:flex-row sm:items-center">
       <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
-        <FileText className="size-4" aria-hidden="true" />
+        {'\u{1F4C4}'}
       </span>
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="truncate text-sm font-medium text-foreground">
+          <p className="truncate text-sm font-medium text-foreground pr-8">
             {item.name}
           </p>
           <Badge variant={meta.variant} size="xs" className="shrink-0 gap-1">
@@ -67,7 +85,7 @@ function ResumeCard({ item }: { item: ResumeEntry }) {
         ) : null}
         {isProcessing && (
           <ProgressBar
-            value={72}
+            value={fakeProgress}
             size="sm"
             label="Extracting details…"
             showValue
@@ -75,6 +93,15 @@ function ResumeCard({ item }: { item: ResumeEntry }) {
           />
         )}
       </div>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => void deleteResume(item.id)}
+        className="absolute right-4 top-4 opacity-0 transition-opacity group-hover:opacity-100 text-muted-foreground hover:bg-destructive/10 hover:text-destructive sm:static sm:opacity-100 sm:ml-2"
+        aria-label="Delete resume"
+      >
+        <Trash2 className="size-4" />
+      </Button>
     </div>
   )
 }
