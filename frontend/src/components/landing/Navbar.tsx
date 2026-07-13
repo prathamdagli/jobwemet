@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Menu, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useAuth } from '@/hooks/useAuth'
 
 const NAV_LINKS = [
   { label: 'Home', href: '#home' },
@@ -53,6 +54,7 @@ function BrandLogo() {
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false)
   const [open, setOpen] = useState(false)
+  const { user } = useAuth()
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 4)
@@ -105,19 +107,30 @@ export default function Navbar() {
         </ul>
 
         <div className="hidden items-center gap-3 md:flex">
-          <Button
-            variant="ghost"
-            render={<Link to="/login" />}
-            className="px-5 transition-all duration-300 hover:bg-muted hover:shadow-sm"
-          >
-            Login
-          </Button>
-          <Button
-            render={<Link to="/register" />}
-            className="px-5 shadow-sm transition-all duration-300 hover:-translate-y-px hover:shadow-md"
-          >
-            Get Started
-          </Button>
+          {user ? (
+            <Button
+              render={<Link to="/dashboard" />}
+              className="px-5 shadow-sm transition-all duration-300 hover:-translate-y-px hover:shadow-md"
+            >
+              Go to Dashboard
+            </Button>
+          ) : (
+            <>
+              <Button
+                variant="ghost"
+                render={<Link to="/login" />}
+                className="px-5 transition-all duration-300 hover:bg-muted hover:shadow-sm"
+              >
+                Login
+              </Button>
+              <Button
+                render={<Link to="/register" />}
+                className="px-5 shadow-sm transition-all duration-300 hover:-translate-y-px hover:shadow-md"
+              >
+                Get Started
+              </Button>
+            </>
+          )}
         </div>
 
         <Button
@@ -180,21 +193,33 @@ export default function Navbar() {
             </a>
           ))}
           <div className="mt-4 flex flex-col gap-3">
-            <Button
-              variant="ghost"
-              render={<Link to="/login" />}
-              className="transition-all duration-300 hover:bg-muted hover:shadow-sm"
-              onClick={handleNavClick}
-            >
-              Login
-            </Button>
-            <Button
-              render={<Link to="/register" />}
-              className="shadow-sm transition-all duration-300 hover:-translate-y-px hover:shadow-md"
-              onClick={handleNavClick}
-            >
-              Get Started
-            </Button>
+            {user ? (
+              <Button
+                render={<Link to="/dashboard" />}
+                className="shadow-sm transition-all duration-300 hover:-translate-y-px hover:shadow-md"
+                onClick={handleNavClick}
+              >
+                Go to Dashboard
+              </Button>
+            ) : (
+              <>
+                <Button
+                  variant="ghost"
+                  render={<Link to="/login" />}
+                  className="transition-all duration-300 hover:bg-muted hover:shadow-sm"
+                  onClick={handleNavClick}
+                >
+                  Login
+                </Button>
+                <Button
+                  render={<Link to="/register" />}
+                  className="shadow-sm transition-all duration-300 hover:-translate-y-px hover:shadow-md"
+                  onClick={handleNavClick}
+                >
+                  Get Started
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </div>

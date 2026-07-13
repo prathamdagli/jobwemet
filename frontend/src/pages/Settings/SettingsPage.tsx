@@ -39,20 +39,40 @@ export default function SettingsPage() {
   const [saved, setSaved] = useState(false)
   const [loggingOut, setLoggingOut] = useState(false)
 
-  // Career-goal options: AI matches merged with a small default set, plus the
+  // Career-goal options: AI matches merged with a comprehensive default set, plus the
   // currently-saved value so a custom goal is never dropped from the list.
-  const careerOptions = Array.from(
-    new Set(
-      [
-        ...careers.map((c) => c.title),
-        'AI Engineer',
-        'Data Scientist',
-        'ML Engineer',
-        'Backend Developer',
-        profile.targetCareer,
-      ].filter((t): t is string => Boolean(t && t.trim())),
-    ),
-  )
+  const predefinedCareers = [
+    'Frontend Developer',
+    'Backend Developer',
+    'Full Stack Developer',
+    'DevOps Engineer',
+    'QA Engineer',
+    'Data Scientist',
+    'Data Engineer',
+    'ML Engineer',
+    'AI Engineer',
+    'Product Manager',
+    'UI/UX Designer',
+    'Mobile Developer',
+  ]
+
+  const rawOptions = [
+    'Not Set',
+    ...careers.map((c) => c.title),
+    ...predefinedCareers,
+    profile.targetCareer,
+  ].filter((t): t is string => Boolean(t && t.trim()))
+
+  const seen = new Set<string>()
+  const careerOptions: string[] = []
+
+  for (const option of rawOptions) {
+    const normalized = option.toLowerCase().trim()
+    if (!seen.has(normalized)) {
+      seen.add(normalized)
+      careerOptions.push(option.trim())
+    }
+  }
 
   async function handleLogout() {
     if (loggingOut) return
@@ -288,9 +308,13 @@ export default function SettingsPage() {
             >
               <Select
                 id="targetCareer"
-                value={form.targetCareer}
+                value={form.targetCareer || 'Not Set'}
                 onChange={(e) =>
-                  setForm((f) => ({ ...f, targetCareer: e.target.value }))
+                  setForm((f) => ({
+                    ...f,
+                    targetCareer:
+                      e.target.value === 'Not Set' ? '' : e.target.value,
+                  }))
                 }
                 className="sm:w-72"
               >

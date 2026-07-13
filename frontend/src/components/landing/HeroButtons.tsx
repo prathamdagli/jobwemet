@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom'
 import { ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useAuth } from '@/hooks/useAuth'
 
 export default function HeroButtons() {
+  const { user } = useAuth()
   const scrollToFeatures = () => {
     document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })
   }
@@ -12,10 +14,10 @@ export default function HeroButtons() {
       {/* Primary — soft monochrome glow + lift on hover, press feedback, arrow slide */}
       <Button
         size="lg"
-        render={<Link to="/register" />}
+        render={<Link to={user ? '/dashboard' : '/register'} />}
         className="gap-2 px-7 shadow-sm shadow-primary/10 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/25 active:translate-y-0 active:shadow-sm"
       >
-        Start Your Journey
+        {user ? 'Go to Dashboard' : 'Start Your Journey'}
         <ArrowRight className="size-4 transition-transform duration-300 group-hover/button:translate-x-1" />
       </Button>
       <Button

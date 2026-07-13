@@ -2,7 +2,9 @@ import { motion } from 'motion/react'
 import { ArrowRight, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import Section from './Section'
+import { Link } from 'react-router-dom'
 import { scaleIn, useInViewReveal } from '@/motion'
+import { useAuth } from '@/hooks/useAuth'
 
 const TRUST = [
   'Free to start',
@@ -31,6 +33,7 @@ function FloatingIndicator({
 
 export default function CTASection() {
   const { ref, inView } = useInViewReveal<HTMLDivElement>()
+  const { user } = useAuth()
   return (
     <Section id="cta" className="overflow-hidden">
       <motion.div
@@ -101,9 +104,10 @@ export default function CTASection() {
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Button
               size="lg"
+              render={<Link to={user ? '/dashboard' : '/register'} />}
               className="gap-2 bg-background px-7 text-foreground shadow-sm transition-all duration-300 hover:-translate-y-px hover:shadow-md"
             >
-              Get Started
+              {user ? 'Go to Dashboard' : 'Get Started'}
             </Button>
             <Button
               size="lg"
