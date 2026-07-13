@@ -34,6 +34,11 @@ function FloatingIndicator({
 export default function CTASection() {
   const { ref, inView } = useInViewReveal<HTMLDivElement>()
   const { user } = useAuth()
+
+  const scrollToFeatures = () => {
+    document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })
+  }
+
   return (
     <Section id="cta" className="overflow-hidden">
       <motion.div
@@ -112,6 +117,7 @@ export default function CTASection() {
             <Button
               size="lg"
               variant="outline"
+              onClick={scrollToFeatures}
               className="gap-2 border-background/30 bg-transparent px-7 text-background transition-all duration-300 hover:-translate-y-px hover:bg-background/10"
             >
               Explore Platform

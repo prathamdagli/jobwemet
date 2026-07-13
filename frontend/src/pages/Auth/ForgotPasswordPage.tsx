@@ -47,7 +47,7 @@ export default function ForgotPasswordPage() {
     return (
       <div>
         <div className="mb-5 flex flex-col items-center text-center">
-          <span className="mb-2 flex size-12 items-center justify-center rounded-full bg-success-500/10 text-success-600">
+          <span className="mb-2 flex size-12 items-center justify-center rounded-full bg-green-500/10 text-green-600 dark:text-green-400">
             <CheckCircle2 className="size-6" aria-hidden="true" />
           </span>
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">

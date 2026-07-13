@@ -106,6 +106,11 @@ function Dropdown({
     </div>
   )
 }
+const USER_MENU_ITEMS = [
+  { to: '/profile', label: 'Profile', icon: UserIcon },
+  { to: '/settings', label: 'Settings', icon: SettingsIcon },
+  { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+] as const
 
 function UserMenu() {
   const { user, logout } = useAuth()
@@ -113,13 +118,6 @@ function UserMenu() {
   const name = user?.displayName ?? user?.email?.split('@')[0] ?? 'User'
   const email = user?.email ?? ''
   const initials = getUserInitials(user?.displayName, user?.email)
-
-  const menuItems = [
-    { to: '/profile', label: 'Profile', icon: UserIcon },
-    { to: '/settings', label: 'Settings', icon: SettingsIcon },
-    { to: '/', label: 'Landing Page', icon: LayoutDashboard },
-    { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  ]
 
   return (
     <Dropdown
@@ -189,7 +187,7 @@ function UserMenu() {
             </div>
           </div>
           <div className="my-1 h-px bg-border" />
-          {menuItems.map((item) => (
+          {USER_MENU_ITEMS.map((item) => (
             <Link
               key={item.label}
               to={item.to}
@@ -408,9 +406,11 @@ export default function Topbar({
         />
         <Input
           type="search"
-          aria-label="Search"
-          placeholder="Search…"
-          className="pl-9"
+          aria-label="Search (coming soon)"
+          placeholder="Search… (coming soon)"
+          className="pl-9 cursor-not-allowed opacity-50"
+          readOnly
+          title="Search is coming soon"
         />
       </motion.div>
 
