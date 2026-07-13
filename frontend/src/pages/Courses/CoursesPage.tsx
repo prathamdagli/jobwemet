@@ -17,6 +17,7 @@ import { WidgetCard } from '@/components/dashboard/WidgetCard'
 import { EmptyState } from '@/components/common/EmptyState'
 import { ErrorState } from '@/components/common/ErrorState'
 import { LoadingState } from '@/components/common/LoadingState'
+import { RegeneratingState } from '@/components/common/RegeneratingState'
 import {
   FilterSelect,
   type FilterSelectProps,
@@ -134,6 +135,7 @@ export default function CoursesPage() {
   const { profile } = useProfile()
   const {
     loading,
+    isRegenerating,
     error,
     refresh,
     activeResumeId,
@@ -303,7 +305,9 @@ export default function CoursesPage() {
         }
       />
 
-      {loading ? (
+      {isRegenerating ? (
+        <RegeneratingState targetCareer={profile.targetCareer} />
+      ) : loading ? (
         <LoadingState label="Loading your courses…" />
       ) : error ? (
         <ErrorState

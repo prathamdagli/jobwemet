@@ -21,6 +21,7 @@ import { WidgetCard } from '@/components/dashboard/WidgetCard'
 import { ErrorState } from '@/components/common/ErrorState'
 import { EmptyState } from '@/components/common/EmptyState'
 import { LoadingState } from '@/components/common/LoadingState'
+import { RegeneratingState } from '@/components/common/RegeneratingState'
 import { DistributionBar } from '@/components/skills/skills'
 import {
   PriorityItem,
@@ -36,7 +37,7 @@ export default function SkillGapPage() {
   const { detected, missing, coverage, priority, recommendations } =
     useSkillGap()
   const { profile } = useProfile()
-  const { loading, error, refresh } = useAppState()
+  const { loading, isRegenerating, error, refresh } = useAppState()
   const [refreshing, setRefreshing] = useState(false)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const hasGoal = !!profile.targetCareer
@@ -95,7 +96,9 @@ export default function SkillGapPage() {
         }
       />
 
-      {loading ? (
+      {isRegenerating ? (
+        <RegeneratingState targetCareer={profile.targetCareer} />
+      ) : loading ? (
         <LoadingState label="Loading your skill gap…" />
       ) : error ? (
         <ErrorState

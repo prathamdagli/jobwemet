@@ -21,6 +21,7 @@ import { WidgetCard } from '@/components/dashboard/WidgetCard'
 import { ErrorState } from '@/components/common/ErrorState'
 import { EmptyState } from '@/components/common/EmptyState'
 import { LoadingState } from '@/components/common/LoadingState'
+import { RegeneratingState } from '@/components/common/RegeneratingState'
 import { RoadmapModule, type ModuleStatus } from '@/components/roadmap/roadmap'
 import { Stagger } from '@/motion'
 import { cn } from '@/lib/utils'
@@ -88,8 +89,14 @@ export default function RoadmapPage() {
   const { modules } = useRoadmap()
   const { courses } = useCourses()
   const { profile } = useProfile()
-  const { loading, error, refresh, activeResumeId, regenerateRoadmap } =
-    useAppState()
+  const {
+    loading,
+    isRegenerating,
+    error,
+    refresh,
+    activeResumeId,
+    regenerateRoadmap,
+  } = useAppState()
   const goal = profile.targetCareer || 'your goal'
   const [regenerating, setRegenerating] = useState(false)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -163,7 +170,9 @@ export default function RoadmapPage() {
         }
       />
 
-      {loading ? (
+      {isRegenerating ? (
+        <RegeneratingState targetCareer={profile.targetCareer} />
+      ) : loading ? (
         <LoadingState label="Loading your roadmap…" />
       ) : error ? (
         <ErrorState

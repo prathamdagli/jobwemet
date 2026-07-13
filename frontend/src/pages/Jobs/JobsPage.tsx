@@ -20,6 +20,7 @@ import { PageHeader } from '@/components/dashboard/PageHeader'
 import { ErrorState } from '@/components/common/ErrorState'
 import { EmptyState } from '@/components/common/EmptyState'
 import { LoadingState } from '@/components/common/LoadingState'
+import { RegeneratingState } from '@/components/common/RegeneratingState'
 import {
   CareerCard,
   FilterSelect,
@@ -34,7 +35,8 @@ import { Reveal, Stagger } from '@/motion'
 export default function JobsPage() {
   const { careers, insights, insightNote } = useCareerMatches()
   const { profile } = useProfile()
-  const { loading, error, refresh, selectCareer } = useAppState()
+  const { loading, isRegenerating, error, refresh, selectCareer } =
+    useAppState()
   const [refreshing, setRefreshing] = useState(false)
   const [selecting, setSelecting] = useState<string | null>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -96,7 +98,9 @@ export default function JobsPage() {
         }
       />
 
-      {loading ? (
+      {isRegenerating ? (
+        <RegeneratingState targetCareer={profile.targetCareer} />
+      ) : loading ? (
         <LoadingState label="Loading career matches…" />
       ) : error ? (
         <ErrorState

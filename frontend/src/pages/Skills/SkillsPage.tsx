@@ -28,6 +28,7 @@ import { ProgressBar } from '@/components/dashboard/ProgressBar'
 import { ErrorState } from '@/components/common/ErrorState'
 import { EmptyState } from '@/components/common/EmptyState'
 import { LoadingState } from '@/components/common/LoadingState'
+import { RegeneratingState } from '@/components/common/RegeneratingState'
 import { InsightRow } from '@/components/careers/careers'
 import {
   CategoryHeader,
@@ -95,7 +96,14 @@ function CategoryAccordion({
 export default function SkillsPage() {
   const [analyzing, setAnalyzing] = useState(false)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const { loading, error, refresh, activeResumeId, runAnalysis } = useAppState()
+  const {
+    loading,
+    isRegenerating,
+    error,
+    refresh,
+    activeResumeId,
+    runAnalysis,
+  } = useAppState()
   const { profile } = useProfile()
   const { priority: missingSkills } = useSkillGap()
   const {
@@ -165,7 +173,9 @@ export default function SkillsPage() {
         }
       />
 
-      {loading ? (
+      {isRegenerating ? (
+        <RegeneratingState targetCareer={profile.targetCareer} />
+      ) : loading ? (
         <LoadingState label="Loading your skills…" />
       ) : error ? (
         <ErrorState
