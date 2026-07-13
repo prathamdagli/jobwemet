@@ -294,7 +294,7 @@ function buildCareerMatches(slots: DataSlots): CareerMatchesData {
     id: slug(c.careerName),
     title: c.careerName,
     match: Math.round(c.confidence * 100),
-    description: c.reason,
+    description: c.description || c.reason,
     topSkills: c.topMatchingSkills,
     missingSkills: [],
     explanation: c.reason,

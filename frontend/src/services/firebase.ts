@@ -78,6 +78,7 @@ export interface SkillAnalysisDoc {
 export interface CareerMatchItem {
   careerName: string
   confidence: number
+  description?: string
   reason: string
   topMatchingSkills: string[]
 }

@@ -124,6 +124,7 @@ class SkillAnalysis(BaseModel):
 class CareerMatchItem(BaseModel):
     careerName: str
     confidence: float = 0
+    description: str = ""
     reason: str = ""
     topMatchingSkills: list[str] = Field(default_factory=list)
 

@@ -218,6 +218,7 @@ function CareerMatchesBody({
           <TopMatchBanner
             career={topMatch}
             isGoal={isGoal(topMatch.title)}
+            isSelecting={selecting === topMatch.title}
             onSelect={onSelect}
           />
         </Reveal>
@@ -295,7 +296,8 @@ function CareerMatchesBody({
               <CareerCard
                 key={career.id}
                 career={career}
-                isGoal={isGoal(career.title) || selecting === career.title}
+                isGoal={isGoal(career.title)}
+                isSelecting={selecting === career.title}
                 onSelect={onSelect}
               />
             ))}

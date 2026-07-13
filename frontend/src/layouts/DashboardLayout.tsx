@@ -4,6 +4,8 @@ import { AnimatePresence, motion } from 'motion/react'
 import { pageTransition } from '@/motion'
 import Sidebar from '@/components/dashboard/Sidebar'
 import Topbar from '@/components/dashboard/Topbar'
+import { useAppState } from '@/hooks/useAppState'
+import { Loader2 } from 'lucide-react'
 
 export default function DashboardLayout() {
   const [collapsed, setCollapsed] = useState(
@@ -11,6 +13,7 @@ export default function DashboardLayout() {
   )
   const [mobileOpen, setMobileOpen] = useState(false)
   const location = useLocation()
+  const { isRegenerating, data } = useAppState()
 
   return (
     <div className="flex h-screen overflow-hidden bg-background text-foreground">
@@ -19,7 +22,7 @@ export default function DashboardLayout() {
         mobileOpen={mobileOpen}
         onCloseMobile={() => setMobileOpen(false)}
       />
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="relative flex min-w-0 flex-1 flex-col">
         <Topbar
           onOpenMobile={() => setMobileOpen(true)}
           onToggleCollapse={() => setCollapsed((value) => !value)}
@@ -35,6 +38,34 @@ export default function DashboardLayout() {
             >
               <Outlet />
             </motion.div>
+          </AnimatePresence>
+
+          <AnimatePresence>
+            {isRegenerating && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm"
+              >
+                <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-border bg-card p-8 shadow-xl text-center">
+                  <Loader2
+                    className="size-10 animate-spin text-primary"
+                    aria-hidden="true"
+                  />
+                  <div className="space-y-1.5">
+                    <h3 className="text-lg font-semibold tracking-tight text-foreground">
+                      Rebuilding your path
+                    </h3>
+                    <p className="max-w-xs text-sm text-muted-foreground">
+                      Processing your new goal ({data.profile.targetCareer}).
+                      Please wait while we generate your missing skills,
+                      roadmap, and recommended courses...
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            )}
           </AnimatePresence>
         </main>
       </div>

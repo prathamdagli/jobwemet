@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import type { LucideIcon } from 'lucide-react'
 import { motion } from 'motion/react'
-import { ArrowUpRight, ChevronDown, Sparkles } from 'lucide-react'
+import { ArrowUpRight, ChevronDown, Sparkles, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -31,10 +31,12 @@ export interface Career {
 export function CareerCard({
   career,
   isGoal,
+  isSelecting,
   onSelect,
 }: {
   career: Career
   isGoal?: boolean
+  isSelecting?: boolean
   onSelect?: (title: string) => void
 }) {
   const headingId = `career-${career.id}-title`
@@ -147,10 +149,22 @@ export function CareerCard({
           size="default"
           className="flex-1"
           onClick={onSelect ? () => onSelect(career.title) : undefined}
-          disabled={isGoal}
+          disabled={isGoal || isSelecting}
           aria-pressed={isGoal}
         >
-          {isGoal ? 'Current Goal' : 'Set as Goal'}
+          {isSelecting ? (
+            <>
+              <Loader2
+                className="mr-1.5 size-4 animate-spin"
+                aria-hidden="true"
+              />
+              Updating...
+            </>
+          ) : isGoal ? (
+            'Current Goal'
+          ) : (
+            'Set as Goal'
+          )}
         </Button>
         <Button
           size="default"
@@ -168,10 +182,12 @@ export function CareerCard({
 export function TopMatchBanner({
   career,
   isGoal,
+  isSelecting,
   onSelect,
 }: {
   career: Career
   isGoal?: boolean
+  isSelecting?: boolean
   onSelect?: (title: string) => void
 }) {
   const { ref, inView } = useInViewReveal<HTMLElement>()
@@ -224,10 +240,22 @@ export function TopMatchBanner({
           size="sm"
           className="mt-5 gap-1.5"
           onClick={onSelect ? () => onSelect(career.title) : undefined}
-          disabled={isGoal}
+          disabled={isGoal || isSelecting}
           aria-pressed={isGoal}
         >
-          {isGoal ? 'Current Goal' : 'Set as Goal'}
+          {isSelecting ? (
+            <>
+              <Loader2
+                className="mr-1.5 size-4 animate-spin"
+                aria-hidden="true"
+              />
+              Updating...
+            </>
+          ) : isGoal ? (
+            'Current Goal'
+          ) : (
+            'Set as Goal'
+          )}
         </Button>
       </div>
 

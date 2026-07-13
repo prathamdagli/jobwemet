@@ -466,17 +466,14 @@ def recommend_courses_endpoint(
 @api_router.post(
     "/select-career",
     response_model=models.ActionResponse,
-    summary="Select a target career and re-derive the pipeline",
+    summary="Select a target career (frontend orchestrates pipeline regeneration)",
     description=(
-        "Sets the user's target career (persisted on the profile) and, when a "
-        "resume exists, re-runs the full pipeline — analysis, career matches, "
-        "skill gap, roadmap and courses — so every derived document stays keyed "
-        "to the SAME career. This is what keeps the roadmap and the courses from "
-        "drifting to different goals."
+        "Sets the user's target career (persisted on the profile). The frontend "
+        "is responsible for orchestrating the pipeline regeneration (analysis, "
+        "roadmap, courses)."
     ),
     responses={
         401: {"description": "Missing or invalid Firebase ID token."},
-        404: {"description": "No resume found for the user."},
     },
     tags=["Career"],
 )
@@ -487,18 +484,12 @@ def select_career(
     _require_user(user.uid)
     database.update_profile(user.uid, target_career=body.career)
     resume_id = _latest_resume_id(user)
-    if not resume_id:
-        _record_activity(user.uid, None, "profile_updated")
-        return models.ActionResponse(
-            status="ok",
-            message="Target career saved. Upload a resume to generate a roadmap.",
-            resumeId=None,
-        )
-    _run_full_pipeline(user, resume_id, body.career)
-    logger.info("Career selected: uid=%s career=%s", user.uid, body.career)
+    
+    _record_activity(user.uid, None, "profile_updated")
+    
     return models.ActionResponse(
         status="ok",
-        message=f"Pipeline re-derived for {body.career}.",
+        message="Target career saved.",
         resumeId=resume_id,
     )
 
@@ -529,6 +520,9 @@ def update_profile(
 ) -> models.User:
     _require_user(user.uid)
     _validate_profile(body)
+    user_doc = database.get_user(user.uid)
+    old_target = user_doc.targetCareer if user_doc else None
+
     updated = database.update_profile(
         user.uid,
         display_name=body.displayName,
@@ -542,9 +536,6 @@ def update_profile(
         portfolio=body.portfolio,
         profile_image=body.profileImage,
     )
-    # Changing the target career must re-derive the roadmap + courses so the
-    # whole pipeline stays keyed to the same goal.
-    _cascade_if_target_changed(user, body.targetCareer)
     _record_activity(user.uid, None, "profile_updated")
     logger.info("Profile updated: uid=%s", user.uid)
     return updated
@@ -629,6 +620,9 @@ def update_settings(
             "profileImage",
         )
     ):
+        user_doc = database.get_user(user.uid)
+        old_target = user_doc.targetCareer if user_doc else None
+
         database.update_profile(
             user.uid,
             display_name=body.displayName,
@@ -642,9 +636,6 @@ def update_settings(
             portfolio=body.portfolio,
             profile_image=body.profileImage,
         )
-        # Changing the target career must re-derive the roadmap + courses so
-        # the whole pipeline stays keyed to the same goal.
-        _cascade_if_target_changed(user, body.targetCareer)
 
     _record_activity(user.uid, None, "settings_changed")
     logger.info("Settings changed: uid=%s", user.uid)
@@ -957,7 +948,7 @@ def _run_full_pipeline(
 
 
 def _cascade_if_target_changed(
-    user: models.FirebaseUser, new_target: Optional[str]
+    user: models.FirebaseUser, old_target: Optional[str], new_target: Optional[str]
 ) -> None:
     """If the target career actually changed, re-derive everything for it.
 
@@ -966,10 +957,7 @@ def _cascade_if_target_changed(
     the glue that keeps resume -> career -> roadmap -> courses in sync when
     the user edits their target career from Settings or the Resume page.
     """
-    if not new_target:
-        return
-    user_doc = database.get_user(user.uid)
-    if user_doc and user_doc.targetCareer == new_target:
+    if not new_target or old_target == new_target:
         return
     resume_id = _latest_resume_id(user)
     if not resume_id:

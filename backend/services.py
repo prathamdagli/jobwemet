@@ -461,6 +461,7 @@ def build_career_matches(skills: list[str]) -> dict:
                 {
                     "careerName": "Software Engineer",
                     "confidence": 0.82,
+                    "description": "Design, develop, and maintain software systems.",
                     "reason": "Strong overlap with the candidate's profile.",
                     "topMatchingSkills": _as_list(skills)[:3],
                 }
@@ -470,7 +471,9 @@ def build_career_matches(skills: list[str]) -> dict:
         "Given the candidate's skills, rank the best-fit careers for this candidate "
         "and return STRICT JSON:\n"
         '{"careers": [{"careerName": string, "confidence": 0-1 float, '
-        '"reason": string, "topMatchingSkills": ["string"]}]}\n'
+        '"description": "Short 1-sentence description of the role itself", '
+        '"reason": "Detailed explanation of why the candidate is a good fit for this role based on their skills", '
+        '"topMatchingSkills": ["string"]}]}\n'
         f"Candidate skills: {list(_as_list(skills))}.\n"
         "Include 3-6 careers. confidence must be a float between 0 and 1. "
         "Return ONLY valid JSON."
@@ -480,6 +483,7 @@ def build_career_matches(skills: list[str]) -> dict:
         {
             "careerName": _as_str(c.get("careerName")),
             "confidence": max(0.0, min(1.0, _as_float(c.get("confidence"), 0.5))),
+            "description": _as_str(c.get("description")),
             "reason": _as_str(c.get("reason")),
             "topMatchingSkills": [str(s) for s in _as_list(c.get("topMatchingSkills"))],
         }

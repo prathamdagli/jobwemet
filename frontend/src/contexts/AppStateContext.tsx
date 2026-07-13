@@ -24,6 +24,8 @@ export interface AppStateContextValue {
   data: AppData
   /** True while the data is (re)loading. */
   loading: boolean
+  /** True while the AI pipeline is regenerating in the background (e.g. after goal change). */
+  isRegenerating: boolean
   /** Populated when a load or action fails. */
   error: string | null
   /** Re-fetch every slice from the backend. */
@@ -64,6 +66,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     buildAppData(EMPTY_SLOTS, null),
   )
   const [loading, setLoading] = useState(true)
+  const [isRegenerating, setIsRegenerating] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [settings, setSettings] = useState<Settings | null>(null)
 
@@ -237,39 +240,94 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     [loadAll],
   )
 
-  const selectCareer = useCallback(
-    async (career: string) => {
-      await api.selectCareer(career)
-      await loadAll()
+  const activeResumeId = useMemo(
+    () => data.resume.recent[0]?.id ?? null,
+    [data.resume.recent],
+  )
+
+  const _runRegenerationPipeline = useCallback(
+    async (resumeId: string) => {
+      setIsRegenerating(true)
+      try {
+        await api.regenerateAnalysis(resumeId)
+        await loadAll()
+        await Promise.allSettled([
+          api.generateRoadmap(resumeId),
+          api.recommendCourses(resumeId),
+        ])
+      } catch (err) {
+        console.error('Pipeline failed during career target change:', err)
+      } finally {
+        await loadAll()
+        setIsRegenerating(false)
+      }
     },
     [loadAll],
+  )
+
+  const selectCareer = useCallback(
+    async (career: string) => {
+      const res = await api.selectCareer(career)
+      await loadAll()
+
+      const resumeId =
+        (res as { resumeId?: string })?.resumeId || activeResumeId
+      if (resumeId) {
+        void _runRegenerationPipeline(resumeId)
+      }
+    },
+    [loadAll, activeResumeId, _runRegenerationPipeline],
   )
 
   const updateProfile = useCallback(
     async (body: UpdateProfileBody) => {
+      const oldTarget = data.profile.targetCareer
       await api.updateProfile(body)
       await loadAll()
+
+      if (
+        body.targetCareer !== undefined &&
+        body.targetCareer !== oldTarget &&
+        activeResumeId
+      ) {
+        void _runRegenerationPipeline(activeResumeId)
+      }
     },
-    [loadAll],
+    [
+      loadAll,
+      data.profile.targetCareer,
+      activeResumeId,
+      _runRegenerationPipeline,
+    ],
   )
 
   const putSettings = useCallback(
     async (body: PutSettingsBody) => {
+      const oldTarget = data.profile.targetCareer
       await api.putSettings(body)
       await loadAll()
-    },
-    [loadAll],
-  )
 
-  const activeResumeId = useMemo(
-    () => data.resume.recent[0]?.id ?? null,
-    [data.resume.recent],
+      if (
+        body.targetCareer !== undefined &&
+        body.targetCareer !== oldTarget &&
+        activeResumeId
+      ) {
+        void _runRegenerationPipeline(activeResumeId)
+      }
+    },
+    [
+      loadAll,
+      data.profile.targetCareer,
+      activeResumeId,
+      _runRegenerationPipeline,
+    ],
   )
 
   const value = useMemo<AppStateContextValue>(
     () => ({
       data,
       loading,
+      isRegenerating,
       error,
       refresh,
       activeResumeId,
@@ -286,6 +344,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     [
       data,
       loading,
+      isRegenerating,
       error,
       refresh,
       activeResumeId,
