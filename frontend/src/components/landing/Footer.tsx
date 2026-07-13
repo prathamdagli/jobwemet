@@ -1,5 +1,5 @@
 import { motion } from 'motion/react'
-import { Sparkles } from 'lucide-react'
+
 import { Link } from 'react-router-dom'
 import { fadeUp, useInViewReveal } from '@/motion'
 
@@ -36,8 +36,12 @@ export default function Footer() {
               aria-label="JobWeMet — home"
               className="group flex w-fit cursor-pointer items-center gap-2.5 outline-none transition-opacity hover:opacity-80 focus-visible:ring-2 focus-visible:ring-ring/50"
             >
-              <span className="inline-flex size-9 items-center justify-center rounded-xl bg-foreground text-background">
-                <Sparkles className="size-4" aria-hidden="true" />
+              <span className="inline-flex size-9 items-center justify-center">
+                <img
+                  src="/logo.png"
+                  alt="JobWeMet Logo"
+                  className="size-9 object-contain"
+                />
               </span>
               <p className="text-lg font-semibold tracking-tight text-foreground">
                 Job<span className="text-primary">WeMet</span>

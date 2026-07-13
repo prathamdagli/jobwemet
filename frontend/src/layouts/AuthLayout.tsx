@@ -2,7 +2,7 @@ import { Link, Outlet, useLocation } from 'react-router-dom'
 import { AnimatePresence, motion } from 'motion/react'
 import { pageTransition } from '@/motion'
 import { cn } from '@/lib/utils'
-import { Brain } from 'lucide-react'
+
 import AuthShowcase from '@/components/auth/AuthShowcase'
 
 function BrandLogo({ className }: { className?: string }) {
@@ -16,8 +16,12 @@ function BrandLogo({ className }: { className?: string }) {
       )}
     >
       <span className="flex items-center gap-2.5">
-        <span className="flex size-9 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/20">
-          <Brain className="size-5 text-white" aria-hidden="true" />
+        <span className="flex size-9 items-center justify-center">
+          <img
+            src="/logo.png"
+            alt="JobWeMet Logo"
+            className="size-9 object-contain"
+          />
         </span>
         <span className="text-lg font-semibold tracking-tight text-white">
           JobWeMet

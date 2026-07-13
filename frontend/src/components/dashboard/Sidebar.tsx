@@ -17,17 +17,12 @@ function BrandMark({ collapsed }: { collapsed: boolean }) {
       aria-label="JobWeMet — home"
       className="flex h-16 cursor-pointer items-center gap-2 px-4 outline-none transition-opacity hover:opacity-80 focus-visible:ring-2 focus-visible:ring-ring/50"
     >
-      <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-        <svg viewBox="0 0 32 32" className="size-5" aria-hidden="true">
-          <path
-            d="M7 23 L13 17 L19 20 L25 9"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.4"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
+      <span className="flex size-8 shrink-0 items-center justify-center">
+        <img
+          src="/logo.png"
+          alt="JobWeMet Logo"
+          className="size-8 object-contain"
+        />
       </span>
       {!collapsed && (
         <span className="text-lg font-semibold tracking-tight text-foreground">

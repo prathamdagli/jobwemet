@@ -15,35 +15,11 @@ const NAV_LINKS = [
 function BrandLogo() {
   return (
     <span className="flex items-center gap-2">
-      <svg
-        viewBox="0 0 32 32"
-        className="size-7 shrink-0"
-        aria-hidden="true"
-        focusable="false"
-      >
-        <rect width="32" height="32" rx="9" className="fill-primary" />
-        {/* ascending node network: growth path mapped by intelligence */}
-        <path
-          d="M7 23 L13 17 L19 20 L25 9"
-          fill="none"
-          stroke="white"
-          strokeWidth="2.2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M13 17 L17 12"
-          fill="none"
-          stroke="white"
-          strokeWidth="1.6"
-          strokeLinecap="round"
-        />
-        <circle cx="7" cy="23" r="2.1" fill="white" />
-        <circle cx="13" cy="17" r="2.1" fill="white" />
-        <circle cx="19" cy="20" r="1.8" fill="white" />
-        <circle cx="17" cy="12" r="1.6" fill="white" />
-        <circle cx="25" cy="9" r="2.6" fill="white" />
-      </svg>
+      <img
+        src="/logo.png"
+        alt="JobWeMet Logo"
+        className="size-8 shrink-0 object-contain"
+      />
       <span className="text-lg font-semibold tracking-tight text-foreground">
         Job<span className="text-primary">WeMet</span>
       </span>

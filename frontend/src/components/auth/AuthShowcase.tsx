@@ -1,6 +1,5 @@
 import { motion } from 'motion/react'
 import {
-  Brain,
   Briefcase,
   Check,
   FileText,
@@ -368,8 +367,12 @@ export default function AuthShowcase() {
             to="/"
             className="inline-flex w-fit cursor-pointer items-center gap-3 rounded-2xl opacity-95 outline-none transition-[transform,opacity] duration-200 hover:-translate-y-px hover:opacity-100 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-950"
           >
-            <span className="flex size-14 items-center justify-center rounded-2xl bg-white/10 ring-1 ring-white/20">
-              <Brain className="size-7 text-white" />
+            <span className="flex size-14 items-center justify-center">
+              <img
+                src="/logo.png"
+                alt="JobWeMet Logo"
+                className="size-14 object-contain"
+              />
             </span>
             <span className="text-3xl font-semibold tracking-tight text-white">
               JobWeMet
