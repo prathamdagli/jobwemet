@@ -281,7 +281,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
 
   const updateProfile = useCallback(
     async (body: UpdateProfileBody) => {
-      const oldTarget = data.profile.targetCareer
+      const oldTarget = data.profile.profile.targetCareer
       await api.updateProfile(body)
       await loadAll()
 
@@ -295,7 +295,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     },
     [
       loadAll,
-      data.profile.targetCareer,
+      data.profile.profile.targetCareer,
       activeResumeId,
       _runRegenerationPipeline,
     ],
@@ -303,7 +303,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
 
   const putSettings = useCallback(
     async (body: PutSettingsBody) => {
-      const oldTarget = data.profile.targetCareer
+      const oldTarget = data.profile.profile.targetCareer
       await api.putSettings(body)
       await loadAll()
 
@@ -317,7 +317,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     },
     [
       loadAll,
-      data.profile.targetCareer,
+      data.profile.profile.targetCareer,
       activeResumeId,
       _runRegenerationPipeline,
     ],
