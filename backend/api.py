@@ -291,9 +291,9 @@ def analyze_resume(
     except FileNotFoundError:
         raise HTTPException(status_code=404, detail="Resume not found.")
 
-    analysis = run_analyze(resume_id, text, target)
+    analysis = run_analyze(resume_id, text, "")
     skills = [s for grp in (analysis.technicalSkills or []) for s in grp.skills]
-    matches = match_careers(resume_id, skills, target)
+    matches = match_careers(resume_id, skills, "")
     top = matches.careers[0] if matches.careers else None
 
     # If the user hasn't set a target, fall back to the top AI-recommended career
@@ -341,9 +341,9 @@ def regenerate_analysis(
         text = read_resume_text(user.uid, resume_id)
     except FileNotFoundError:
         raise HTTPException(status_code=404, detail="Resume not found.")
-    analysis = run_analyze(resume_id, text, target)
+    analysis = run_analyze(resume_id, text, "")
     skills = [s for grp in (analysis.technicalSkills or []) for s in grp.skills]
-    matches = match_careers(resume_id, skills, target)
+    matches = match_careers(resume_id, skills, "")
     top = matches.careers[0] if matches.careers else None
 
     # If the user hasn't set a target, fall back to the top AI-recommended career
@@ -940,9 +940,9 @@ def _run_full_pipeline(
         # Storage blob gone — nothing to recompute against.
         return
 
-    analysis = run_analyze(resume_id, text, target)
+    analysis = run_analyze(resume_id, text, "")
     skills = _flatten_skills(analysis)
-    matches = match_careers(resume_id, skills, target)
+    matches = match_careers(resume_id, skills, "")
     top = matches.careers[0] if matches.careers else None
     effective_target = target if target else (top.careerName if top else "")
 
