@@ -26,7 +26,7 @@ This backend is hardened for deployment (no functional changes to the API):
 - **Request IDs.** Each request gets an id (`X-Request-ID` header, also echoed
   in logs) for correlation.
 - **Startup validation.** `config.validate_env()` fails fast with a helpful
-  message on misconfiguration (bad AI provider, openrouter without a key, wildcard
+  message on misconfiguration (bad AI provider, groq without a key, wildcard
   CORS with auth enabled).
 - **Input validation.** Resume upload, profile/settings updates, and
   roadmap/analysis regeneration are validated via Pydantic models.
@@ -62,31 +62,30 @@ Key values:
 - `REQUIRE_AUTH` / `DEMO_UID` — when auth is off, requests fall back to a demo
   user so Swagger and quick tests work without a token. Set `REQUIRE_AUTH=true`
   in production.
-- `AI_PROVIDER`, `OPENROUTER_API_KEY`, `OPENROUTER_MODEL`, `OPENROUTER_REASONING`, `OPENROUTER_BASE_URL`
+- `AI_PROVIDER`, `GROQ_API_KEY`, `GROQ_MODEL`
 
 ### Switching the AI provider
 
 - **Stub (default, no key, no billing):** `AI_PROVIDER=stub`. The four
   generative stages return deterministic placeholder data so the whole
   pipeline runs end-to-end for development and demos.
-- **Real OpenRouter:** `AI_PROVIDER=openrouter` **and**
-  `OPENROUTER_API_KEY=<your key>`. The stub is then only used as an
+- **Real Groq:** `AI_PROVIDER=groq` **and**
+  `GROQ_API_KEY=<your key>`. The stub is then only used as an
   internal fallback if the key is missing. There is **no separate
   `build_course_list`** anymore — course recommendations are catalog-driven
   (see `courses.py`) and the dashboard summary is deterministic aggregation,
   by design.
 
-### Replacing / rotating the OpenRouter key
+### Replacing / rotating the Groq key
 
-Edit `backend/.env` and change `OPENROUTER_API_KEY=...`, then restart the
-server. The key must be valid and have enough credits on OpenRouter —
+Edit `backend/.env` and change `GROQ_API_KEY=...`, then restart the
+server. The key must be valid and have enough credits on Groq —
 otherwise every call returns HTTP 429 (`ai_quota`). On a bad key the API
 returns `401 ai_auth`; on a network/timeout failure `502/504`. These all map
 to the standard `{ success:false, error:{code,message} }` envelope via the
 `AIError` handler in `main.py`, so the backend never 500s on an AI failure.
-The default model is `tencent/hy3:free`; set `OPENROUTER_MODEL` if you need
-a different one. `OPENROUTER_REASONING` (e.g. `low`, `medium`, `high`) tunes
-reasoning effort for models that support it and is ignored otherwise.
+The default model is `meta-llama/llama-4-scout-17b-16e-instruct`; set `GROQ_MODEL` if you need
+a different one.
 
 ## Layout
 
@@ -97,7 +96,7 @@ backend/
   firebase.py  Admin SDK init + auth/firestore/storage clients
   database.py  Firestore read/write helpers (uid-scoped)
   models.py    Pydantic models (camelCase, 1:1 with Firestore docs)
-  ai.py        AI provider abstraction (stub | openrouter)
+  ai.py        AI provider abstraction (stub | groq)
   resume.py    Upload, validation, PDF/DOCX text extraction
   career.py    Skill analysis, career matching, skill gap, dashboard
   roadmap.py   Roadmap generation / regeneration
@@ -147,13 +146,13 @@ Resumes are stored at `users/{uid}/resumes/{resumeId}.{ext}`.
 
 ## AI provider abstraction
 
-No endpoint calls a model directly. Every request goes through `ai.py`,
-which exposes a provider interface (`AIProvider`) with a `stub` and an
-`openrouter` implementation selected by `AI_PROVIDER`. Adding another
+No endpoint calls a model directly. Every request goes through `services.py`
+(specifically the AIProvider), which exposes a provider interface (`AIProvider`) with a `stub` and a
+`groq` implementation selected by `AI_PROVIDER`. Adding another
 provider later means adding another provider class — nothing else changes.
 
-When `AI_PROVIDER=openrouter`, the **four generative stages** of the
-resume pipeline call the OpenRouter chat-completions API and parse the JSON
+When `AI_PROVIDER=groq`, the **four generative stages** of the
+resume pipeline call the Groq API and parse the JSON
 it returns:
 `analyze_resume_text` (skill/experience/education extraction),
 `build_career_matches`, `build_skill_gap`, and `build_roadmap`. Outputs are

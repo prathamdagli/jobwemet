@@ -7,3 +7,4 @@ PyMuPDF
 python-docx
 requests
 python-multipart
+groq

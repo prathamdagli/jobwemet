@@ -37,7 +37,7 @@ logger = logging.getLogger("jobwemet.services")
 # Every AI call in the application goes through this section — no endpoint
 # or domain function imports a provider SDK directly. Today a deterministic
 # ``stub`` provider is used when no real key is configured; otherwise the
-# configured provider (OpenRouter) is used for the four generative stages of
+# configured provider (Groq) is used for the four generative stages of
 # the resume pipeline: skill extraction, career matching, skill-gap analysis
 # and roadmap generation. (Course recommendations are catalog-driven and live
 # in the course-provider section below, not here.)
@@ -82,150 +82,117 @@ class StubProvider(AIProvider):
 
     Lets the full pipeline run end-to-end (and keeps Swagger honest)
     without spending tokens or requiring secrets. This is the intentional
-    fallback only — production runs the OpenRouter provider.
+    fallback only — production runs the Groq provider.
     """
 
     name = "stub"
 
     def complete(self, prompt: str, *, system: Optional[str] = None) -> str:
         return (
-            "[stub] AI provider is not configured. Set AI_PROVIDER=openrouter "
-            "and OPENROUTER_API_KEY in .env to enable real generation."
+            "[stub] AI provider is not configured. Set AI_PROVIDER=groq "
+            "and GROQ_API_KEY in .env to enable real generation."
         )
 
 
-class OpenRouterProvider(AIProvider):
-    """OpenRouter chat-completions API (OpenAI-compatible)."""
+class GroqProvider(AIProvider):
+    """Groq API client integration."""
 
-    name = "openrouter"
+    name = "groq"
 
-    # Valid OpenRouter reasoning-effort levels. Unknown/empty values are
-    # skipped so non-reasoning models and typos degrade gracefully.
-    _REASONING_EFFORTS = {"max", "xhigh", "high", "medium", "low", "minimal", "none"}
-
-    def __init__(self, api_key: str, base_url: str, model: str, reasoning: str = "low") -> None:
-        self._api_key = api_key
+    def __init__(self, api_key: str, model: str) -> None:
+        import groq
         self._model = model
-        self._reasoning = reasoning
-        self._url = f"{base_url.rstrip('/')}/chat/completions"
+        self._client = groq.Groq(
+            api_key=api_key,
+            max_retries=0, # We handle retries at a higher level
+            timeout=_TIMEOUT_SECONDS,
+        )
 
     def complete(self, prompt: str, *, system: Optional[str] = None) -> str:
+        import groq
         messages = []
         if system:
             messages.append({"role": "system", "content": system})
         messages.append({"role": "user", "content": prompt})
 
-        payload = {
-            "model": self._model,
-            "messages": messages,
-            "temperature": 0.2,
-        }
-        # Optional reasoning effort for models that support it. Sent only for
-        # a recognised effort level; otherwise omitted so the request still
-        # works (graceful default) on models that don't use it.
-        effort = (self._reasoning or "").strip().lower()
-        if effort in self._REASONING_EFFORTS:
-            payload["reasoning"] = {"effort": effort}
-        headers = {
-            "Authorization": f"Bearer {self._api_key}",
-            "Content-Type": "application/json",
-        }
-
         started = time.monotonic()
         try:
-            resp = requests.post(
-                self._url,
-                headers=headers,
-                json=payload,
-                timeout=_TIMEOUT_SECONDS,
+            resp = self._client.chat.completions.create(
+                model=self._model,
+                messages=messages,
+                temperature=0.2,
             )
-        except requests.exceptions.Timeout:
+        except groq.AuthenticationError as exc:
             raise AIError(
-                "The AI provider timed out.", status_code=504, code="ai_timeout"
-            )
-        except requests.exceptions.RequestException as exc:
+                "Invalid or unauthorized Groq API key.",
+                status_code=401,
+                code="ai_auth",
+            ) from exc
+        except groq.NotFoundError as exc:
+            raise AIError(
+                "Groq model or endpoint not found.",
+                status_code=404,
+                code="ai_not_found",
+            ) from exc
+        except groq.RateLimitError as exc:
+            raise AIError(
+                f"AI provider quota exceeded. Check the Groq key's credits / rate limits. {str(exc)[:200]}",
+                status_code=429,
+                code="ai_quota",
+            ) from exc
+        except groq.APITimeoutError as exc:
+            raise AIError(
+                "The AI provider request timed out.",
+                status_code=408,
+                code="ai_timeout",
+            ) from exc
+        except groq.APIConnectionError as exc:
             raise AIError(
                 f"The AI provider is unreachable: {exc}",
                 status_code=502,
                 code="ai_unavailable",
-            )
+            ) from exc
+        except groq.APIStatusError as exc:
+            if exc.status_code == 503:
+                raise AIError(
+                    "The AI provider is temporarily unavailable.",
+                    status_code=503,
+                    code="ai_unavailable",
+                ) from exc
+            raise AIError(
+                f"Groq API error {exc.status_code}: {str(exc)[:300]}",
+                status_code=502,
+                code="ai_error",
+            ) from exc
+        except Exception as exc:
+            raise AIError(
+                f"Unexpected Groq API error: {str(exc)[:300]}",
+                status_code=502,
+                code="ai_error",
+            ) from exc
 
         latency_ms = int((time.monotonic() - started) * 1000)
-        request_id = resp.headers.get("x-request-id")
-        try:
-            usage = resp.json().get("usage")
-        except Exception:
-            usage = None
+        request_id = getattr(resp, "id", None)
+        usage = getattr(resp, "usage", None)
+        
         # Log operational signal only — never the prompt or the API key.
         logger.info(
-            "openrouter model=%s latency_ms=%d request_id=%s usage=%s",
+            "groq model=%s latency_ms=%d request_id=%s usage=%s",
             self._model,
             latency_ms,
             request_id,
             usage,
         )
 
-        # Map the documented status codes onto stable error envelopes.
-        if resp.status_code in (401, 403):
-            raise AIError(
-                "Invalid or unauthorized OpenRouter API key.",
-                status_code=401,
-                code="ai_auth",
-            )
-        if resp.status_code == 404:
-            raise AIError(
-                "OpenRouter model or endpoint not found.",
-                status_code=404,
-                code="ai_not_found",
-            )
-        if resp.status_code == 408:
-            raise AIError(
-                "The AI provider request timed out.",
-                status_code=408,
-                code="ai_timeout",
-            )
-        if resp.status_code == 429:
-            raise AIError(
-                "AI provider quota exceeded. Check the OpenRouter key's "
-                "credits / rate limits, then retry. Raw: "
-                f"{resp.text[:300]}",
-                status_code=429,
-                code="ai_quota",
-            )
-        if resp.status_code == 503:
-            raise AIError(
-                "The AI provider is temporarily unavailable.",
-                status_code=503,
-                code="ai_unavailable",
-            )
-        if resp.status_code == 504:
-            raise AIError(
-                "The AI provider gateway timed out.",
-                status_code=504,
-                code="ai_timeout",
-            )
-        if resp.status_code >= 500:
-            raise AIError(
-                f"OpenRouter API error {resp.status_code}: {resp.text[:300]}",
-                status_code=502,
-                code="ai_error",
-            )
-        if resp.status_code != 200:
-            raise AIError(
-                f"OpenRouter API error {resp.status_code}: {resp.text[:300]}",
-                status_code=502,
-                code="ai_error",
-            )
-
         try:
-            data = resp.json()
-            text = data["choices"][0]["message"]["content"]
-        except (KeyError, IndexError, ValueError) as exc:
+            text = resp.choices[0].message.content
+        except (KeyError, IndexError, ValueError, AttributeError) as exc:
             raise AIError(
                 "The AI provider returned an empty or malformed response.",
                 status_code=502,
                 code="ai_malformed",
             ) from exc
+            
         if not text or not text.strip():
             raise AIError(
                 "The AI provider returned an empty response.",
@@ -237,12 +204,10 @@ class OpenRouterProvider(AIProvider):
 
 def get_provider() -> AIProvider:
     """Return the configured provider (factory)."""
-    if config.AI_PROVIDER == "openrouter" and config.OPENROUTER_API_KEY:
-        return OpenRouterProvider(
-            config.OPENROUTER_API_KEY,
-            config.OPENROUTER_BASE_URL,
-            config.OPENROUTER_MODEL,
-            config.OPENROUTER_REASONING,
+    if config.AI_PROVIDER == "groq" and config.GROQ_API_KEY:
+        return GroqProvider(
+            config.GROQ_API_KEY,
+            config.GROQ_MODEL,
         )
     return StubProvider()
 
@@ -359,7 +324,7 @@ _SYSTEM = (
 # Domain helpers — build structured data for the pipeline.
 #
 # Each returns a plain dict the caller wraps in a Pydantic model. When the
-# OpenRouter provider is active the dict is produced by a real generation
+# Groq provider is active the dict is produced by a real generation
 # call; when only the stub is configured a deterministic placeholder is
 # returned (intentional fallback, never billed).
 # --------------------------------------------------------------------------
@@ -602,25 +567,39 @@ def build_course_recommendations(skill: str, difficulty: str) -> dict:
         "Return STRICT JSON:\n"
         '{"courses": [{"title": string, "provider": string, "skill": string, '
         '"difficulty": "easy"|"moderate"|"hard", "estimatedDuration": string, '
-        '"url": string, "rating": float, "priority": "high"|"medium"|"low"}]}\n'
+        '"rating": float, "priority": "high"|"medium"|"low"}]}\n'
         "Include realistic ratings (e.g. 4.7). priority and difficulty MUST be one of the listed allowed values. "
         "Return ONLY valid JSON."
     )
     data = _generate(prompt, system=_SYSTEM)
-    courses = [
-        {
-            "title": _as_str(c.get("title")),
-            "provider": _as_str(c.get("provider")),
-            "skill": _as_str(c.get("skill", skill)),
-            "difficulty": _difficulty(c.get("difficulty")),
-            "estimatedDuration": _as_str(c.get("estimatedDuration")),
-            "url": _as_str(c.get("url", f"https://www.google.com/search?q={c.get('title', skill).replace(' ', '+')}+course")),
-            "rating": _as_float(c.get("rating"), 4.5),
-            "priority": _priority(c.get("priority")),
-        }
-        for c in _as_list(data.get("courses"))
-        if isinstance(c, dict) and c.get("title")
-    ]
+    
+    import urllib.parse
+    
+    courses = []
+    for c in _as_list(data.get("courses")):
+        if isinstance(c, dict) and c.get("title"):
+            title = _as_str(c.get("title", skill))
+            provider = _as_str(c.get("provider", "")).lower()
+            query = urllib.parse.quote(title)
+            
+            if "udemy" in provider:
+                url = f"https://www.udemy.com/courses/search/?q={query}"
+            elif "coursera" in provider:
+                url = f"https://www.coursera.org/search?query={query}"
+            else:
+                url = f"https://www.google.com/search?q={query}+course"
+                
+            courses.append({
+                "title": title,
+                "provider": _as_str(c.get("provider")),
+                "skill": _as_str(c.get("skill", skill)),
+                "difficulty": _difficulty(c.get("difficulty")),
+                "estimatedDuration": _as_str(c.get("estimatedDuration")),
+                "url": url,
+                "rating": _as_float(c.get("rating"), 4.5),
+                "priority": _priority(c.get("priority")),
+            })
+            
     return {"courses": courses}
 
 

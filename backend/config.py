@@ -51,26 +51,18 @@ ALLOWED_ORIGINS: list[str] = [
 ]
 
 # --- AI provider ----------------------------------------------------------
-# Active provider: "stub" | "openrouter". "stub" returns deterministic
+# Active provider: "stub" | "groq". "stub" returns deterministic
 # placeholder output (no network, no billing) when no key is configured.
-# "openrouter" routes the four generative stages of the resume pipeline to
-# OpenRouter's chat-completions API.
+# "groq" routes the four generative stages of the resume pipeline to
+# Groq's chat-completions API.
 AI_PROVIDER: str = os.getenv("AI_PROVIDER", "stub")
 
-# OpenRouter credentials/endpoint. The key is required whenever
-# AI_PROVIDER=openrouter. OPENROUTER_MODEL defaults to the free
-# `tencent/hy3:free` model and is configurable from .env (never
-# hard-coded elsewhere). OPENROUTER_BASE_URL is also configurable so a
-# gateway/proxy can be swapped in without code changes. OPENROUTER_REASONING
-# (low|medium|high|...) optionally tunes reasoning effort for models that
-# support it; it is sent only when set to a valid effort level and is
-# gracefully omitted otherwise.
-OPENROUTER_API_KEY: str = os.getenv("OPENROUTER_API_KEY", "")
-OPENROUTER_MODEL: str = os.getenv("OPENROUTER_MODEL", "tencent/hy3:free")
-OPENROUTER_REASONING: str = os.getenv("OPENROUTER_REASONING", "low")
-OPENROUTER_BASE_URL: str = os.getenv(
-    "OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1"
-)
+# Groq credentials/endpoint. The key is required whenever
+# AI_PROVIDER=groq. GROQ_MODEL defaults to the
+# `meta-llama/llama-4-scout-17b-16e-instruct` model and is configurable from .env (never
+# hard-coded elsewhere).
+GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
+GROQ_MODEL: str = os.getenv("GROQ_MODEL", "meta-llama/llama-4-scout-17b-16e-instruct")
 
 # Time in seconds before an AI provider request times out
 AI_TIMEOUT_SECONDS: int = int(os.getenv("AI_TIMEOUT_SECONDS", "30"))
@@ -91,7 +83,7 @@ RESUME_STORAGE_FOLDER = "resumes"
 # Providers that may be configured today. Another provider (e.g. a future
 # OpenAI/Claude backend) can be added without touching the rest of the app —
 # everything routes through ai.py.
-ALLOWED_AI_PROVIDERS = {"stub", "openrouter"}
+ALLOWED_AI_PROVIDERS = {"stub", "groq"}
 
 
 def validate_env() -> None:
@@ -108,9 +100,9 @@ def validate_env() -> None:
             f"got {AI_PROVIDER!r}."
         )
 
-    if AI_PROVIDER == "openrouter" and not OPENROUTER_API_KEY:
+    if AI_PROVIDER == "groq" and not GROQ_API_KEY:
         errors.append(
-            "AI_PROVIDER=openrouter requires OPENROUTER_API_KEY to be set "
+            "AI_PROVIDER=groq requires GROQ_API_KEY to be set "
             "(otherwise no real generation can happen)."
         )
 
