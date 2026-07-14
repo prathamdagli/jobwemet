@@ -342,11 +342,11 @@ export default function SkillsPage() {
                       average={average}
                     >
                       <ProgressBar value={average} className="mb-4" />
-                      <div className="divide-y divide-border">
+                      <Stagger className="divide-y divide-border">
                         {skills.map((skill) => (
                           <SkillRow key={skill.name} skill={skill} />
                         ))}
-                      </div>
+                      </Stagger>
                     </CategoryAccordion>
                   )
                 })}

@@ -40,8 +40,8 @@ export default function SkillGapPage() {
   const { loading, isRegenerating, error, refresh } = useAppState()
   const [refreshing, setRefreshing] = useState(false)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const hasGoal = !!profile.targetCareer
-  const goal = profile.targetCareer || 'your goal'
+  const hasGoal = !!profile.targetCareer && profile.targetCareer !== 'Not set'
+  const goal = hasGoal ? profile.targetCareer : 'your goal'
 
   useEffect(() => {
     return () => {
@@ -113,7 +113,7 @@ export default function SkillGapPage() {
           description="Select your target career to generate a personalized skill gap analysis."
           action={
             <Button
-              render={<Link to="/profile" />}
+              render={<Link to="/settings" />}
               size="sm"
               className="mt-1 gap-1.5"
             >

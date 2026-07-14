@@ -143,7 +143,8 @@ export default function CoursesPage() {
     settings,
     putSettings,
   } = useAppState()
-  const goal = profile.targetCareer || 'your goal'
+  const hasGoal = !!profile.targetCareer && profile.targetCareer !== 'Not set'
+  const goal = hasGoal ? profile.targetCareer : 'your goal'
   const [refreshing, setRefreshing] = useState(false)
   const [searchParams, setSearchParams] = useSearchParams()
   const skillParam = searchParams.get('skill')
@@ -314,6 +315,21 @@ export default function CoursesPage() {
           title="Couldn't load courses"
           description={error}
           onRetry={refresh}
+        />
+      ) : !hasGoal ? (
+        <EmptyState
+          icon={Target}
+          title="No target career set"
+          description="Select your target career to get personalized course recommendations."
+          action={
+            <Button
+              render={<Link to="/settings" />}
+              size="sm"
+              className="mt-1 gap-1.5"
+            >
+              Set Target Career
+            </Button>
+          }
         />
       ) : courses.length === 0 ? (
         <EmptyState

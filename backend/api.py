@@ -913,6 +913,8 @@ def _resolve_resume_id(user: models.FirebaseUser, resume_id: Optional[str]) -> s
 def _target_career_for(user: models.FirebaseUser, resume_id: Optional[str] = None) -> str:
     user_doc = database.get_user(user.uid)
     target = (user_doc.targetCareer if user_doc else None) or ""
+    if target == "Not set":
+        target = ""
     if not target and resume_id:
         matches = database.get_career_matches(resume_id)
         if matches and matches.careers:
