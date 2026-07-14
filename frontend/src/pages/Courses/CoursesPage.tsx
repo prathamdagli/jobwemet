@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams, Link } from 'react-router-dom'
 import {
   BookOpen,
   GraduationCap,
@@ -332,7 +332,7 @@ export default function CoursesPage() {
           }
           action={
             <Button
-              render={<a href="/resume" />}
+              render={<Link to="/resume" />}
               size="sm"
               className="mt-1 gap-1.5"
             >
