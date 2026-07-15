@@ -83,7 +83,7 @@ RESUME_STORAGE_FOLDER = "resumes"
 # Providers that may be configured today. Another provider (e.g. a future
 # OpenAI/Claude backend) can be added without touching the rest of the app —
 # everything routes through ai.py.
-ALLOWED_AI_PROVIDERS = {"stub", "groq"}
+ALLOWED_AI_PROVIDERS = {"stub", "groq", "openrouter"}
 
 
 def validate_env() -> None:
