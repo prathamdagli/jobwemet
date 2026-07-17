@@ -22,9 +22,7 @@ import firebase_admin
 from firebase_admin import auth, credentials, firestore, storage
 from google.cloud.firestore import FieldFilter
 
-import config
-import models
-import utils
+from . import config, models, utils
 
 # --------------------------------------------------------------------------
 # Firebase Admin SDK (initialisation + client singletons).

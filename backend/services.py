@@ -27,10 +27,7 @@ from typing import Optional
 
 import requests
 
-import config
-import database
-import models
-import utils
+from . import config, database, models, utils
 
 logger = logging.getLogger("jobwemet.services")
 

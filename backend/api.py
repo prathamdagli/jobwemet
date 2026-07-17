@@ -15,12 +15,9 @@ import re
 from typing import Optional
 
 from fastapi import APIRouter, Depends, File, Header, HTTPException, Query, Request, UploadFile
-import config
-import database
-import models
-import utils
-from database import get_auth
-from services import (
+from . import config, database, models, utils
+from .database import get_auth
+from .services import (
     _flatten_skills,
     analyze_resume as run_analyze,
     build_dashboard,
