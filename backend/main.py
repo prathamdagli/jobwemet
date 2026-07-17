@@ -25,10 +25,11 @@ from fastapi.openapi.utils import get_openapi
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from . import config, utils
-from .api import api_router
-from .database import initialize_firebase
-from .services import AIError
+import config
+import utils
+from api import api_router
+from database import initialize_firebase
+from services import AIError
 
 logging.basicConfig(
     level=logging.INFO,
