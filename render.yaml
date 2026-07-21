@@ -31,7 +31,7 @@ services:
       - key: OPENROUTER_API_KEY
         sync: false          # paste your OpenRouter key in the Render dashboard
       - key: OPENROUTER_MODEL
-        value: "tencent/hy3:free"
+        value: "poolside/laguna-m.1:free"
       - key: OPENROUTER_REASONING
         value: "low"
       - key: OPENROUTER_BASE_URL
